@@ -66,7 +66,7 @@ div.action {
 div#form_block {
   width: 70%;
   margin:50px auto;
-  font-family: 'Droid Serif', serif;
+  font-family: Arial, Helvetica, sans-serif;
   position:relative;
 }
 
