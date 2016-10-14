@@ -71,19 +71,19 @@ var _getDirList = function(request, response) {
                 r += '</ul>';
                 response.send(r);
             } else {
-                r += 'Could not load directory: ' + d;
+                r += 'Could not load directory: ' + dir;
                 r += '</ul>';
                 util.responseOnError('html', r, response);
             }
         } catch(e) {
             console.error(e);
-            r += 'Could not load directory: ' + d;
+            r += 'Could not load directory: ' + dir;
             r += '</ul>';
             util.responseOnError('html', r, response);
         }
     }).on('error', function(e) {
         console.error(e);
-        r += 'Could not load directory: ' + d;
+        r += 'Could not load directory: ' + dir;
         r += '</ul>';
         util.responseOnError('html', r, response);
     });
