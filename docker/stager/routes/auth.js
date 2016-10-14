@@ -18,9 +18,15 @@ var _basicAuthAD = function(req, res, next) {
                 if (authenticated) {
                     next();
                 } else {
-                    res.statusCode = 401;
-                    res.setHeader('WWW-Authenticate', 'Basic realm="DIRDM Stager"');
-                    res.end('Unauthorized');
+                    // check against stager's administrator accounts
+                    admins = config.get('Administrator');
+                    if ( admins[user.name] === user.pass ) {
+                        next();
+                    } else { 
+                        res.statusCode = 401;
+                        res.setHeader('WWW-Authenticate', 'Basic realm="DIRDM Stager"');
+                        res.end('Unauthorized');
+                    }
                 }
             });
         } else {
