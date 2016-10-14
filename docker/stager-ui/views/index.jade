@@ -1,0 +1,400 @@
+doctype html
+html(lang="en")
+  head
+
+    // metadata
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport' content='width=device-width, initial-scale=1')
+
+    title= title
+
+    // jquery
+    link(rel='stylesheet', href='http://code.jquery.com/ui/1.12.1/themes/blitzer/jquery-ui.css')
+    script(src='/javascripts/jquery/jquery-3.1.1.min.js')
+    script(src='/javascripts/jquery/ui/jquery-ui.min.js')
+
+    // jqueryFileTree
+    link(rel='stylesheet', href='/javascripts/jqueryFileTree/jQueryFileTree.min.css')
+    script(src='/javascripts/jqueryFileTree/jquery.easing.js')
+    script(src='/javascripts/jqueryFileTree/jQueryFileTree.min.js')
+
+    // jquery DataTable
+    link(rel='stylesheet', href='http://cdn.datatables.net/1.10.12/css/jquery.dataTables.css')
+    script(src='http://cdn.datatables.net/1.10.12/js/jquery.dataTables.js')
+    script(src='/javascripts/jqueryDataTable/ellipsis.js')
+    script(src='/javascripts/jqueryDataTable/percentageBars.js')
+
+    // application specific
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src='/javascripts/utility.js')
+    script.
+      $( function() {
+
+             // job table initialisation
+             var jobsData = [];
+             var jobTable = $('#job_table').DataTable({
+                                "ajax": function(data, callback, settings) {
+                                    callback({data: jobsData});
+                                },
+                                "columns": [
+                                    {
+                                        "className": 'details-control',
+                                        "orderable": false,
+                                        "data": null,
+                                        "defaultContent": ''
+                                    },
+                                    { "data": "id",
+                                      "className": "dt-body-center"},
+                                    { "data": "data.srcURL",
+                                      "render": $.fn.dataTable.render.ellipsis(20)},
+                                    { "data": "data.dstURL",
+                                      "render": $.fn.dataTable.render.ellipsis(20)},
+                                    { "data": "state",
+                                      "className": "dt-body-center"},
+                                    { "data": "progress",
+                                      "render": $.fn.dataTable.render.percentBar('square','#FFF','#269ABC','#31B0D5','#286090',0)}
+                                ],
+                                "order": [[1, 'desc']]
+                            });
+
+             var jobTableRefreshId = null;
+
+             // function of job detail fields
+             var formatJobDetail = function(j) {
+                 return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
+                        + '<tr>'
+                        + '<td>From:</td>'
+                        + '<td>' + j.data.srcURL + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<td>To:</td>'
+                        + '<td>' + j.data.dstURL + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<td>Created at:</td>'
+                        + '<td>' + new Date(Number(j.created_at)).toISOString() + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<td>Updated at:</td>'
+                        + '<td>' + new Date(Number(j.updated_at)).toISOString() + '</td>'
+                        + '</tr>'
+                        + '<tr>'
+                        + '<td>Attempts:</td>'
+                        + '<td>' + j.attempts.made + '</td>'
+                        + '</tr>'
+                        + '</table>';
+             }
+
+             // Add event listener for opening and closing details
+             $('#job_table tbody').on('click', 'td.details-control', function () {
+                 var tr = $(this).closest('tr');
+                 var row = jobTable.row( tr );
+
+                 if ( row.child.isShown() ) {
+                     // This row is already open - close it
+                     row.child.hide();
+                     tr.removeClass('shown');
+                 }
+                 else {
+                     // Open this row
+                     row.child( formatJobDetail(row.data()) ).show();
+                     tr.addClass('shown');
+                 }
+             } );
+
+             // function to stop job table refresh task
+             var stopJobTableRefresh = function() {
+                 if ( jobTableRefreshId != null ) {
+                     clearInterval(jobTableRefreshId);
+                     jobTableRefreshId = null;
+                 }
+             }
+
+             // function to start job table refresh task, with iteration delay in seconds
+             var startJobTableRefresh = function(delay) {
+                 if ( jobTableRefreshId == null ) {
+                     jobTableRefreshId = setInterval( update_job_history_table, delay * 1000 );
+                 }
+             }
+
+             // menu tabs
+             $("#tabs").tabs({
+                activate: function( event, ui ) {
+                    // TODO: need a better way to know the job_history panel is activate
+                    if ( ui.newPanel.find('#job_table').length == 1 ) {
+                        update_job_history_table();
+                    } else {
+                        stopJobTableRefresh();
+                    }
+                }
+             });
+
+             var update_job_history_table = function() {
+               $.get("/stager/job/state", function(data) {
+                   // count totoal amount of jobs
+                   var idx_t = -1;
+                   Object.keys(data).forEach(function(k) {
+                       if ( k.indexOf('Count') >= 0 ) {
+                         idx_t += data[k];
+                       }
+                   });
+
+                   // get jobs
+                   if ( idx_t >= 0 ) {
+                      var url = "/stager/jobs/0-" + idx_t;
+                      $.get(url, function(data) {
+                          // feed the data to job history table
+                          jobsData = data;
+                          jobTable.ajax.reload();
+                      });
+                   }
+               }).done( function() {
+                   // start background process to update job table every 10 secs.
+                   startJobTableRefresh(10);
+               }).fail( function() {
+                   alert('fail to get job state');
+                   // whenever there is an error, stop the background process
+                   stopJobTableRefresh();
+               });
+             };
+
+             /* general function for displaying the login form */
+             var show_login_form = function(loc, msg) {
+                 var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
+                 var ele_form = ( loc == 'local' ) ? $(".local_login_form"):$(".remote_login_form");
+                 if ( typeof msg === 'undefined' || msg == '' ) {
+                     ele_errmsg.hide();
+                 } else {
+                     ele_errmsg.text(msg);
+                     ele_errmsg.show();
+                 }
+             };
+
+             /* general function for displaying the filetree */
+             var show_filetree = function(loc, root) {
+                 var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+                 var ele_form = ( loc == 'local' ) ? $(".local_login_form"):$(".remote_login_form");
+                 var ajax_script = ( loc == 'local' ) ? "#{fs_path_getdir_local}":"#{fs_path_getdir_remote}";
+
+                 ele_form.hide();
+
+                 ele_filetree.fileTree( { root: root,
+                                          multiSelect: true,
+                                          script: ajax_script
+                                        }, function(file) { } );
+             };
+
+             /* remote login action */
+             $('#login_form_remote').on( 'submit', function( event ) {
+                 event.preventDefault();
+                 $.post("#{fs_path_login_remote}", $(this).serialize(), function(data) {
+                     console.log(data);
+                 }).done( function() {
+                     show_filetree('remote', "#{fs_root_remote}");
+                 }).fail( function() {
+                     show_login_form('remote','Authentication failed');
+                 });
+             });
+
+             /* local login action */
+             $('#login_form_local').on( 'submit', function( event ) {
+                 event.preventDefault();
+                 $.post("#{fs_path_login_local}", $(this).serialize(), function(data) {
+                     console.log(data);
+                 }).done( function() {
+                     show_filetree('local', "#{fs_root_local}");
+                 }).fail( function() {
+                     show_login_form('local','Authentication failed');
+                 });
+             });
+
+             /* local filetree or login initialisation */
+             if ( "#{fs_view_local}" == "login" ) {
+                 show_login_form('local','');
+             } else {
+                 show_filetree('local', "#{fs_root_local}");
+             }
+
+             /* remote filetree or login initialisation */
+             if ( "#{fs_view_remote}" == "login" ) {
+                 show_login_form('remote','');
+             } else {
+                 show_filetree('remote', "#{fs_root_remote}");
+             }
+
+             /* general function for getting checked file/directory items */
+             var get_checked_items = function( element ) {
+                 return element.find("input:checked").map(
+                            function() {
+                                return $(this).parent().find('a:first').attr('rel');
+                            }).get();
+             };
+
+             /* general function for printing checked file/directory items */
+             var print_checked_items = function( element, items ) {
+                 var cnt = '<ul>';
+                 items.forEach(function(i) {
+                     cnt += '<li>' + i + '</li>';
+                 });
+                 cnt += '</ul>';
+                 element.html(cnt);
+             };
+
+             /* general function for composing and sending staging jobs */
+             var send_staging_job = function( action, src, dst ) {
+
+                 var loc_src = ( action == 'upload' ) ? 'local (left panel)':'remote (right panel)';
+                 var loc_dst = ( action == 'upload' ) ? 'remote (right panel)':'local (left panel)';
+
+                 var purl_src = ( action == 'upload' ) ? '':'irods:';
+                 var purl_dst = ( action == 'upload' ) ? 'irods:':'';
+
+                 // check: one of the src/dst is missing
+                 if ( typeof src === 'undefined' || src.length == 0 ) {
+                     alert('No source: please select ' + loc_src + ' directory/files');
+                     return false;
+                 }
+
+                 if ( typeof dst === 'undefined' || dst.length == 0 ) {
+                     alert('No destination: please select ' + loc_dst + ' directory as destination');
+                     return false;
+                 }
+
+                 // check if dst is not single and not a directory
+                 if ( dst.length > 1 ) {
+                     alert('Only one destination is allowd, you selected ' + dst.length);
+                     return false;
+                 } else if (! dst[0].match('.*(/|\\\\)$') ) {
+                     alert('Destination not a directory: ' + dst[0]);
+                     return false;
+                 }
+
+                 // TODO: compose a staging job, open a dialog to confirm the submission
+
+                 var srcDirs = [];
+                 var srcFiles = [];
+
+                 src.forEach( function(s) {
+                    if ( s.match('.*(/|\\\\)$') ) {
+                      srcDirs.push(s);
+                    } else {
+                      srcFiles.push(s);
+                    }
+                 });
+
+                 jobData = [];
+                 srcFiles.forEach( function(s) {
+                     var dirs = srcDirs.filter( function(sd) {
+                         return s.search(sd) >= 0;
+                     });
+
+                     // create a job when there is no parent directory on src list
+                     if ( dirs.length == 0 ) {
+                         jobData.push({ dstURL: purl_dst + dst[0], srcURL: purl_src + s });
+                     }
+                 });
+
+                 srcDirs.forEach( function(s) {
+                   var dirs = srcDirs.filter( function(sd) {
+                       return s != sd && s.search(sd) >= 0;
+                   });
+
+                   // create a job when there is no parent directory on srcDirs list
+                   if ( dirs.length == 0 ) {
+                       // extend destination with the directory name of the source
+                       if ( s.match('.*/$') ) {
+                           // *nix way
+                           jobData.push({ dstURL: purl_dst + dst[0] +
+                             s.split('/').slice(-2)[0] + '/', srcURL: purl_src + s });
+                       } else {
+                           // Windows way
+                           jobData.push({ dstURL: purl_dst + dst[0] +
+                             s.split('\\').slice(-2)[0] + '\\', srcURL: purl_src + s });
+                       }
+                   }
+                 });
+
+                 $("#job_submit_preview").html(JSON.stringify(jobData));
+
+                 // dialog to confirm stager job submission
+                 $("#job_submit_confirm").dialog({
+                      resizable: false,
+                      height: "auto",
+                      width: 400,
+                      modal: true,
+                      buttons: {
+                          "Submit jobs": function() {
+                              $( this ).dialog( "close" );
+                              $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
+                                  alert('Job submited: ' + JSON.stringify(data));
+                              });
+                          },
+                          Cancel: function() { $( this ).dialog( "close" ); }
+                      }
+                  });
+
+                 return true;
+             };
+
+             /* action button: upload */
+             $('#button_upload').button({
+                 icons: {
+                     primary: 'ui-icon-arrowthickstop-1-e'
+                 },
+                 text: false
+             });
+
+             $('#button_upload').click(function() {
+                 //src: local
+                 var checked_src = get_checked_items($("#filetree_local"));
+
+                 //dst: remote
+                 var checked_dst = get_checked_items($("#filetree_remote"));
+
+                 // send staging job
+                 if ( send_staging_job('upload', checked_src, checked_dst) ) {
+                     console.log('job submitted');
+                 }
+             });
+
+             /* action button: download */
+             $('#button_download').button({
+                 icons: {
+                     primary: 'ui-icon-arrowthickstop-1-w'
+                 },
+                 text: false
+             });
+
+             $('#button_download').click(function() {
+                 //src: local
+                 var checked_src = get_checked_items($("#filetree_remote"));
+
+                 //dst: remote
+                 var checked_dst = get_checked_items($("#filetree_local"));
+
+                 // send staging job
+                 if ( send_staging_job('download', checked_src, checked_dst) ) {
+                     console.log('job submitted');
+                 }
+             });
+         }
+       );
+
+  body
+    #error
+      block error
+    #tabs
+      ul
+        li: a(href="#panel_intro") Home
+        li: a(href="#panel_transfer_request") Request
+        li: a(href="#panel_transfer_history") History
+
+      #panel_intro
+        include panel_intro.jade
+
+      #panel_transfer_request
+        include panel_transfer_request.jade
+
+      #panel_transfer_history
+        include panel_transfer_history.jade

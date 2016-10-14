@@ -1,0 +1,43 @@
+div.container
+
+    div#job_submit_confirm(title='Job Submission')
+      p
+        span.dialog#job_submit_preview
+
+    div#filetrees
+        div.filetree_block
+            div.filetree
+                div#filetree_local
+                     div#form_block.local_login_form
+                         h3 Login to access #{fs_server_local}
+                         div.hint #{fs_hint_login_local}
+                         form#login_form_local(class="form", method="post",action="#")
+                             label Username :
+                             input#username(type="text",name="username")
+                             label Password :
+                             input#password(type="password",name="password")
+                             input.login_button#login_local(type="submit",name="login",value="Login")
+                         div.login_error#login_error_local(class="ui-state-error")
+            div#selected_local
+
+        div.action_block
+            div.action
+                button.action_button#button_upload Uplaod
+            div.action
+                button.action_button#button_download Donwload
+
+        div.filetree_block
+            div.filetree
+                div#filetree_remote
+                     div#form_block.remote_login_form
+                         h3 Login to access #{fs_server_remote}
+                         div.hint #{fs_hint_login_remote}
+                         form#login_form_remote(class="form", method="post",action="#")
+                             label Username :
+                             input#username(type="text",name="username")
+                             label Password :
+                             input#password(type="password",name="password")
+                             input.login_button#login_remote(type="submit",name="login",value="Login")
+                         div.login_error#login_error_remote(class="ui-state-error")
+
+            div#selected_remote

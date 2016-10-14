@@ -1,0 +1,36 @@
+{
+    "port": 3080,
+    "local": {
+        "module": "stager"
+    },
+    "filesystem": {
+        "displayName": "local file system",
+        "rootDir": "/tmp/",
+        "pathListDir": "/fs/dir"
+    },
+    "sftp": {
+        "displayName": "DCCN project storage",
+        "rootDir": "/project/",
+        "hintLogin": "use the DCCN account",
+        "pathLogin": "/sftp/login",
+        "pathListDir": "/sftp/dir",
+        "host": "mentat999.dccn.nl",
+        "port": "22"
+    },
+    "rdm": {
+        "displayName": "DI-RDM",
+        "rootDir": "/rdm/di/",
+        "hintLogin": "use the DI-RDM data-access account",
+        "pathLogin": "/rdm/login",
+        "pathListDir": "/rdm/dir",
+        "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest"
+    },
+    "stager": {
+        "displayName": "Stager file system",
+        "rootDir": "/project/",
+        "hintLogin": "use the DCCN account with @dccn.nl appended to the username",
+        "pathLogin": "/stager/login",
+        "pathListDir": "/stager/dir",
+        "restfulEndpoint": "http://localhost:3000"
+    }
+}
