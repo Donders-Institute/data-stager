@@ -54,7 +54,7 @@ RUN ( $nodejs_prefix/bin/npm install body-parser )
 RUN ( $nodejs_prefix/bin/npm install posix )
 COPY package.json package.json
 COPY *.js ./
-COPY bin/* ./bin/
+COPY bin ./bin
 COPY lib ./lib
 COPY routes ./routes
 COPY start_stager.sh start_stager.sh
