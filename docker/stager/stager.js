@@ -4,6 +4,7 @@ var cluster = require('cluster');
 var kill = require('tree-kill');
 var bodyParser = require('body-parser');
 var posix = require('posix');
+var child_process = require('child_process')
 var queue = kue.createQueue({
     redis: {
         port: 6379,
@@ -117,16 +118,23 @@ if (cluster.isMaster) {
                 console.log('[' + new Date().toISOString() + '] job %d ignored: invalid arguments', job.id);
                 done();
             } else {
+                // get fresh One-time password for job.data.rdmUser
+                var cmd = stager_bindir + path.sep + 's-otp.sh';
+                var out = child_process.execFileSync( cmd, [ job.data.rdmUser ]);
+                var rdmPass = out.toString().split('\n')[0];
+                // throw error if rdmPass is not a 6-digit number 
+                if ( ! rdmPass.match('^[0-9]{6}$') ) {
+                    throw new Error('invalid OTP for user: ' + job.data.rdmUser);
+                }
              
                 // TODO: make the logic implementation as a plug-in
-                var cmd;
                 if ( job.data.clientIF === undefined || job.data.clientIF == 'irods' ) {
                     cmd = stager_bindir + path.sep + 's-irsync.sh';
                 } else {
                     cmd = stager_bindir + path.sep + 's-duck.sh';
                 }
 
-                var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser ];
+                var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser, rdmPass ];
                 var cmd_opts = {
                     maxBuffer: 10*1024*1024
                 };
@@ -140,8 +148,7 @@ if (cluster.isMaster) {
                 var job_timeout_err;
                 var job_stopped = false;
                 var sec_noprogress = 0;
-                var execFile = require('child_process').execFile;
-                var child = execFile(cmd, cmd_args, cmd_opts, function(err, stdout, stderr) {
+                var child = child_process.execFile(cmd, cmd_args, cmd_opts, function(err, stdout, stderr) {
                     // push the last 5-lines of stdout to job log
                     job.log({"stdout": stdout.split("\n").slice(-5)});
                     // error handling

@@ -5,7 +5,7 @@ function print_usage() {
     cat <<EOF
 Usage:
 
-  $ s-irsync.sh <src> <dst> <rdmUser>
+  $ s-irsync.sh <src> <dst> <rdmUser> <rdmPass>
 
 EOF
 }
@@ -30,14 +30,17 @@ function get_script_dir() {
 }
 
 # check if control file is given
-if [ $# -ne 3 ]; then
+if [ $# -ne 4 ]; then
     print_usage
     exit 1
 fi
 
 mydir=$( get_script_dir $0 )
-rdm_user=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userName'])" )
-rdm_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
+#rdm_user=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userName'])" )
+#rdm_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
+
+rdm_user=$3
+rdm_pass=$4
 
 export IRODS_AUTHENTICATION_FILE=/tmp/.irodsA.$$
 export IRODS_USER_NAME=$rdm_user

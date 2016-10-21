@@ -7,10 +7,12 @@ function print_usage() {
     cat <<EOF
 Usage:
 
-  $ s-duck.sh <src> <dst>
+  $ s-duck.sh <src> <dst> <rdmUser> <rdmPass>
 
   - src: source
   - dst: destination
+  - rdmUser: RDM username
+  - rdmPass: RDM password
 
 EOF
 }
@@ -35,7 +37,7 @@ function get_script_dir() {
 }
 
 # check if control file is given
-if [ $# -ne 2 ]; then
+if [ $# -ne 4 ]; then
     print_usage
     exit 1
 fi
@@ -43,8 +45,11 @@ fi
 mydir=$( get_script_dir $0 )
 
 # get username/password from the config file: $mydir/../config/default.json
-rest_user=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userName'])" )
-rest_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
+#rest_user=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userName'])" )
+#rest_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
+
+rest_user=$3
+rest_pass=$4
 dav_endpt=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['davEndpoint'])" )
 
 src=$( echo $1 | sed 's/irods:/i:/g' )
