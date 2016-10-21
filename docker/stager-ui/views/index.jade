@@ -14,6 +14,9 @@ html(lang="en")
     script(src='/javascripts/jquery/jquery-3.1.1.min.js')
     script(src='/javascripts/jquery/ui/jquery-ui.min.js')
 
+    // Font awesome
+    link(rel='stylesheet', href='/stylesheets/font-awesome/4.6.3/css/font-awesome.min.css')
+
     // jqueryFileTree
     link(rel='stylesheet', href='/javascripts/jqueryFileTree/jQueryFileTree.min.css')
     script(src='/javascripts/jqueryFileTree/jquery.easing.js')
@@ -161,8 +164,18 @@ html(lang="en")
 
              /* general function for displaying the login form */
              var show_login_form = function(loc, msg) {
+                 var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
                  var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
-                 var ele_form = ( loc == 'local' ) ? $(".local_login_form"):$(".remote_login_form");
+                 var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+                 var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
+
+                 // hide filetree and action buttons
+                 ele_filetree.hide();
+                 ele_actions.hide();
+
+                 // show login form
+                 ele_form.show(); 
+
                  if ( typeof msg === 'undefined' || msg == '' ) {
                      ele_errmsg.hide();
                  } else {
@@ -173,11 +186,17 @@ html(lang="en")
 
              /* general function for displaying the filetree */
              var show_filetree = function(loc, root) {
+                 var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
                  var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
-                 var ele_form = ( loc == 'local' ) ? $(".local_login_form"):$(".remote_login_form");
+                 var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
                  var ajax_script = ( loc == 'local' ) ? "#{fs_path_getdir_local}":"#{fs_path_getdir_remote}";
 
+                 // hide login form
                  ele_form.hide();
+
+                 // show filetree and action buttons 
+                 ele_actions.show();
+                 ele_filetree.show();
 
                  ele_filetree.fileTree( { root: root,
                                           multiSelect: true,
@@ -189,7 +208,7 @@ html(lang="en")
              $('#login_form_remote').on( 'submit', function( event ) {
                  event.preventDefault();
                  $.post("#{fs_path_login_remote}", $(this).serialize(), function(data) {
-                     console.log(data);
+                     //console.log(data);
                  }).done( function() {
                      show_filetree('remote', "#{fs_root_remote}");
                  }).fail( function() {
@@ -201,7 +220,7 @@ html(lang="en")
              $('#login_form_local').on( 'submit', function( event ) {
                  event.preventDefault();
                  $.post("#{fs_path_login_local}", $(this).serialize(), function(data) {
-                     console.log(data);
+                     //console.log(data);
                  }).done( function() {
                      show_filetree('local', "#{fs_root_local}");
                  }).fail( function() {
@@ -339,10 +358,7 @@ html(lang="en")
 
              /* action button: upload */
              $('#button_upload').button({
-                 icons: {
-                     primary: 'ui-icon-arrowthickstop-1-e'
-                 },
-                 text: false
+                 text: true 
              });
 
              $('#button_upload').click(function() {
@@ -360,10 +376,7 @@ html(lang="en")
 
              /* action button: download */
              $('#button_download').button({
-                 icons: {
-                     primary: 'ui-icon-arrowthickstop-1-w'
-                 },
-                 text: false
+                 text: true
              });
 
              $('#button_download').click(function() {
@@ -377,6 +390,30 @@ html(lang="en")
                  if ( send_staging_job('download', checked_src, checked_dst) ) {
                      console.log('job submitted');
                  }
+             });
+
+             /* action buttons: local */
+             $('#button_refresh_local').button({
+                 text: true
+             });
+             $('#button_refresh_local').click(function() {
+                 console.log('clicked');
+                 show_filetree('local', "#{fs_root_local}");
+             });
+
+             $('#button_logout_local').button({
+                 text: true
+             });
+
+             /* action buttons: remote */
+             $('#button_refresh_remote').button({
+                 text: true
+             });
+             $('#button_refresh_remote').click(function() {
+                 show_filetree('remote', "#{fs_root_remote}");
+             });
+             $('#button_logout_remote').button({
+                 text: true
              });
          }
        );

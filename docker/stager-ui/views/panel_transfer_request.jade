@@ -6,38 +6,47 @@ div.container
 
     div#filetrees
         div.filetree_block
-            div.filetree
-                div#filetree_local
-                     div#form_block.local_login_form
-                         h3 Login to access #{fs_server_local}
-                         div.hint #{fs_hint_login_local}
-                         form#login_form_local(class="form", method="post",action="#")
-                             label Username :
-                             input#username(type="text",name="username")
-                             label Password :
-                             input#password(type="password",name="password")
-                             input.login_button#login_local(type="submit",name="login",value="Login")
-                         div.login_error#login_error_local(class="ui-state-error")
-            div#selected_local
+            div.form_block#local_login_form
+                h3 Login to access #{fs_server_local}
+                div.hint #{fs_hint_login_local}
+                form#login_form_local(class="form", method="post",action="#")
+                    label Username :
+                    input#username(type="text",name="username")
+                    label Password :
+                    input#password(type="password",name="password")
+                    button.login_button#login_local(type="submit",name="login")
+                        i.fa.fa-sign-in.fa-2x
+                div.login_error#login_error_local(class="ui-state-error")
+            div.tree_block#filetree_local
+            div.tree_action_block#action_local
+                button.action_button_inline#button_refresh_local
+                    i.fa.fa-refresh
+                button.action_button_inline#button_logout_local
+                    i.fa.fa-sign-out
 
         div.action_block
             div.action
-                button.action_button#button_upload Uplaod
+                button.action_button#button_upload
+                    i.fa.fa-upload &nbsp;Uplaod
             div.action
-                button.action_button#button_download Donwload
+                button.action_button#button_download
+                    i.fa.fa-download &nbsp;Download
 
         div.filetree_block
-            div.filetree
-                div#filetree_remote
-                     div#form_block.remote_login_form
-                         h3 Login to access #{fs_server_remote}
-                         div.hint #{fs_hint_login_remote}
-                         form#login_form_remote(class="form", method="post",action="#")
-                             label Username :
-                             input#username(type="text",name="username")
-                             label Password :
-                             input#password(type="password",name="password")
-                             input.login_button#login_remote(type="submit",name="login",value="Login")
-                         div.login_error#login_error_remote(class="ui-state-error")
-
-            div#selected_remote
+            div.form_block#remote_login_form
+                h3 Login to access #{fs_server_remote}
+                div.hint #{fs_hint_login_remote}
+                form#login_form_remote(class="form", method="post",action="#")
+                    label Username :
+                    input#username(type="text",name="username")
+                    label Password :
+                    input#password(type="password",name="password")
+                    button.login_button#login_remote(type="submit",name="login")
+                        i.fa.fa-sign-in.fa-2x
+                div.login_error#login_error_remote(class="ui-state-error")
+            div.tree_block#filetree_remote
+            div.tree_action_block#action_remote
+                button.action_button_inline#button_refresh_remote
+                    i.fa.fa-refresh
+                button.action_button_inline#button_logout_remote
+                    i.fa.fa-sign-out
