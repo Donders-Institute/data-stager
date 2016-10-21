@@ -60,14 +60,21 @@ var _getDirList = function(request, response) {
         try {
             console.log('stager response status: ' + resp.statusCode);
             if ( resp.statusCode == 200 ) {
-                data.forEach( function(f) {
-                    if ( f.type == 'd' ) {
-                        r += '<li class="directory collapsed">' + checkbox + '<a href="#" rel="' + dir + f.name + '/">' + f.name + '</a></li>';
-                    } else {
+
+                // list files in front of directories
+                data.filter(function(f) { return f.type == 'f'; }).
+                     sort(function(a,b) { return a.name - b.name; }).
+                     forEach( function(f) {
                         var e = f.name.split('.').pop();
                         r += '<li title="' + f.size + ' Bytes" class="file ext_' + e + '">' + checkbox + '<a href="#" rel='+ dir + f.name + '>' + f.name + '</a></li>';
-                    }
                 });
+
+                data.filter(function(f) { return f.type == 'd'; }).
+                     sort(function(a,b) { return a.name - b.name; }).
+                     forEach( function(f) {
+                        r += '<li class="directory collapsed">' + checkbox + '<a href="#" rel="' + dir + f.name + '/">' + f.name + '</a></li>';
+                });
+
                 r += '</ul>';
                 response.send(r);
             } else {
