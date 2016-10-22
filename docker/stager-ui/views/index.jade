@@ -10,9 +10,11 @@ html(lang="en")
     title= title
 
     // jquery
-    link(rel='stylesheet', href='http://code.jquery.com/ui/1.12.1/themes/blitzer/jquery-ui.css')
     script(src='/javascripts/jquery/jquery-3.1.1.min.js')
-    script(src='/javascripts/jquery/ui/jquery-ui.min.js')
+
+    // bootstrap
+    link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
+    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js") 
 
     // Font awesome
     link(rel='stylesheet', href='/stylesheets/font-awesome/4.6.3/css/font-awesome.min.css')
@@ -122,15 +124,12 @@ html(lang="en")
              }
 
              // menu tabs
-             $("#tabs").tabs({
-                activate: function( event, ui ) {
-                    // TODO: need a better way to know the job_history panel is activate
-                    if ( ui.newPanel.find('#job_table').length == 1 ) {
+             $('.nav-tabs a').on('shown.bs.tab', function(event){
+                 if ( $(event.target).text() == 'History' ) {
                         update_job_history_table();
-                    } else {
+                 } else {
                         stopJobTableRefresh();
-                    }
-                }
+                 }
              });
 
              var update_job_history_table = function() {
@@ -334,24 +333,25 @@ html(lang="en")
                    }
                  });
 
-                 $("#job_submit_preview").html(JSON.stringify(jobData));
+                 // open up the modal and preview the jobs
+                 $("#job_confirmation").modal("toggle");
+                 $("#job_preview").html(JSON.stringify(jobData));
 
-                 // dialog to confirm stager job submission
-                 $("#job_submit_confirm").dialog({
-                      resizable: false,
-                      height: "auto",
-                      width: 400,
-                      modal: true,
-                      buttons: {
-                          "Submit jobs": function() {
-                              $( this ).dialog( "close" );
-                              $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
-                                  alert('Job submited: ' + JSON.stringify(data));
-                              });
-                          },
-                          Cancel: function() { $( this ).dialog( "close" ); }
-                      }
-                  });
+                 // submit stager jobs
+                 $("#job_submit").click(function() {
+                     $("#job_confirmation").modal( "hide" );
+                     $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
+                         alert('Job submited: ' + JSON.stringify(data));
+                     }).fail( function() {
+                         alert('Job submission failed');
+                     });
+                 });
+
+                 // cancel stager jobs
+                 $("#job_cancel").click(function() {
+                     jobData = [];
+                     $("#job_confirmation").modal( "hide" );
+                 });
 
                  return true;
              };
@@ -422,16 +422,17 @@ html(lang="en")
     #error
       block error
     #tabs
-      ul
-        li: a(href="#panel_intro") Home
-        li: a(href="#panel_transfer_request") Request
-        li: a(href="#panel_transfer_history") History
+      ul.nav.nav-tabs
+        li.active: a(data-toggle="tab", href="#panel_intro") Home
+        li: a(data-toggle="tab", href="#panel_transfer_request") Request
+        li: a(data-toggle="tab", href="#panel_transfer_history") History
 
-      #panel_intro
-        include panel_intro.jade
-
-      #panel_transfer_request
-        include panel_transfer_request.jade
-
-      #panel_transfer_history
-        include panel_transfer_history.jade
+      div.tab-content
+        div.tab-pane.fade.in.active#panel_intro
+          include panel_intro.jade
+       
+        div.tab-pane.fade#panel_transfer_request
+          include panel_transfer_request.jade
+       
+        div.tab-pane.fade#panel_transfer_history
+          include panel_transfer_history.jade

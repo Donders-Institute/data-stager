@@ -24,14 +24,6 @@ div.tree_action_block {
   position:relative;
 }
 
-div.filetree_block {
-  vertical-align: top;
-  display:inline-block;
-  width: 45%;
-  margin:10px auto;
-  position:relative;
-}
-
 div.filetrees {
   width: 97%;
   height: 97%;

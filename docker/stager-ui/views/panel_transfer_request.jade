@@ -1,11 +1,21 @@
-div.container
+h1= title_request
+p Send staging requests by selecting source and destination from the panel below.
 
-    div#job_submit_confirm(title='Job Submission')
-      p
-        span.dialog#job_submit_preview
+div.modal.fade#job_confirmation(role='dialog')
+  div.modal-dialog
+    div.modal-content
+      div.modal-head
+          button.close(data-dismiss="modal",type="button") &times;
+          h4.modal-body Jobs to be submitted
+      div.modal-body
+        p: span#job_preview
+      div.modal-footer
+        button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
+        button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
 
-    div#filetrees
-        div.filetree_block
+div.container-fluid
+    div.row#filetrees
+        div.col-md-5
             div.form_block#local_login_form
                 h3 Login to access #{fs_server_local}
                 div.hint #{fs_hint_login_local}
@@ -23,16 +33,16 @@ div.container
                     i.fa.fa-refresh
                 button.action_button_inline#button_logout_local
                     i.fa.fa-sign-out
-
-        div.action_block
+ 
+        div.col-md-2
             div.action
                 button.action_button#button_upload
                     i.fa.fa-upload &nbsp;Uplaod
             div.action
                 button.action_button#button_download
                     i.fa.fa-download &nbsp;Download
-
-        div.filetree_block
+ 
+        div.col-md-5
             div.form_block#remote_login_form
                 h3 Login to access #{fs_server_remote}
                 div.hint #{fs_hint_login_remote}
