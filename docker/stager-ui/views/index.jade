@@ -410,6 +410,9 @@ html(lang="en")
              $('#button_refresh_remote').click(function() {
                  $("#filetree_remote").jstree(true).refresh();
              });
+
+             /* initialise all popovers */
+             $('[data-toggle="popover"]').popover();
          }
        );
 

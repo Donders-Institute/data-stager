@@ -1,5 +1,5 @@
-h1= title_request
-p Send staging requests by selecting source and destination from the panel below.
+div.page-header
+  h1= title_request
 
 div.modal.fade#job_confirmation(role='dialog')
   div.modal-dialog
@@ -15,43 +15,56 @@ div.modal.fade#job_confirmation(role='dialog')
 div.container-fluid
     div.row#filetrees
         div.col-md-5
-            div.form_block#local_login_form
-                h3 Login to access #{fs_server_local}
-                div.hint #{fs_hint_login_local}
-                form#login_form_local(class="form", method="post",action="#")
-                    label Username :
-                    input#username(type="text",name="username")
-                    label Password :
-                    input#password(type="password",name="password")
-                    button.login_button#login_local(type="submit",name="login")
-                        i.fa.fa-sign-in.fa-2x
-            div.tree_block#filetree_local
+            div.panel.panel-default
+                div.panel-heading
+                    span: strong #{fs_server_local}
+                div.panel-body#local_login_form
+                    form.form-horizontal#login_form_local(method="post",action="#")
+                        div.form-group
+                            label.control-label.col-sm-4(for="username") Username:
+                            div.col-sm-8
+                                input.form-control#username(type="text",name="username",placeholder="#{fs_example_login_local}")
+                        div.form-group
+                            label.control-label.col-sm-4(for="password") Password:
+                            div.col-sm-8
+                                input.form-control#password(type="password",name="password")
+                        div.form-group
+                            div.col-sm-offset-4.col-sm-8
+                                button.btn.btn-default#login_local(type="submit",name="login")
+                                    i.fa.fa-sign-in &nbsp;Login
+                div.panel.panel-body.filetree-panel#filetree_local
             div.btn-group#action_local
                 button.btn.btn-default#button_refresh_local
                     i.fa.fa-refresh
                 button.btn.btn-default#button_logout_local
                     i.fa.fa-sign-out
 
-        div.col-md-2
-            div.action
-                button.action_button#button_upload
+        div.col-md-2.text-center
+            div.btn-group-vertical
+                button.btn.btn-default#button_upload
                     i.fa.fa-upload &nbsp;Uplaod
-            div.action
-                button.action_button#button_download
+                button.btn.btn-default#button_download
                     i.fa.fa-download &nbsp;Download
 
         div.col-md-5
-            div.form_block#remote_login_form
-                h3 Login to access #{fs_server_remote}
-                div.hint #{fs_hint_login_remote}
-                form#login_form_remote(class="form", method="post",action="#")
-                    label Username :
-                    input#username(type="text",name="username")
-                    label Password :
-                    input#password(type="password",name="password")
-                    button.login_button#login_remote(type="submit",name="login")
-                        i.fa.fa-sign-in.fa-2x
-            div.tree_block#filetree_remote
+            div.panel.panel-default
+                div.panel-heading
+                  span: strong #{fs_server_remote}
+                div.panel-body#remote_login_form
+                    form.form-horizontal#login_form_remote(method="post",action="#")
+                        div.form-group
+                            label.control-label.col-sm-4(for="username") Username:
+                            div.col-sm-8
+                                input.form-control#username(type="text",name="username",placeholder="#{fs_example_login_remote}")
+                        div.form-group
+                            label.control-label.col-sm-4(for="password") Password:
+                            div.col-sm-8
+                                input.form-control#password(type="password",name="password")
+                        div.form-group
+                            div.col-sm-offset-4.col-sm-8
+                                button.btn.btn-default#login_remote(type="submit",name="login")
+                                    i.fa.fa-sign-in &nbsp;Login
+                div.panel.panel-body.filetree-panel#filetree_remote
             div.btn-group#action_remote
                 button.btn.btn-default#button_refresh_remote
                     i.fa.fa-refresh

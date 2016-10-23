@@ -7,6 +7,7 @@ var _getModParams = function(req, mod) {
   var view = "";
   var path_login = "";
   var hint_login = "";
+  var example_login = "";
   if (config.has(mod + '.pathLogin')) {
 
       if (typeof req.session.user  === 'undefined' ||
@@ -21,6 +22,10 @@ var _getModParams = function(req, mod) {
           hint_login = config.get(mod + '.hintLogin');
       }
 
+      if (config.has(mod + '.exampleLogin')) {
+         example_login = config.get(mod + '.exampleLogin');
+      }
+
       path_login = config.get(mod + '.pathLogin');
   }
   var path_getdir = config.get(mod + '.pathListDir');
@@ -30,6 +35,7 @@ var _getModParams = function(req, mod) {
            root: root,
            hint_login: hint_login,
            path_login: path_login,
+           example_login: example_login,
            path_getdir: path_getdir,
            display_name: display_name }
 }
@@ -44,19 +50,21 @@ router.get('/', function(req, res, next) {
   var params_remote = _getModParams(req, 'rdm');
 
   res.render('index', { title: 'DI-RDM file staging service',
-                        title_request: 'Staging request',
-                        title_history: 'Staging history',
+                        title_request: 'New request',
+                        title_history: 'Request history',
                         fs_root_local: params_local.root,
                         fs_view_local: params_local.view,
                         fs_server_local: params_local.display_name,
                         fs_hint_login_local: params_local.hint_login,
                         fs_path_login_local: params_local.path_login,
+                        fs_example_login_local: params_local.example_login,
                         fs_path_getdir_local: params_local.path_getdir,
                         fs_root_remote: params_remote.root,
                         fs_view_remote: params_remote.view,
                         fs_server_remote: params_remote.display_name,
                         fs_hint_login_remote: params_remote.hint_login,
                         fs_path_login_remote: params_remote.path_login,
+                        fs_example_login_remote: params_remote.example_login,
                         fs_path_getdir_remote: params_remote.path_getdir
                        });
 });

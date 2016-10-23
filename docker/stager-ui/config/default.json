@@ -14,23 +14,26 @@
         "hintLogin": "use the DCCN account",
         "pathLogin": "/sftp/login",
         "pathListDir": "/sftp/dir",
+        "exampleLogin": "pethag",
         "host": "mentat999.dccn.nl",
         "port": "22"
     },
     "rdm": {
         "displayName": "DI-RDM",
         "rootDir": "/rdm/di/",
-        "hintLogin": "use the DI-RDM data-access account",
+        "hintLogin": "Sing in with the DI-RDM data-access account",
         "pathLogin": "/rdm/login",
         "pathListDir": "/rdm/dir",
+        "exampleLogin": "U123456-ru.nl",
         "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest"
     },
     "stager": {
-        "displayName": "Stager file system",
+        "displayName": "File Stager",
         "rootDir": "/project/",
-        "hintLogin": "use the DCCN account with @dccn.nl appended to the username",
+        "hintLogin": "Sing in with the DCCN account appended with @dccn.nl",
         "pathLogin": "/stager/login",
         "pathListDir": "/stager/dir",
+        "exampleLogin": "peghag@dccn.nl",
         "restfulEndpoint": "http://localhost:3000"
     }
 }
