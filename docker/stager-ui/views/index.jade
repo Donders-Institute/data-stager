@@ -14,15 +14,14 @@ html(lang="en")
 
     // bootstrap
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
-    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js") 
+    script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
 
     // Font awesome
     link(rel='stylesheet', href='/stylesheets/font-awesome/4.6.3/css/font-awesome.min.css')
 
-    // jqueryFileTree
-    link(rel='stylesheet', href='/javascripts/jqueryFileTree/jQueryFileTree.min.css')
-    script(src='/javascripts/jqueryFileTree/jquery.easing.js')
-    script(src='/javascripts/jqueryFileTree/jQueryFileTree.min.js')
+    // jsTree
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js')
 
     // jquery DataTable
     link(rel='stylesheet', href='http://cdn.datatables.net/1.10.12/css/jquery.dataTables.css')
@@ -64,6 +63,17 @@ html(lang="en")
                             });
 
              var jobTableRefreshId = null;
+
+             // function of toggle application error modal panel
+             var appAlert = function(html_text) {
+                 $("#app_error").modal('toggle');
+                 $("#app_error_message").html( html_text );
+             }
+
+             // actions of application error modal panel
+             $("#close_app_error").click(function() {
+                 $("#app_error").modal( "hide" );
+             });
 
              // function of job detail fields
              var formatJobDetail = function(j) {
@@ -155,9 +165,9 @@ html(lang="en")
                    // start background process to update job table every 10 secs.
                    startJobTableRefresh(10);
                }).fail( function() {
-                   alert('fail to get job state');
                    // whenever there is an error, stop the background process
                    stopJobTableRefresh();
+                   appAlert('fail to get job state');
                });
              };
 
@@ -173,7 +183,7 @@ html(lang="en")
                  ele_actions.hide();
 
                  // show login form
-                 ele_form.show(); 
+                 ele_form.show();
 
                  if ( typeof msg === 'undefined' || msg == '' ) {
                      ele_errmsg.hide();
@@ -193,14 +203,33 @@ html(lang="en")
                  // hide login form
                  ele_form.hide();
 
-                 // show filetree and action buttons 
+                 // show filetree and action buttons
                  ele_actions.show();
                  ele_filetree.show();
 
-                 ele_filetree.fileTree( { root: root,
-                                          multiSelect: true,
-                                          script: ajax_script
-                                        }, function(file) { } );
+                 // jsTree
+                 ele_filetree.jstree({
+                    core: {
+                        animation: 0,
+                        error: function(err) {
+                            appAlert(err.reason + ": " + err.data);
+                        },
+                        data: {
+                            url: ajax_script,
+                            data: function(node) {
+                                return { 'dir': ( node.id == '#') ? root: node.id,
+                                         'isRoot': (node.id == '#') }
+                            }
+                        }
+                    },
+                    checkbox: {
+                        keep_selected_style: false,
+                        tie_selection: false,
+                        three_state: false,
+                        cascade: 'up',
+                    },
+                    plugins: [ 'checkbox', 'wholerow' ]
+                 });
              };
 
              /* remote login action */
@@ -211,7 +240,7 @@ html(lang="en")
                  }).done( function() {
                      show_filetree('remote', "#{fs_root_remote}");
                  }).fail( function() {
-                     show_login_form('remote','Authentication failed');
+                     appAlert('Authentication failure: #{fs_server_remote}');
                  });
              });
 
@@ -223,7 +252,7 @@ html(lang="en")
                  }).done( function() {
                      show_filetree('local', "#{fs_root_local}");
                  }).fail( function() {
-                     show_login_form('local','Authentication failed');
+                     appAlert('Authentication failure: #{fs_server_local}');
                  });
              });
 
@@ -243,20 +272,8 @@ html(lang="en")
 
              /* general function for getting checked file/directory items */
              var get_checked_items = function( element ) {
-                 return element.find("input:checked").map(
-                            function() {
-                                return $(this).parent().find('a:first').attr('rel');
-                            }).get();
-             };
-
-             /* general function for printing checked file/directory items */
-             var print_checked_items = function( element, items ) {
-                 var cnt = '<ul>';
-                 items.forEach(function(i) {
-                     cnt += '<li>' + i + '</li>';
-                 });
-                 cnt += '</ul>';
-                 element.html(cnt);
+                 return (element.jstree(true)) ?
+                     element.jstree(true).get_checked():[];
              };
 
              /* general function for composing and sending staging jobs */
@@ -270,21 +287,21 @@ html(lang="en")
 
                  // check: one of the src/dst is missing
                  if ( typeof src === 'undefined' || src.length == 0 ) {
-                     alert('No source: please select ' + loc_src + ' directory/files');
+                     appAlert('No source: please select ' + loc_src + ' directory/files');
                      return false;
                  }
 
                  if ( typeof dst === 'undefined' || dst.length == 0 ) {
-                     alert('No destination: please select ' + loc_dst + ' directory as destination');
+                     appAlert('No destination: please select ' + loc_dst + ' directory as destination');
                      return false;
                  }
 
                  // check if dst is not single and not a directory
                  if ( dst.length > 1 ) {
-                     alert('Only one destination is allowd, you selected ' + dst.length);
+                     appAlert('Only one destination is allowd, you selected ' + dst.length);
                      return false;
                  } else if (! dst[0].match('.*(/|\\\\)$') ) {
-                     alert('Destination not a directory: ' + dst[0]);
+                     appAlert('Destination not a directory: ' + dst[0]);
                      return false;
                  }
 
@@ -341,9 +358,9 @@ html(lang="en")
                  $("#job_submit").click(function() {
                      $("#job_confirmation").modal( "hide" );
                      $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
-                         alert('Job submited: ' + JSON.stringify(data));
+                         appAlert('Job submited: ' + JSON.stringify(data));
                      }).fail( function() {
-                         alert('Job submission failed');
+                         appAlert('Job submission failed');
                      });
                  });
 
@@ -357,10 +374,6 @@ html(lang="en")
              };
 
              /* action button: upload */
-             $('#button_upload').button({
-                 text: true 
-             });
-
              $('#button_upload').click(function() {
                  //src: local
                  var checked_src = get_checked_items($("#filetree_local"));
@@ -375,10 +388,6 @@ html(lang="en")
              });
 
              /* action button: download */
-             $('#button_download').button({
-                 text: true
-             });
-
              $('#button_download').click(function() {
                  //src: local
                  var checked_src = get_checked_items($("#filetree_remote"));
@@ -393,32 +402,19 @@ html(lang="en")
              });
 
              /* action buttons: local */
-             $('#button_refresh_local').button({
-                 text: true
-             });
              $('#button_refresh_local').click(function() {
-                 console.log('clicked');
-                 show_filetree('local', "#{fs_root_local}");
-             });
-
-             $('#button_logout_local').button({
-                 text: true
+                 $("#filetree_local").jstree(true).refresh();
              });
 
              /* action buttons: remote */
-             $('#button_refresh_remote').button({
-                 text: true
-             });
              $('#button_refresh_remote').click(function() {
-                 show_filetree('remote', "#{fs_root_remote}");
-             });
-             $('#button_logout_remote').button({
-                 text: true
+                 $("#filetree_remote").jstree(true).refresh();
              });
          }
        );
 
   body
+    include app_error.jade
     #error
       block error
     #tabs
@@ -430,9 +426,9 @@ html(lang="en")
       div.tab-content
         div.tab-pane.fade.in.active#panel_intro
           include panel_intro.jade
-       
+
         div.tab-pane.fade#panel_transfer_request
           include panel_transfer_request.jade
-       
+
         div.tab-pane.fade#panel_transfer_history
           include panel_transfer_history.jade

@@ -1,4 +1,5 @@
 var config = require('config');
+var path = require('path');
 var RestClient = require('node-rest-client').Client;
 var util = require('../lib/utility');
 
@@ -43,7 +44,62 @@ var _authenticateUser = function(request, response) {
     });
 }
 
-/* Get directory content from the RDM service */
+/* Get directory content for jsTree */
+var _getDirListJsTree = function(request, response) {
+
+    var files = [];
+
+    var sess = request.session;
+
+    var dir = request.query.dir;
+    var isRoot = request.query.isRoot;
+
+    var cfg = { user: sess.user['rdm'],
+                password: sess.pass['rdm'] };
+
+    var c = new RestClient(cfg);
+    var args = { parameters: { listType: 'both', listing: 'True' },
+                 headers: { "Accept": "application/json" } };
+
+    c.get(config.get('rdm.irodsRestfulEndpoint') + '/collection' + dir, args, function(data, resp) {
+        try {
+            console.log('irods-rest response status: ' + resp.statusCode);
+            data.children.forEach(function(f){
+                if ( f.objectType == 'COLLECTION' ) {
+                    files.push({
+                        id: f.pathOrName + '/',
+                        type: 'd',
+                        parent: isRoot === 'true' ? '#':dir,
+                        text: f.pathOrName.replace(f.parentPath + '/', ''),
+                        icon: 'fa fa-folder',
+                        li_attr: {},
+                        children: true
+                    });
+                } else {
+                    //var e = f.pathOrName.split('.').pop();
+                    files.push({
+                        id: f.parentPath + '/' + f.pathOrName,
+                        type: 'f',
+                        parent: isRoot === 'true' ? '#':dir,
+                        text: f.pathOrName,
+                        icon: 'fa fa-file-o',
+                        li_attr: {'title':''+f.dataSize+' bytes'},
+                        children: false
+                    });
+                }
+            });
+            response.json(files);
+        } catch(e) {
+            console.error(e);
+            util.responseOnError('json',[],response);
+        }
+    }).on('error', function(e) {
+        console.error(e);
+        util.responseOnError('json',[],response);
+    });
+}
+
+/* Get directory content for jqueryFileTree */
 var _getDirList = function(request, response) {
 
     var sess = request.session;
@@ -91,3 +147,4 @@ var _getDirList = function(request, response) {
 
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;
+module.exports.getDirListJsTree = _getDirListJsTree;

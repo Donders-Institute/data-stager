@@ -5,7 +5,6 @@ div.modal.fade#job_confirmation(role='dialog')
   div.modal-dialog
     div.modal-content
       div.modal-head
-          button.close(data-dismiss="modal",type="button") &times;
           h4.modal-body Jobs to be submitted
       div.modal-body
         p: span#job_preview
@@ -26,14 +25,13 @@ div.container-fluid
                     input#password(type="password",name="password")
                     button.login_button#login_local(type="submit",name="login")
                         i.fa.fa-sign-in.fa-2x
-                div.login_error#login_error_local(class="ui-state-error")
             div.tree_block#filetree_local
-            div.tree_action_block#action_local
-                button.action_button_inline#button_refresh_local
+            div.btn-group#action_local
+                button.btn.btn-default#button_refresh_local
                     i.fa.fa-refresh
-                button.action_button_inline#button_logout_local
+                button.btn.btn-default#button_logout_local
                     i.fa.fa-sign-out
- 
+
         div.col-md-2
             div.action
                 button.action_button#button_upload
@@ -41,7 +39,7 @@ div.container-fluid
             div.action
                 button.action_button#button_download
                     i.fa.fa-download &nbsp;Download
- 
+
         div.col-md-5
             div.form_block#remote_login_form
                 h3 Login to access #{fs_server_remote}
@@ -53,10 +51,9 @@ div.container-fluid
                     input#password(type="password",name="password")
                     button.login_button#login_remote(type="submit",name="login")
                         i.fa.fa-sign-in.fa-2x
-                div.login_error#login_error_remote(class="ui-state-error")
             div.tree_block#filetree_remote
-            div.tree_action_block#action_remote
-                button.action_button_inline#button_refresh_remote
+            div.btn-group#action_remote
+                button.btn.btn-default#button_refresh_remote
                     i.fa.fa-refresh
-                button.action_button_inline#button_logout_remote
+                button.btn.btn-default#button_logout_remote
                     i.fa.fa-sign-out

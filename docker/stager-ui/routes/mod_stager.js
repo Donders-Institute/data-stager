@@ -1,4 +1,5 @@
 var config = require('config');
+var path = require('path');
 var RestClient = require('node-rest-client').Client;
 var util = require('../lib/utility');
 
@@ -37,6 +38,65 @@ var _authenticateUser = function(request, response) {
     }).on('error', function(e) {
         console.error(e);
         util.responseOnError('json', {}, response);
+    });
+}
+
+var _getDirListJsTree = function(request, response) {
+
+  var files = [];
+  var sess = request.session;
+  var dir = request.query.dir;
+  var isRoot = request.query.isRoot;
+
+  var args = { data: { dir: dir },
+               headers: { "Accept": "application/json",
+                          "Content-Type": "application/json" } };
+
+  var c = new RestClient({user: sess.user.stager,
+                          password: sess.pass.stager});
+
+  var req = c.post(config.get('stager.restfulEndpoint') + '/fstree/stager', args, function(data, resp) {
+
+        try {
+            console.log('stager response status: ' + resp.statusCode);
+            if ( resp.statusCode == 200 ) {
+
+                // list files in front of directories
+                data.filter(function(f) { return f.type == 'f'; }).
+                     sort(function(a,b) { return a.name - b.name; }).
+                     forEach( function(f) {
+                        files.push({
+                            id: path.join(dir, f.name),
+                            parent: isRoot === 'true' ? '#':dir,
+                            text: f.name,
+                            icon: 'fa fa-file-o',
+                            li_attr: {'title':''+f.size+' bytes'},
+                            children: false
+                        });
+                });
+                data.filter(function(f) { return f.type == 'd'; }).
+                     sort(function(a,b) { return a.name - b.name; }).
+                     forEach( function(f) {
+                        files.push({
+                           id: path.join(dir, f.name) + '/',
+                           parent: isRoot === 'true' ? '#':dir,
+                           text: f.name,
+                           icon: 'fa fa-folder',
+                           li_attr: {},
+                           children: true
+                        });
+                });
+                response.json(files);
+            } else {
+                util.responseOnError('json', [], response);
+            }
+        } catch(e) {
+            console.error(e);
+            util.responseOnError('json', [], response);
+        }
+    }).on('error', function(e) {
+        console.error(e);
+        util.responseOnError('json', [], response);
     });
 }
 
@@ -264,6 +324,7 @@ var _submitJobs = function(request, response) {
 
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;
+module.exports.getDirListJsTree = _getDirListJsTree;
 module.exports.getJobCount = _getJobCount;
 module.exports.getJobs = _getJobs;
 module.exports.getJobsInState = _getJobsInState;
