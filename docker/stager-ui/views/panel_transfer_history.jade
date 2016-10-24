@@ -1,13 +1,24 @@
 div.page-header
     h1= title_history
 
-div#job_history
-    table#job_table(class="display", cellspacing="0", width="100%")
-      thead
-        tr
-          th
-          th ID
-          th From
-          th To
-          th State
-          th Progress (%)
+div.container-fluid
+    div.row
+      div.col-md-12
+        div.pull-right
+           <!-- strong update mode:&nbsp; -->
+           input#history-refresh-toggle(type='checkbox')
+           span &nbsp;&nbsp;
+           button.btn.btn-default.disabled#button_refresh_history
+              i.fa.fa-refresh
+    div.row.row-gap
+      div.col-md-12
+        div.panel.panel-default
+          div.panel.panel-body#job_history
+              table.display#job_table(cellspacing="0", width="100%")
+                  thead: tr
+                      th
+                      th ID
+                      th From
+                      th To
+                      th State
+                      th Progress (%)

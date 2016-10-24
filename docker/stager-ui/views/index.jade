@@ -16,6 +16,10 @@ html(lang="en")
     link(rel='stylesheet', href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css')
     script(src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js")
 
+    // bootstrap switch
+    link(rel='stylesheet', href='/stylesheets/bootstrap/bootstrap-switch.min.css')
+    script(src='/javascripts/bootstrap/bootstrap-switch.min.js')
+
     // Font awesome
     link(rel='stylesheet', href='/stylesheets/font-awesome/4.6.3/css/font-awesome.min.css')
 
@@ -149,6 +153,27 @@ html(lang="en")
                  }
              }
 
+             // toggle for background history refresh
+             // action toggle background history refresh
+             var setHistoryRefreshMode = function(e, s) {
+                console.log('switch to: ' + s);
+                if (s) {
+                    $('#button_refresh_history').addClass('disabled');
+                    startJobTableRefresh(10);
+                } else {
+                    $('#button_refresh_history').removeClass('disabled');
+                    stopJobTableRefresh();
+                }
+             };
+
+             $('#history-refresh-toggle').bootstrapSwitch({
+                 size: "normal",
+                 onText: "A",
+                 offText: "M",
+                 onInit: setHistoryRefreshMode,
+                 onSwitchChange: setHistoryRefreshMode
+             });
+
              // menu tabs
              $('.nav-tabs a').on('shown.bs.tab', function(event){
                  if ( $(event.target).text() == 'History' ) {
@@ -178,11 +203,9 @@ html(lang="en")
                       });
                    }
                }).done( function() {
-                   // start background process to update job table every 10 secs.
-                   startJobTableRefresh(10);
                }).fail( function() {
                    // whenever there is an error, stop the background process
-                   stopJobTableRefresh();
+                   $('#history-refresh-toggle').bootstrapSwitch('state',false);
                    appError('cannot retrieve history');
                });
              };
@@ -457,8 +480,10 @@ html(lang="en")
                  $("#filetree_remote").jstree(true).refresh();
              });
 
-             /* initialise all popovers */
-             $('[data-toggle="popover"]').popover();
+             /* action manual history refresh */
+             $('#button_refresh_history').click(function() {
+                 update_job_history_table();
+             });
          }
        );
 

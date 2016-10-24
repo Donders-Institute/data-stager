@@ -39,12 +39,12 @@ div.container-fluid
                 button.btn.btn-default#button_logout_local
                     i.fa.fa-sign-out
 
-        div.col-md-2.text-center
-            div.btn-group-vertical
-                button.btn.btn-default#button_upload
-                    i.fa.fa-upload &nbsp;Uplaod
-                button.btn.btn-default#button_download
-                    i.fa.fa-download &nbsp;Download
+        div.col-md-2
+            div.list-group
+                a.list-group-item.list-group-item-action#button_upload(href='#')
+                    i.fa.fa-arrow-right &nbsp;Upload
+                a.list-group-item.list-group-item-action#button_download(href='#')
+                    i.fa.fa-arrow-left &nbsp;Download
 
         div.col-md-5
             div.panel.panel-default

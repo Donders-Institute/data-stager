@@ -33,7 +33,7 @@
         "hintLogin": "Sing in with the DCCN account appended with @dccn.nl",
         "pathLogin": "/stager/login",
         "pathListDir": "/stager/dir",
-        "exampleLogin": "peghag@dccn.nl",
+        "exampleLogin": "pethag@dccn.nl",
         "restfulEndpoint": "http://localhost:3000"
     }
 }

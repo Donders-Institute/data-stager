@@ -42,6 +42,11 @@ div.scroll-able {
   overflow: auto;
 }
 
+div.row-gap {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 div.action {
   width: 100%;
   margin-left: 5px;
