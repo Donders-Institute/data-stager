@@ -1,9 +1,9 @@
-div.modal.fade#app_error(role='dialog')
+div.modal.fade#app_dialog(role='dialog')
   div.modal-dialog
     div.modal-content
-      div.modal-head
-          h4.modal-body Error
+      div.modal-header
+          h4.modal-title#app_dialog_header
       div.modal-body
-        p: span#app_error_message
+        p: span#app_dialog_message
       div.modal-footer
         button.btn.btn-default#close_app_error(data-dismiss="modal",type="button") Close

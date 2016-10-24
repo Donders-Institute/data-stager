@@ -60,31 +60,26 @@ var _getDirListJsTree = function(request, response) {
         try {
             console.log('stager response status: ' + resp.statusCode);
             if ( resp.statusCode == 200 ) {
-
-                // list files in front of directories
-                data.filter(function(f) { return f.type == 'f'; }).
-                     sort(function(a,b) { return a.name - b.name; }).
-                     forEach( function(f) {
-                        files.push({
-                            id: path.join(dir, f.name),
-                            parent: isRoot === 'true' ? '#':dir,
-                            text: f.name,
-                            icon: 'fa fa-file-o',
-                            li_attr: {'title':''+f.size+' bytes'},
-                            children: false
-                        });
-                });
-                data.filter(function(f) { return f.type == 'd'; }).
-                     sort(function(a,b) { return a.name - b.name; }).
-                     forEach( function(f) {
-                        files.push({
+               data.forEach( function(f) {
+                   if ( f.type == 'f' ) {
+                       files.push({
+                           id: path.join(dir, f.name),
+                           parent: isRoot === 'true' ? '#':dir,
+                           text: f.name,
+                           icon: 'fa fa-file-o',
+                           li_attr: {'title':''+f.size+' bytes'},
+                           children: false
+                       });
+                   } else {
+                       files.push({
                            id: path.join(dir, f.name) + '/',
                            parent: isRoot === 'true' ? '#':dir,
                            text: f.name,
                            icon: 'fa fa-folder',
                            li_attr: {},
                            children: true
-                        });
+                       });
+                    }
                 });
                 response.json(files);
             } else {

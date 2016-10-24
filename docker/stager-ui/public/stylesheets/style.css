@@ -38,6 +38,10 @@ div.filetrees {
   height: 400px;
 }
 
+div.scroll-able {
+  overflow: auto;
+}
+
 div.action {
   width: 100%;
   margin-left: 5px;

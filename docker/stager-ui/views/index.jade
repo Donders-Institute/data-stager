@@ -23,6 +23,9 @@ html(lang="en")
     link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css')
     script(src='https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js')
 
+    // jsTree bootstrap theme
+    link(rel="stylesheet", href='/stylesheets/jstree/dist/themes/proton/style.min.css')
+
     // jquery DataTable
     link(rel='stylesheet', href='http://cdn.datatables.net/1.10.12/css/jquery.dataTables.css')
     script(src='http://cdn.datatables.net/1.10.12/js/jquery.dataTables.js')
@@ -64,10 +67,23 @@ html(lang="en")
 
              var jobTableRefreshId = null;
 
-             // function of toggle application error modal panel
-             var appAlert = function(html_text) {
-                 $("#app_error").modal('toggle');
-                 $("#app_error_message").html( html_text );
+             // function of determine whether a given path is a directory
+             var isDir = function(p) {
+                 return p.match('.*(/|\\\\)$')?true:false;
+             }
+
+             // function of toggle application dialog for error message
+             var appError = function(html_text) {
+                 $("#app_dialog").modal('toggle');
+                 $("#app_dialog_header").html( 'Error' );
+                 $("#app_dialog_message").html( html_text );
+             }
+
+             // function of toggle application dialog for information
+             var appInfo = function(html_text) {
+                 $("#app_dialog").modal('toggle');
+                 $("#app_dialog_header").html( 'Information' );
+                 $("#app_dialog_message").html( html_text );
              }
 
              // actions of application error modal panel
@@ -167,7 +183,7 @@ html(lang="en")
                }).fail( function() {
                    // whenever there is an error, stop the background process
                    stopJobTableRefresh();
-                   appAlert('fail to get job state');
+                   appError('cannot retrieve history');
                });
              };
 
@@ -212,7 +228,7 @@ html(lang="en")
                     core: {
                         animation: 0,
                         error: function(err) {
-                            appAlert(err.reason + ": " + err.data);
+                            appError(err.reason + ": " + err.data);
                         },
                         data: {
                             url: ajax_script,
@@ -220,6 +236,10 @@ html(lang="en")
                                 return { 'dir': ( node.id == '#') ? root: node.id,
                                          'isRoot': (node.id == '#') }
                             }
+                        },
+                        themes: {
+                            name: 'proton',
+                            responsive: true
                         }
                     },
                     checkbox: {
@@ -228,7 +248,19 @@ html(lang="en")
                         three_state: false,
                         cascade: 'up',
                     },
-                    plugins: [ 'checkbox', 'wholerow' ]
+                    sort: function(a, b) {
+                        var na = this.get_node(a);
+                        var nb = this.get_node(b);
+
+                        // sorting by type and file/directory name
+                        if ( isDir(na.id) == isDir(nb.id) ) {
+                            return ( na.id > nb.id ) ? 1:-1;
+                        } else {
+                            return isDir(na.id) ? 1:-1;
+                        }
+                        return -1;
+                    },
+                    plugins: [ 'checkbox', 'wholerow', 'sort' ]
                  });
              };
 
@@ -240,7 +272,7 @@ html(lang="en")
                  }).done( function() {
                      show_filetree('remote', "#{fs_root_remote}");
                  }).fail( function() {
-                     appAlert('Authentication failure: #{fs_server_remote}');
+                     appError('Authentication failure: #{fs_server_remote}');
                  });
              });
 
@@ -252,7 +284,7 @@ html(lang="en")
                  }).done( function() {
                      show_filetree('local', "#{fs_root_local}");
                  }).fail( function() {
-                     appAlert('Authentication failure: #{fs_server_local}');
+                     appError('Authentication failure: #{fs_server_local}');
                  });
              });
 
@@ -277,6 +309,7 @@ html(lang="en")
              };
 
              /* general function for composing and sending staging jobs */
+             var jobData = [];
              var send_staging_job = function( action, src, dst ) {
 
                  var loc_src = ( action == 'upload' ) ? 'local (left panel)':'remote (right panel)';
@@ -287,31 +320,29 @@ html(lang="en")
 
                  // check: one of the src/dst is missing
                  if ( typeof src === 'undefined' || src.length == 0 ) {
-                     appAlert('No source: please select ' + loc_src + ' directory/files');
+                     appError('No source: please select ' + loc_src + ' directory/files');
                      return false;
                  }
 
                  if ( typeof dst === 'undefined' || dst.length == 0 ) {
-                     appAlert('No destination: please select ' + loc_dst + ' directory as destination');
+                     appError('No destination: please select ' + loc_dst + ' directory as destination');
                      return false;
                  }
 
                  // check if dst is not single and not a directory
                  if ( dst.length > 1 ) {
-                     appAlert('Only one destination is allowd, you selected ' + dst.length);
+                     appError('Only one destination is allowd, you selected ' + dst.length);
                      return false;
-                 } else if (! dst[0].match('.*(/|\\\\)$') ) {
-                     appAlert('Destination not a directory: ' + dst[0]);
+                 } else if (! isDir(dst[0]) ) {
+                     appError('Destination not a directory: ' + dst[0]);
                      return false;
                  }
-
-                 // TODO: compose a staging job, open a dialog to confirm the submission
 
                  var srcDirs = [];
                  var srcFiles = [];
 
                  src.forEach( function(s) {
-                    if ( s.match('.*(/|\\\\)$') ) {
+                    if ( isDir(s) ) {
                       srcDirs.push(s);
                     } else {
                       srcFiles.push(s);
@@ -352,26 +383,41 @@ html(lang="en")
 
                  // open up the modal and preview the jobs
                  $("#job_confirmation").modal("toggle");
-                 $("#job_preview").html(JSON.stringify(jobData));
-
-                 // submit stager jobs
-                 $("#job_submit").click(function() {
-                     $("#job_confirmation").modal( "hide" );
-                     $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
-                         appAlert('Job submited: ' + JSON.stringify(data));
-                     }).fail( function() {
-                         appAlert('Job submission failed');
+                 $("#job_preview").html( function() {
+                     var html_d = '<table class="table">';
+                     html_d += '<thead><tr>';
+                     html_d += '<th>From (srcURL)</th>';
+                     html_d += '<th>To (dstURL)</th>';
+                     html_d += '</tr></thead>';
+                     html_d += '<tbody>';
+                     jobData.forEach( function(j) {
+                         html_d += '<tr>';
+                         html_d += '<td>' + j.srcURL + '</td>';
+                         html_d += '<td>' + j.dstURL + '</td>';
+                         html_d += '</tr>';
                      });
-                 });
-
-                 // cancel stager jobs
-                 $("#job_cancel").click(function() {
-                     jobData = [];
-                     $("#job_confirmation").modal( "hide" );
+                     html_d += '</tbody></table>';
+                     return html_d;
                  });
 
                  return true;
              };
+
+             // action button: submit stager jobs
+             $("#job_submit").click(function() {
+                 $("#job_confirmation").modal( "hide" );
+                 $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
+                     appInfo('Job submited: ' + JSON.stringify(data));
+                 }).fail( function() {
+                     appError('Job submission failed');
+                 });
+             });
+
+             // action button: cancel stager jobs
+             $("#job_cancel").click(function() {
+                 jobData = [];
+                 $("#job_confirmation").modal( "hide" );
+             });
 
              /* action button: upload */
              $('#button_upload').click(function() {
@@ -417,7 +463,7 @@ html(lang="en")
        );
 
   body
-    include app_error.jade
+    include app_dialog.jade
     #error
       block error
     #tabs
