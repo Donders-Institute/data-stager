@@ -178,6 +178,8 @@ html(lang="en")
              $('.nav-tabs a').on('shown.bs.tab', function(event){
                  if ( $(event.target).text() == 'History' ) {
                         update_job_history_table();
+                        // by-default disable the auto refresh of job history
+                        $('#history-refresh-toggle').bootstrapSwitch('state',false);
                  } else {
                         stopJobTableRefresh();
                  }
@@ -269,7 +271,7 @@ html(lang="en")
                         keep_selected_style: false,
                         tie_selection: false,
                         three_state: false,
-                        cascade: 'up',
+                        cascade: 'undetermined',
                     },
                     sort: function(a, b) {
                         var na = this.get_node(a);
