@@ -3,6 +3,8 @@
     "local": {
         "module": "stager"
     },
+    "website": "https://data.donders.ru.nl",
+    "helpdesk": "helpdesk@fcdonders.ru.nl",
     "filesystem": {
         "displayName": "local file system",
         "rootDir": "/tmp/",

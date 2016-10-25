@@ -44,12 +44,11 @@ var _authenticateUser = function(request, response) {
     }
 }
 
-/* logout user by removing client session */
+/* logout user by removing corresponding session data */
 var _logoutUser = function(request, response) {
-    request.session.destroy( function(err) {
-        console.log(err);
-        response.json({'logout': true});
-    });
+    var sess = request.session;
+    delete sess.user.sftp;
+    response.json({'logout': true});
 }
 
 /* Get directory content for jsTree */

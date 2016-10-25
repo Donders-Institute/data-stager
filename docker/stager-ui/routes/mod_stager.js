@@ -3,6 +3,7 @@ var path = require('path');
 var RestClient = require('node-rest-client').Client;
 var util = require('../lib/utility');
 
+/* Authenticate user agains the Stager service */
 var _authenticateUser = function(request, response) {
     var args = { headers: { "Accept": "application/json" } };
 
@@ -41,14 +42,14 @@ var _authenticateUser = function(request, response) {
     });
 }
 
-// logout user by removing client session
+/* logout user by removing corresponding session data */
 var _logoutUser = function(request, response) {
-    request.session.destroy( function(err) {
-        console.log(err);
-        response.json({'logout': true});
-    });
+    var sess = request.session;
+    delete sess.user.stager;
+    response.json({'logout': true});
 }
 
+/* Get directory content for jsTree */
 var _getDirListJsTree = function(request, response) {
 
   var files = [];
@@ -103,6 +104,7 @@ var _getDirListJsTree = function(request, response) {
     });
 }
 
+/* Get directory content for jqueryFileTree */
 var _getDirList = function(request, response) {
     var sess = request.session;
     var dir = request.body.dir;

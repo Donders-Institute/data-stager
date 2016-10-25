@@ -42,6 +42,10 @@ html(lang="en")
     script.
       $( function() {
 
+             // global variable of local and remote usernames
+             var username_local = '';
+             var username_remote = '';
+
              // job table initialisation
              var jobsData = [];
              var jobTable = $('#job_table').DataTable({
@@ -175,7 +179,7 @@ html(lang="en")
              });
 
              // menu tabs
-             $('.nav-tabs a').on('shown.bs.tab', function(event){
+             $('.navbar-nav a').on('shown.bs.tab', function(event){
                  if ( $(event.target).text() == 'History' ) {
                         update_job_history_table();
                         // by-default disable the auto refresh of job history
@@ -218,12 +222,14 @@ html(lang="en")
                  var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
                  var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
                  var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
+                 var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
 
                  // hide filetree and action buttons
                  ele_filetree.hide();
                  ele_actions.hide();
 
-                 // show login form
+                 // show login form without username on it
+                 ele_username.html('');
                  ele_form.show();
 
                  if ( typeof msg === 'undefined' || msg == '' ) {
@@ -240,6 +246,8 @@ html(lang="en")
                  var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
                  var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
                  var ajax_script = ( loc == 'local' ) ? "#{fs_path_getdir_local}":"#{fs_path_getdir_remote}";
+                 var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
+                 var u = ( loc == 'local' ) ? username_local:username_remote;
 
                  // hide login form
                  ele_form.hide();
@@ -247,6 +255,8 @@ html(lang="en")
                  // show filetree and action buttons
                  ele_actions.show();
                  ele_filetree.show();
+
+                 ele_username.html(u);
 
                  // jsTree
                  ele_filetree.jstree({
@@ -292,9 +302,11 @@ html(lang="en")
              /* remote login action */
              $('#login_form_remote').on( 'submit', function( event ) {
                  event.preventDefault();
+                 var u = $(this).find('input[name="username"]').val();
                  $.post("#{fs_path_login_remote}", $(this).serialize(), function(data) {
                      //console.log(data);
                  }).done( function() {
+                     username_remote = u;
                      show_filetree('remote', "#{fs_root_remote}");
                  }).fail( function() {
                      appError('Authentication failure: #{fs_server_remote}');
@@ -304,9 +316,11 @@ html(lang="en")
              /* local login action */
              $('#login_form_local').on( 'submit', function( event ) {
                  event.preventDefault();
+                 var u = $(this).find('input[name="username"]').val();
                  $.post("#{fs_path_login_local}", $(this).serialize(), function(data) {
                      //console.log(data);
                  }).done( function() {
+                     username_local = u;
                      show_filetree('local', "#{fs_root_local}");
                  }).fail( function() {
                      appError('Authentication failure: #{fs_server_local}');
@@ -480,6 +494,7 @@ html(lang="en")
              $('#button_logout_local').click(function() {
                  $.post("#{fs_path_logout_local}", function(data) {
                      appInfo("#{fs_server_local} user logged out");
+                     username_local = '';
                      show_login_form('local','');
                  }).fail( function() {
                      appError('fail logout #{fs_server_local} user');
@@ -494,6 +509,7 @@ html(lang="en")
              $('#button_logout_remote').click(function() {
                  $.post("#{fs_path_logout_remote}", function(data) {
                      appInfo("#{fs_server_remote} user logged out");
+                     username_remote = '';
                      show_login_form('remote','');
                  }).fail( function() {
                      appError('fail logout #{fs_server_remote} user');
@@ -506,23 +522,29 @@ html(lang="en")
              });
          }
        );
-
+  <!-- HTML body -->
   body
+    <!-- modal panel for application message -->
     include app_dialog.jade
-    #error
-      block error
-    #tabs
-      ul.nav.nav-tabs
-        li.active: a(data-toggle="tab", href="#panel_intro") Home
-        li: a(data-toggle="tab", href="#panel_transfer_request") Request
-        li: a(data-toggle="tab", href="#panel_transfer_history") History
-
-      div.tab-content
-        div.tab-pane.fade.in.active#panel_intro
-          include panel_intro.jade
-
-        div.tab-pane.fade#panel_transfer_request
-          include panel_transfer_request.jade
-
-        div.tab-pane.fade#panel_transfer_history
-          include panel_transfer_history.jade
+    <!-- TODO: improve the system error panel -->
+    block error
+    <!-- navigation bar -->
+    nav.navbar.navbar-inverse
+      div.container-fluid
+        div.navbar-header
+          a.navbar-brand(href='#') File Stager
+        ul.nav.navbar-nav
+          li.active: a(data-toggle="tab", href="#panel_intro"): i.fa.fa-home
+          li: a(data-toggle="tab", href="#panel_transfer_request") Request
+          li: a(data-toggle="tab", href="#panel_transfer_history") History
+        ui.nav.navbar-nav.navbar-right
+          li: a(href="#{website}", target="_blank"): i.fa.fa-globe &nbsp;RDM
+          li: a(href="mailto:#{helpdesk}"): i.fa.fa-envelope &nbsp;Help
+    <!-- tabs -->
+    div.tab-content
+      div.tab-pane.fade.in.active#panel_intro
+        include panel_intro.jade
+      div.tab-pane.fade#panel_transfer_request
+        include panel_transfer_request.jade
+      div.tab-pane.fade#panel_transfer_history
+        include panel_transfer_history.jade

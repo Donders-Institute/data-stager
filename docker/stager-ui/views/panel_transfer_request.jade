@@ -1,23 +1,25 @@
-div.page-header
-  h1= title_request
-
-div.modal.fade#job_confirmation(role='dialog')
-  div.modal-dialog
-    div.modal-content
-      div.modal-head
-          h4.modal-body Transfer requests to be submitted
-      div.modal-body.scroll-able
-        p: span#job_preview
-      div.modal-footer
-        button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
-        button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
-
 div.container-fluid
+    div.page-header
+      h1= title_request
+    <!-- modal panel for job confirmation -->
+    div.modal.fade#job_confirmation(role='dialog')
+      div.modal-dialog
+        div.modal-content
+          div.modal-head
+              h4.modal-body Transfer requests to be submitted
+          div.modal-body.scroll-able
+            p: span#job_preview
+          div.modal-footer
+            button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
+            button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
+    <!-- main panel -->
     div.row#filetrees
+        <!-- local panel -->
         div.col-md-5
             div.panel.panel-default
                 div.panel-heading
                     span: strong #{fs_server_local}
+                <!-- local login form -->
                 div.panel-body#local_login_form
                     form.form-horizontal#login_form_local(method="post",action="#")
                         div.form-group
@@ -32,26 +34,36 @@ div.container-fluid
                             div.col-sm-offset-4.col-sm-8
                                 button.btn.btn-default#login_local(type="submit",name="login")
                                     i.fa.fa-sign-in &nbsp;Login
-                div.panel.panel-body.filetree-panel#filetree_local
-            div.btn-group#action_local
-                button.btn.btn-default#button_refresh_local
-                    i.fa.fa-refresh
-                button.btn.btn-default.disabled#button_config_local
-                    i.fa.fa-gear
-                button.btn.btn-default#button_logout_local
-                    i.fa.fa-sign-out
-
+                <!-- local filesystem treeview panel -->
+                div.panel-body.filetree-panel#filetree_local
+                <!-- local filesystem action panel -->
+                div.panel-footer.clearfix#action_local
+                    div.pull-right.btn-toolbar
+                        div.btn-group
+                            button.btn.btn-default#button_refresh_local
+                                i.fa.fa-refresh
+                            button.btn.btn-default.disabled#button_config_local
+                                i.fa.fa-gear
+                        div.btn-group
+                            button.btn.btn-success#fs_username_local
+                            button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
+                                span.caret
+                            ul.dropdown-menu(role="manu")
+                                li: a#button_logout_local(href="#")
+                                    i.fa.fa-sign-out &nbsp;Logout
+        <!-- transfer action panel -->
         div.col-md-2
             div.list-group
                 a.list-group-item.list-group-item-action#button_upload(href='#')
                     i.fa.fa-arrow-right &nbsp;Upload
                 a.list-group-item.list-group-item-action#button_download(href='#')
                     i.fa.fa-arrow-left &nbsp;Download
-
+        <!-- remote panel -->
         div.col-md-5
             div.panel.panel-default
                 div.panel-heading
-                  span: strong #{fs_server_remote}
+                    span: strong #{fs_server_remote}
+                <!-- remote login form -->
                 div.panel-body#remote_login_form
                     form.form-horizontal#login_form_remote(method="post",action="#")
                         div.form-group
@@ -66,11 +78,20 @@ div.container-fluid
                             div.col-sm-offset-4.col-sm-8
                                 button.btn.btn-default#login_remote(type="submit",name="login")
                                     i.fa.fa-sign-in &nbsp;Login
-                div.panel.panel-body.filetree-panel#filetree_remote
-            div.btn-group#action_remote
-                button.btn.btn-default#button_refresh_remote
-                    i.fa.fa-refresh
-                button.btn.btn-default.disabled#button_config_remote
-                    i.fa.fa-gear
-                button.btn.btn-default#button_logout_remote
-                    i.fa.fa-sign-out
+                <!-- remote filesystem treeview panel -->
+                div.panel-body.filetree-panel#filetree_remote
+                <!-- remote filesystem action panel -->
+                div.panel-footer.clearfix#action_remote
+                    div.pull-right.btn-toolbar
+                        div.btn-group
+                            button.btn.btn-default#button_refresh_remote
+                                i.fa.fa-refresh
+                            button.btn.btn-default.disabled#button_config_remote
+                                i.fa.fa-gear
+                        div.btn-group
+                            button.btn.btn-success#fs_username_remote
+                            button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
+                                span.caret
+                            ul.dropdown-menu(role="manu")
+                                li: a#button_logout_remote(href="#")
+                                    i.fa.fa-sign-out &nbsp;Logout

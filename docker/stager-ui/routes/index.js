@@ -54,6 +54,8 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'DI-RDM file staging service',
                         title_request: 'New request',
                         title_history: 'Request history',
+                        website: config.get('website'),
+                        helpdesk: config.get('helpdesk'),
                         fs_root_local: params_local.root,
                         fs_view_local: params_local.view,
                         fs_server_local: params_local.display_name,
