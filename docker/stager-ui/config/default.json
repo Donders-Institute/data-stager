@@ -13,6 +13,7 @@
         "rootDir": "/project/",
         "hintLogin": "use the DCCN account",
         "pathLogin": "/sftp/login",
+        "pathLogout": "/sftp/logout",
         "pathListDir": "/sftp/dir",
         "exampleLogin": "pethag",
         "host": "mentat999.dccn.nl",
@@ -23,6 +24,7 @@
         "rootDir": "/rdm/di/",
         "hintLogin": "Sing in with the DI-RDM data-access account",
         "pathLogin": "/rdm/login",
+        "pathLogout": "/rdm/logout",
         "pathListDir": "/rdm/dir",
         "exampleLogin": "U123456-ru.nl",
         "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest"
@@ -32,6 +34,7 @@
         "rootDir": "/project/",
         "hintLogin": "Sing in with the DCCN account appended with @dccn.nl",
         "pathLogin": "/stager/login",
+        "pathLogout": "/stager/logout",
         "pathListDir": "/stager/dir",
         "exampleLogin": "pethag@dccn.nl",
         "restfulEndpoint": "http://localhost:3000"

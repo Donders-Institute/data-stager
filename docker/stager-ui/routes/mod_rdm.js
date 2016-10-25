@@ -44,6 +44,14 @@ var _authenticateUser = function(request, response) {
     });
 }
 
+/* logout user by removing client session */
+var _logoutUser = function(request, response) {
+    request.session.destroy( function(err) {
+        console.log(err);
+        response.json({'logout': true});
+    });
+}
+
 /* Get directory content for jsTree */
 var _getDirListJsTree = function(request, response) {
 
@@ -146,5 +154,6 @@ var _getDirList = function(request, response) {
 }
 
 module.exports.authenticateUser = _authenticateUser;
+module.exports.logoutUser = _logoutUser;
 module.exports.getDirList = _getDirList;
 module.exports.getDirListJsTree = _getDirListJsTree;

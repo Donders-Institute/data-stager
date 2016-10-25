@@ -27,6 +27,7 @@ var _getModParams = function(req, mod) {
       }
 
       path_login = config.get(mod + '.pathLogin');
+      path_logout = config.get(mod + '.pathLogout');
   }
   var path_getdir = config.get(mod + '.pathListDir');
   var display_name = config.get(mod + '.displayName');
@@ -35,6 +36,7 @@ var _getModParams = function(req, mod) {
            root: root,
            hint_login: hint_login,
            path_login: path_login,
+           path_logout: path_logout,
            example_login: example_login,
            path_getdir: path_getdir,
            display_name: display_name }
@@ -57,6 +59,7 @@ router.get('/', function(req, res, next) {
                         fs_server_local: params_local.display_name,
                         fs_hint_login_local: params_local.hint_login,
                         fs_path_login_local: params_local.path_login,
+                        fs_path_logout_local: params_local.path_logout,
                         fs_example_login_local: params_local.example_login,
                         fs_path_getdir_local: params_local.path_getdir,
                         fs_root_remote: params_remote.root,
@@ -64,6 +67,7 @@ router.get('/', function(req, res, next) {
                         fs_server_remote: params_remote.display_name,
                         fs_hint_login_remote: params_remote.hint_login,
                         fs_path_login_remote: params_remote.path_login,
+                        fs_path_logout_remote: params_remote.path_logout,
                         fs_example_login_remote: params_remote.example_login,
                         fs_path_getdir_remote: params_remote.path_getdir
                        });

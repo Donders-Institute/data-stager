@@ -51,14 +51,17 @@ app.post('/fs/dir', mod_fs.getDirList);
 app.get('/fs/dir', mod_fs.getDirListJsTree)
 
 app.post('/rdm/login', mod_rdm.authenticateUser);
+app.post('/rdm/logout', mod_rdm.logoutUser);
 app.post('/rdm/dir', mod_rdm.getDirList);
 app.get('/rdm/dir', mod_rdm.getDirListJsTree);
 
 app.post('/sftp/login', mod_sftp.authenticateUser);
+app.post('/sftp/logout', mod_sftp.logoutUser);
 app.post('/sftp/dir', mod_sftp.getDirList);
 app.get('/sftp/dir', mod_sftp.getDirListJsTree);
 
 app.post('/stager/login', mod_stager.authenticateUser);
+app.post('/stager/logout', mod_stager.logoutUser);
 app.post('/stager/dir', mod_stager.getDirList);
 app.get('/stager/dir', mod_stager.getDirListJsTree);
 

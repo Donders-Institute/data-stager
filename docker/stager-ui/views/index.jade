@@ -477,9 +477,27 @@ html(lang="en")
                  $("#filetree_local").jstree(true).refresh();
              });
 
+             $('#button_logout_local').click(function() {
+                 $.post("#{fs_path_logout_local}", function(data) {
+                     appInfo("#{fs_server_local} user logged out");
+                     show_login_form('local','');
+                 }).fail( function() {
+                     appError('fail logout #{fs_server_local} user');
+                 });
+             });
+
              /* action buttons: remote */
              $('#button_refresh_remote').click(function() {
                  $("#filetree_remote").jstree(true).refresh();
+             });
+
+             $('#button_logout_remote').click(function() {
+                 $.post("#{fs_path_logout_remote}", function(data) {
+                     appInfo("#{fs_server_remote} user logged out");
+                     show_login_form('remote','');
+                 }).fail( function() {
+                     appError('fail logout #{fs_server_remote} user');
+                 });
              });
 
              /* action manual history refresh */
