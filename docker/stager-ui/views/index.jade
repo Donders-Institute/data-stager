@@ -36,15 +36,14 @@ html(lang="en")
     script(src='/javascripts/jqueryDataTable/ellipsis.js')
     script(src='/javascripts/jqueryDataTable/percentageBars.js')
 
+    // js cookie
+    script(src='/javascripts/js.cookie.js')
+
     // application specific
     link(rel='stylesheet', href='/stylesheets/style.css')
     script(src='/javascripts/utility.js')
     script.
       $( function() {
-
-             // global variable of local and remote usernames
-             var username_local = '';
-             var username_remote = '';
 
              // job table initialisation
              var jobsData = [];
@@ -248,56 +247,61 @@ html(lang="en")
                  var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
                  var ajax_script = ( loc == 'local' ) ? "#{fs_path_getdir_local}":"#{fs_path_getdir_remote}";
                  var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
-                 var u = ( loc == 'local' ) ? username_local:username_remote;
+                 var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
 
-                 // hide login form
-                 ele_form.hide();
+                 if ( typeof(u) === 'undefined' ) {
+                     show_login_form(loc, '');
+                 } else {
 
-                 // show filetree and action buttons
-                 ele_actions.show();
-                 ele_filetree.show();
+                    // hide login form
+                    ele_form.hide();
 
-                 ele_username.html(u);
+                    // show filetree and action buttons
+                    ele_actions.show();
+                    ele_filetree.show();
 
-                 // jsTree
-                 ele_filetree.jstree({
-                    core: {
-                        animation: 0,
-                        error: function(err) {
-                            appError(err.reason + ": " + err.data);
-                        },
-                        data: {
-                            url: ajax_script,
-                            data: function(node) {
-                                return { 'dir': ( node.id == '#') ? root: node.id,
-                                         'isRoot': (node.id == '#') }
-                            }
-                        },
-                        themes: {
-                            name: 'proton',
-                            responsive: true
-                        }
-                    },
-                    checkbox: {
-                        keep_selected_style: false,
-                        tie_selection: false,
-                        three_state: false,
-                        cascade: 'undetermined',
-                    },
-                    sort: function(a, b) {
-                        var na = this.get_node(a);
-                        var nb = this.get_node(b);
+                    ele_username.html(u);
 
-                        // sorting by type and file/directory name
-                        if ( isDir(na.id) == isDir(nb.id) ) {
-                            return ( na.id > nb.id ) ? 1:-1;
-                        } else {
-                            return isDir(na.id) ? 1:-1;
-                        }
-                        return -1;
-                    },
-                    plugins: [ 'checkbox', 'wholerow', 'sort' ]
-                 });
+                    // jsTree
+                    ele_filetree.jstree({
+                       core: {
+                           animation: 0,
+                           error: function(err) {
+                               appError(err.reason + ": " + err.data);
+                           },
+                           data: {
+                               url: ajax_script,
+                               data: function(node) {
+                                   return { 'dir': ( node.id == '#') ? root: node.id,
+                                            'isRoot': (node.id == '#') }
+                               }
+                           },
+                           themes: {
+                               name: 'proton',
+                               responsive: true
+                           }
+                       },
+                       checkbox: {
+                           keep_selected_style: false,
+                           tie_selection: false,
+                           three_state: false,
+                           cascade: 'undetermined',
+                       },
+                       sort: function(a, b) {
+                           var na = this.get_node(a);
+                           var nb = this.get_node(b);
+
+                           // sorting by type and file/directory name
+                           if ( isDir(na.id) == isDir(nb.id) ) {
+                               return ( na.id > nb.id ) ? 1:-1;
+                           } else {
+                               return isDir(na.id) ? 1:-1;
+                           }
+                           return -1;
+                       },
+                       plugins: [ 'checkbox', 'wholerow', 'sort' ]
+                    });
+                 }
              };
 
              /* remote login action */
@@ -307,7 +311,7 @@ html(lang="en")
                  $.post("#{fs_path_login_remote}", $(this).serialize(), function(data) {
                      //console.log(data);
                  }).done( function() {
-                     username_remote = u;
+                     Cookies.set('username_remote', u);
                      show_filetree('remote', "#{fs_root_remote}");
                  }).fail( function() {
                      appError('Authentication failure: #{fs_server_remote}');
@@ -321,7 +325,7 @@ html(lang="en")
                  $.post("#{fs_path_login_local}", $(this).serialize(), function(data) {
                      //console.log(data);
                  }).done( function() {
-                     username_local = u;
+                     Cookies.set('username_local', u);
                      show_filetree('local', "#{fs_root_local}");
                  }).fail( function() {
                      appError('Authentication failure: #{fs_server_local}');
@@ -495,7 +499,7 @@ html(lang="en")
              $('#button_logout_local').click(function() {
                  $.post("#{fs_path_logout_local}", function(data) {
                      appInfo("#{fs_server_local} user logged out");
-                     username_local = '';
+                     Cookies.remove('username_local');
                      show_login_form('local','');
                  }).fail( function() {
                      appError('fail logout #{fs_server_local} user');
@@ -510,7 +514,7 @@ html(lang="en")
              $('#button_logout_remote').click(function() {
                  $.post("#{fs_path_logout_remote}", function(data) {
                      appInfo("#{fs_server_remote} user logged out");
-                     username_remote = '';
+                     Cookies.remove('username_remote');
                      show_login_form('remote','');
                  }).fail( function() {
                      appError('fail logout #{fs_server_remote} user');
