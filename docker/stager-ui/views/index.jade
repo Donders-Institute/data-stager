@@ -230,6 +230,7 @@ html(lang="en")
 
                  // show login form without username on it
                  ele_username.html('');
+                 ele_form.find('input[name="password"]').val('')
                  ele_form.show();
 
                  if ( typeof msg === 'undefined' || msg == '' ) {

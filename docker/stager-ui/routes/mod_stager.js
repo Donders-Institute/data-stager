@@ -46,6 +46,7 @@ var _authenticateUser = function(request, response) {
 var _logoutUser = function(request, response) {
     var sess = request.session;
     delete sess.user.stager;
+    delete sess.pass.stager;
     response.json({'logout': true});
 }
 

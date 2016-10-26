@@ -48,6 +48,7 @@ var _authenticateUser = function(request, response) {
 var _logoutUser = function(request, response) {
     var sess = request.session;
     delete sess.user.rdm;
+    delete sess.pass.rdm;
     response.json({'logout': true});
 }
 
