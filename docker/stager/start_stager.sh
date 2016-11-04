@@ -19,10 +19,12 @@ function get_script_dir() {
     echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 
+# load environment variables
+cwd=$( get_script_dir $0 )
+source ${cwd}/envvars
 export PATH=$PYTHON_BINDIR:$PATH
 
 # generate necessary configuration files for interfacing RDM services
-cwd=$( get_script_dir $0 )
 ${cwd}/config_stager.py --rdm_config ${cwd}/config/config.ini --irods_environment ${IRODS_ENVIRONMENT_FILE} 
 
 if [ $? -ne 0 ]; then

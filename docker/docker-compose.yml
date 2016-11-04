@@ -15,7 +15,7 @@ services:
     image: stager
     network_mode: "host"
     volumes:
-      - ./stager/config:/opt/stager/config
+      - /data/stager/config:/opt/stager/config
       - /data/stager/log:/opt/stager/log
       - ./stager/cron:/cron
       - /home:/home:ro
