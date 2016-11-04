@@ -9,13 +9,13 @@
     "StagerLocal": {
         "sftp" : {
             "root": "/project/",
-            "host": "mentat999.dccn.nl",
+            "host": "sftp.dccn.nl",
             "port": "22"
         }
     },
     "RDM": {
         "userName": "irods",
-        "userPass": "340950",
+        "userPass": "xxxxxx",
         "icatHost": "icat.data.donders.ru.nl",
         "icatPort": 1247,
         "restEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
