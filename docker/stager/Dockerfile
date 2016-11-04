@@ -26,9 +26,8 @@ RUN ( tar xvf pycurl-7.43.0.tar.gz \
       && /opt/python/bin/python setup.py --with-nss install && rm -rf pycurl-* )
 
 # install nodejs
-ARG nodejs_prefix=/opt/nodejs
 ADD https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz /tmp
-RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 $nodejs_prefix )
+RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 /opt/nodejs )
 
 # install expect so that we get unbuffer to get irsync progress, progressively 
 RUN ( yum -y install expect )
@@ -36,23 +35,8 @@ RUN ( yum -y install expect )
 # install stager scripts and required nodejs modules
 RUN ( mkdir -p /opt/stager/bin )
 WORKDIR /opt/stager
-RUN ( $nodejs_prefix/bin/npm install express )
-RUN ( $nodejs_prefix/bin/npm install redis )
-RUN ( $nodejs_prefix/bin/npm install kue )
-RUN ( $nodejs_prefix/bin/npm install config )
-RUN ( $nodejs_prefix/bin/npm install tree-kill )
-#RUN ( $nodejs_prefix/bin/npm install basic-auth-connect )
-RUN ( $nodejs_prefix/bin/npm install basic-auth )
-RUN ( $nodejs_prefix/bin/npm install underscore )
-RUN ( $nodejs_prefix/bin/npm install async )
-RUN ( $nodejs_prefix/bin/npm install ldapjs )
-RUN ( $nodejs_prefix/bin/npm install bunyan )
-RUN ( $nodejs_prefix/bin/npm install activedirectory )
-RUN ( $nodejs_prefix/bin/npm install ssh2 )
-RUN ( $nodejs_prefix/bin/npm install node-rest-client )
-RUN ( $nodejs_prefix/bin/npm install body-parser )
-RUN ( $nodejs_prefix/bin/npm install posix )
 COPY package.json package.json
+RUN ( /opt/nodejs/bin/npm install )
 COPY *.js ./
 COPY bin ./bin
 COPY lib ./lib
@@ -62,10 +46,30 @@ COPY config_stager.py config_stager.py
 RUN ( chmod +x start_stager.sh )
 RUN ( chmod +x config_stager.py )
 
-# run a stager
-ENV PYTHON_BINDIR /opt/python/bin
-ENV PYTHON_LIBDIR /opt/stager/lib/python
-ENV NODEJS_PREFIX $nodejs_prefix
-VOLUME [ "/project", "/opt/stager/config/default.json" ]
+# install python pip
+RUN ( wget https://bootstrap.pypa.io/get-pip.py && \
+      /opt/python/bin/python get-pip.py )
+
+# install devcron
+RUN ( yum -y install mercurial )
+RUN ( /opt/python/bin/pip install -e hg+https://bitbucket.org/dbenamy/devcron#egg=devcron )
+
+# install Cheetah template engine
+RUN ( wget https://pypi.python.org/packages/cd/b0/c2d700252fc251e91c08639ff41a8a5203b627f4e0a2ae18a6b662ab32ea/Cheetah-2.4.4.tar.gz#md5=853917116e731afbc8c8a43c37e6ddba && tar xvzf Cheetah-2.4.4.tar.gz && \
+      cd Cheetah-2.4.4 && /opt/python/bin/python setup.py install )
+
+# install supervisor
+RUN ( yum -y install epel-release )
+RUN ( yum -y install supervisor )
+COPY supervisord.conf /opt/stager/supervisord.conf
+
+# run a stager and devcron from supervisor
+VOLUME [ "/project", "/cron", "/opt/stager/config", "/opt/stager/log" ]
 EXPOSE 3000
-CMD [ "/opt/stager/start_stager.sh" ]
+
+RUN ( echo "export PYTHON_BINDIR=/opt/python/bin" > /opt/stager/envvars && \
+      echo "export PYTHON_LIBDIR=/opt/stager/lib/python" >> /opt/stager/envvars && \
+      echo "export NODEJS_PREFIX=/opt/nodejs" >> /opt/stager/envvars )
+
+CMD [ "/usr/bin/supervisord", "-c", "/opt/stager/supervisord.conf" ]
+#CMD [ "/opt/stager/start_stager.sh" ]

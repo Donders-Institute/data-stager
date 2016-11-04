@@ -1,0 +1,1 @@
+0 0 * * * /cron/renew_irods_token.sh

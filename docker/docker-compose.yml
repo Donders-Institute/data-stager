@@ -15,7 +15,9 @@ services:
     image: stager
     network_mode: "host"
     volumes:
-      - ./stager/config/default.json:/opt/stager/config/default.json
+      - ./stager/config:/opt/stager/config
+      - /data/stager/log:/opt/stager/log
+      - ./stager/cron:/cron
       - /home:/home:ro
       - /project:/project
       - /var/lib/sss/pipes:/var/lib/sss/pipes
@@ -28,6 +30,6 @@ services:
     image: stager-ui
     network_mode: "host"
     volumes:
-      - ./stager-ui/config/default.json:/opt/stager-ui/config/default.json
+      - ./stager-ui/config:/opt/stager-ui/config
     depends_on:
       - stager

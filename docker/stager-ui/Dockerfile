@@ -27,6 +27,6 @@ RUN ( $nodejs_prefix/bin/npm install )
 
 # run a stager-ui
 ENV NODEJS_PREFIX $nodejs_prefix
-VOLUME [ "/opt/stager-ui/config/default.json" ]
+VOLUME [ "/opt/stager-ui/config" ]
 EXPOSE 80
 CMD [ "/opt/stager-ui/start_stager-ui.sh" ]
