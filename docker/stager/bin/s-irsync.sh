@@ -40,12 +40,14 @@ mydir=$( get_script_dir $0 )
 #rdm_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
 
 rdm_user=$3
-rdm_pass=$4
 
-export IRODS_AUTHENTICATION_FILE=/tmp/.irodsA.$$
+#rdm_pass=$4
+#export IRODS_AUTHENTICATION_FILE=/tmp/.irodsA.$$
+#export IRODS_USER_NAME=$rdm_user
+#echo $rdm_pass | iinit > /dev/null 2>&1
+
+export IRODS_AUTHENTICATION_FILE=$4
 export IRODS_USER_NAME=$rdm_user
-
-echo $rdm_pass | iinit > /dev/null 2>&1
 
 src=$( echo $1 | sed 's/irods:/i:/g' )
 dst=$( echo $2 | sed 's/irods:/i:/g' )

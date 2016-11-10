@@ -1,11 +1,13 @@
 version: "2"
 services:
   redis:
+    build:
+      context: ./redis
     image: redis
-    command: redis-server --appendonly yes
+    user: root
     network_mode: "host"
     volumes:
-      - /scratch/data_stager:/data
+      - /data/stager/db:/data
   irodsclient:
     build:
       context: ./irodsclient
