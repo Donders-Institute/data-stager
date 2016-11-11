@@ -26,7 +26,9 @@ var _getDirList = function(request, response) {
             var ff = dir + f;
 
             // only list those readable
-            if ( fs.accessSync(ff, fs.R_OK | fs.X_OK ) ) {
+            try {
+                fs.accessSync(ff, fs.R_OK | fs.X_OK );
+
                 var stats = fs.lstatSync(ff);
 
                 switch ( true ) {
@@ -42,10 +44,13 @@ var _getDirList = function(request, response) {
                         f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
                         break;
                 }
+            } catch(e) {
+                console.error('Cannot access file: ' + ff);
+                console.error(e);
             }
         });
     } catch(e) {
-        console.error('Could not load directory: ' + dir);
+        console.error('Cannot load directory: ' + dir);
         console.error(e);
     }
     // regain original privilege
