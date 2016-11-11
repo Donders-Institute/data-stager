@@ -35,7 +35,7 @@ var _getDirList = function(request, response) {
                         break;
 
                     case stats.isSymbolicLink():
-                        console.log( f_data.readlinkSync(ff) );
+                        console.log( fs.readlinkSync(ff) );
                         break;
 
                     default:
