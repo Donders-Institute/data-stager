@@ -8,7 +8,6 @@
     },
     "StagerLocal": {
         "sftp" : {
-            "root": "/project/",
             "host": "sftp.dccn.nl",
             "port": "22"
         }
