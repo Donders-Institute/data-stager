@@ -280,7 +280,7 @@ var run_stager_ui = function() {
   $('#login_form_local').on( 'submit', function( event ) {
       event.preventDefault();
       var u = $(this).find('input[name="username"]').val();
-      $.post(l_fs_path_login_local, $(this).serialize(), function(data) {
+      $.post(l_fs_path_login, $(this).serialize(), function(data) {
           //console.log(data);
       }).done( function() {
           Cookies.set('username_local', u);
