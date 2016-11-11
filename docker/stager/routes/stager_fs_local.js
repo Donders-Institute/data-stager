@@ -27,27 +27,27 @@ var _getDirList = function(request, response) {
 
             // only list those readable
             try {
-                fs.accessSync(ff, fs.R_OK | fs.X_OK );
+                fs.accessSync(ff, fs.R_OK);
 
-                var lstats = fs.lstatSync(ff);
+                var lstat = fs.lstatSync(ff);
 
                 switch ( true ) {
-                    case lstats.isDirectory():
+                    case lstat.isDirectory():
                         f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
                         break;
 
-                    case lstats.isSymbolicLink():
+                    case lstat.isSymbolicLink():
                         // resolve symbolic link to the physical location
-                        var stats = fs.statSync(fs.realpathSync(ff));
-                        if ( stats.isDirectory() ) {
+                        var stat = fs.statSync(fs.realpathSync(ff));
+                        if ( stat.isDirectory() ) {
                             f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
                         } else {
-                            f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
+                            f_data.push( { 'name': f, 'type': 'f', 'size': stat.size } );
                         }
                         break;
 
                     default:
-                        f_data.push( { 'name': f, 'type': 'f', 'size': lstats.size } );
+                        f_data.push( { 'name': f, 'type': 'f', 'size': lstat.size } );
                         break;
                 }
             } catch(e) {
