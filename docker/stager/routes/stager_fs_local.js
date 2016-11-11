@@ -29,19 +29,25 @@ var _getDirList = function(request, response) {
             try {
                 fs.accessSync(ff, fs.R_OK | fs.X_OK );
 
-                var stats = fs.lstatSync(ff);
+                var lstats = fs.lstatSync(ff);
 
                 switch ( true ) {
-                    case stats.isDirectory():
+                    case lstats.isDirectory():
                         f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
                         break;
 
-                    case stats.isSymbolicLink():
-                        console.log( fs.readlinkSync(ff) );
+                    case lstats.isSymbolicLink():
+                        // resolve symbolic link to the physical location
+                        var stats = fs.statSync(fs.realpathSync(ff));
+                        if ( stats.isDirectory() ) {
+                            f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
+                        } else {
+                            f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
+                        }
                         break;
 
                     default:
-                        f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
+                        f_data.push( { 'name': f, 'type': 'f', 'size': lstats.size } );
                         break;
                 }
             } catch(e) {
