@@ -1,6 +1,6 @@
 var config = require('config');
 var kue = require('kue');
-var cluster = require('cluster'); 
+var cluster = require('cluster');
 var kill = require('tree-kill');
 var bodyParser = require('body-parser');
 var posix = require('posix');
@@ -19,11 +19,11 @@ var active_pids = {};
 const stager_bindir = __dirname + path.sep + 'bin';
 
 queue.on( 'error', function(err) {
-    if ( cluster.isMaster) { 
+    if ( cluster.isMaster) {
         console.error('Oops... ', err);
     }
 }).on( 'job enqueue', function(id, type) {
-    if ( cluster.isMaster) { 
+    if ( cluster.isMaster) {
         console.log('[' + new Date().toISOString() + '] job %d enqueued for %s', id, type);
     }
 }).on( 'job complete', function(id, result) {
@@ -32,7 +32,7 @@ queue.on( 'error', function(err) {
     }
 }).on( 'job failed attempt', function(id, err, nattempts) {
     if ( cluster.isMaster) {
-        console.log('[' + new Date().toISOString() + '] job %d failed, attempt %d', id, nattempts); 
+        console.log('[' + new Date().toISOString() + '] job %d failed, attempt %d', id, nattempts);
     }
 }).on( 'job failed' , function(id, err) {
     if ( cluster.isMaster) {
@@ -53,33 +53,31 @@ queue.on( 'error', function(err) {
 // Master process of the cluster
 if (cluster.isMaster) {
 
-    // set up express app 
+    // set up express app
     var express = require('express');
     var app = express();
 
-    // basicAuth 
-    var auth = require('./routes/auth'); 
+    // basicAuth
+    var auth = require('./routes/auth');
     app.use(auth.basicAuthAD);
 
-    // bodyParser so that FORM data become available in req.body 
+    // bodyParser so that FORM data become available in req.body
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
     // start service for RESTful APIs
     app.use(kue.app);
 
-    // expose stager's local filesystem 
-    var stager_fstree = require('./routes/stager_fstree_sftp'); 
-    app.post('/fstree/stager', stager_fstree.getDirList);
+    // expose stager's local filesystem via SFTP
+    //var stager_fs = require('./routes/stager_fs_sftp');
+    // expose stager's local filesystem via FS & setuid
+    var stager_fs = require('./routes/stager_fs_local');
+    app.post('/fslogin/stager', stager_fs.authenticateUser);
+    app.post('/fstree/stager', stager_fs.getDirList);
 
-    //var rdm_fstree = require('./routes/rdm_fstree_restful');
-    //app.post('/fstree/rdm', rdm_fstree.getDirList);
-
-    var stager_fslogin = require('./routes/stager_fslogin_sftp');
-    app.post('/fslogin/stager', stager_fslogin.authenticateUser);
-
-    //var rdm_fslogin = require('./routes/rdm_fslogin_restful');
-    //app.post('/fslogin/rdm', rdm_fslogin.authenticateUser);
+    //var rdm_fs = require('./routes/rdm_fs_restful');
+    //app.post('/fslogin/rdm', rdm_fs.authenticateUser);
+    //app.post('/fstree/rdm', rdm_fs.getDirList);
 
     app.listen(3000);
 
@@ -183,11 +181,11 @@ if ( cluster.worker ) {
     queue.process("rdm", function(job, done) {
 
         var domain = require('domain').create();
- 
+
         domain.on('error', function(err) {
             done(err);
         });
- 
+
         domain.run( function() {
             if ( job.data.srcURL === undefined || job.data.dstURL === undefined ) {
                 console.log('[' + new Date().toISOString() + '] job %d ignored: invalid arguments', job.id);
@@ -213,18 +211,18 @@ if ( cluster.worker ) {
                         } else {
                             cmd += 's-duck.sh';
                         }
-                   
+
                         var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser, irodsA ];
                         var cmd_opts = {
                             maxBuffer: 10*1024*1024
                         };
-                   
+
                         if ( typeof job.data.stagerUser !== "undefined" ) {
                             proc_user = posix.getpwnam(job.data.stagerUser.split('@')[0]);
                             cmd_opts.uid = proc_user.uid;
                             cmd_opts.gid = proc_user.gid;
                         }
-                   
+
                         var job_timeout_err;
                         var job_stopped = false;
                         var sec_noprogress = 0;
@@ -235,33 +233,33 @@ if ( cluster.worker ) {
                             if (err) { throw new Error(stderr); }
                             done(null, stdout);
                         });
-                   
+
                         // inform master the job has been started
                         process.send({'type':'START', 'jid': job.id, 'pid': child.pid});
-                   
+
                         // define callback when data piped to child.stdout
                         child.stdout.on('data', function(data) {
                             // use the child process's output to update job's progress
                             job.progress(parseInt(data.trim()), 100);
-                            // reset noprogress time counter 
+                            // reset noprogress time counter
                             sec_noprogress = 0;
                         });
-                   
+
                         child.stdout.on('error', function(err) {
                             console.log("error on stdout");
                         });
-                   
+
                         child.stderr.on('error', function(err) {
                             console.log("error on stderr");
                         });
-                   
+
                         // define callback when child process exits
                         child.on( "exit", function(code, signal) {
                             // set interal flag indicating the job has been stopped
                             job_stopped = true;
                             // inform master the job has been stopped
                             process.send({'type':'STOP', 'jid': job.id});
-                            // interruption handling (null if process is not interrupted) 
+                            // interruption handling (null if process is not interrupted)
                             if ( signal != null ) {
                                 if ( job_timeout_err === undefined ) {
                                     throw new Error('job terminated by ' + signal);
@@ -270,30 +268,30 @@ if ( cluster.worker ) {
                                 }
                             }
                         });
-                   
-                        // determine job timeout 
+
+                        // determine job timeout
                         var timeout;
                         if ( job.data.timeout === undefined || job.data.timeout <= 0 ) {
                             // no timeout
-                            timeout = Number.MAX_SAFE_INTEGER;  
+                            timeout = Number.MAX_SAFE_INTEGER;
                         } else {
                             timeout = job.data.timeout;
                         }
-                   
+
                         var timeout_noprogress;
                         if ( job.data.timeout_noprogress === undefined || job.data.timeout_noprogress <= 0 ) {
                             // no timeout
-                            timeout_noprogress = 3600;  
+                            timeout_noprogress = 3600;
                         } else {
                             timeout_noprogress = job.data.timeout_noprogress;
                         }
-                   
+
                         // initiate a monitor loop (timer) for heartbeat check on job status/progress
                         var t_beg = new Date().getTime() / 1000;
                         var timer = setInterval( function() {
                             if ( ! job_stopped ) {
                                 if ( sec_noprogress > timeout_noprogress ) {
-                                    // job does not have any progress within an expected duration 
+                                    // job does not have any progress within an expected duration
                                     child.stdin.pause();
                                     kill(child.pid, 'SIGKILL', function(err) {
                                         job_timeout_err = 'no progress for ' + timeout_noprogress + 's';
@@ -307,11 +305,11 @@ if ( cluster.worker ) {
                                         console.log( '[' + new Date().toISOString() + '] job ' + job.id + ' killed due to timout (> ' + timeout + 's)');
                                     });
                                 } else {
-                                    // job doesn't reach any timeout, continue with nopgress time counter increased by 1 second 
+                                    // job doesn't reach any timeout, continue with nopgress time counter increased by 1 second
                                     sec_noprogress += 1;
                                 }
                             } else {
-                                // stop the timer if job is stopped 
+                                // stop the timer if job is stopped
                                 clearInterval(timer);
                             }
                         }, 1000 );
