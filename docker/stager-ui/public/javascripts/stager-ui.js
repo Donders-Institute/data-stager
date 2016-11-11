@@ -1,7 +1,7 @@
 /*
   The main function of stager-ui
 */
-var run_stager_ui = function() {
+var run_stager_ui = function(params) {
 
   // job table initialisation
   var jobsData = [];
@@ -203,7 +203,7 @@ var run_stager_ui = function() {
       var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
       var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
       var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
-      var ajax_script = ( loc == 'local' ) ? l_fs_path_getdir:r_fs_path_getdir;
+      var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
       var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
       var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
 
@@ -266,13 +266,13 @@ var run_stager_ui = function() {
   $('#login_form_remote').on( 'submit', function( event ) {
       event.preventDefault();
       var u = $(this).find('input[name="username"]').val();
-      $.post(r_fs_path_login, $(this).serialize(), function(data) {
+      $.post(params.r_fs_path_login, $(this).serialize(), function(data) {
           //console.log(data);
       }).done( function() {
           Cookies.set('username_remote', u);
-          show_filetree('remote', r_fs_root);
+          show_filetree('remote', params.r_fs_root);
       }).fail( function() {
-          appError('Authentication failure: ' + r_fs_server);
+          appError('Authentication failure: ' + params.r_fs_server);
       });
   });
 
@@ -280,28 +280,28 @@ var run_stager_ui = function() {
   $('#login_form_local').on( 'submit', function( event ) {
       event.preventDefault();
       var u = $(this).find('input[name="username"]').val();
-      $.post(l_fs_path_login, $(this).serialize(), function(data) {
+      $.post(params.l_fs_path_login, $(this).serialize(), function(data) {
           //console.log(data);
       }).done( function() {
           Cookies.set('username_local', u);
-          show_filetree('local', l_fs_root);
+          show_filetree('local', params.l_fs_root);
       }).fail( function() {
-          appError('Authentication failure: ' + l_fs_server);
+          appError('Authentication failure: ' + params.l_fs_server);
       });
   });
 
   /* local filetree or login initialisation */
-  if ( l_fs_view == "login" ) {
+  if ( params.l_fs_view == "login" ) {
       show_login_form('local','');
   } else {
-      show_filetree('local', l_fs_root);
+      show_filetree('local', params.l_fs_root);
   }
 
   /* remote filetree or login initialisation */
-  if ( r_fs_view == "login" ) {
+  if ( params.r_fs_view == "login" ) {
       show_login_form('remote','');
   } else {
-      show_filetree('remote', r_fs_root);
+      show_filetree('remote', params.r_fs_root);
   }
 
   /* general function for getting checked file/directory items */
@@ -455,12 +455,12 @@ var run_stager_ui = function() {
   });
 
   $('#button_logout_local').click(function() {
-      $.post(l_fs_path_logout, function(data) {
-          appInfo(l_fs_server + " user logged out");
+      $.post(params.l_fs_path_logout, function(data) {
+          appInfo(params.l_fs_server + " user logged out");
           Cookies.remove('username_local');
           show_login_form('local','');
       }).fail( function() {
-          appError('fail logout ' + l_fs_server + ' user');
+          appError('fail logout ' + params.l_fs_server + ' user');
       });
   });
 
@@ -470,12 +470,12 @@ var run_stager_ui = function() {
   });
 
   $('#button_logout_remote').click(function() {
-      $.post(r_fs_path_logout, function(data) {
-          appInfo(r_fs_server + " user logged out");
+      $.post(params.r_fs_path_logout, function(data) {
+          appInfo(params.r_fs_server + " user logged out");
           Cookies.remove('username_remote');
           show_login_form('remote','');
       }).fail( function() {
-          appError('fail logout ' + r_fs_server + ' user');
+          appError('fail logout ' + params.r_fs_server + ' user');
       });
   });
 

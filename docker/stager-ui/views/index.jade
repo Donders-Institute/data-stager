@@ -47,22 +47,23 @@ html(lang="en")
       $( function() {
 
              // variables for running stager ui
-             var l_fs_path_getdir = "#{fs_path_getdir_local}";
-             var l_fs_path_login = "#{fs_path_login_local}";
-             var l_fs_path_logout = "#{fs_path_logout_local}";
-             var l_fs_root = "#{fs_root_local}";
-             var l_fs_server = "#{fs_server_local}";
-             var l_fs_view = "#{fs_view_local}";
+             var params = {};
+             params.l_fs_path_getdir = "#{fs_path_getdir_local}";
+             params.l_fs_path_login = "#{fs_path_login_local}";
+             params.l_fs_path_logout = "#{fs_path_logout_local}";
+             params.l_fs_root = "#{fs_root_local}";
+             params.l_fs_server = "#{fs_server_local}";
+             params.l_fs_view = "#{fs_view_local}";
 
-             var r_fs_path_getdir = "#{fs_path_getdir_remote}";
-             var r_fs_path_login = "#{fs_path_login_remote}";
-             var r_fs_path_logout = "#{fs_path_logout_remote}";
-             var r_fs_root = "#{fs_root_remote}";
-             var r_fs_server = "#{fs_server_remote}";
-             var r_fs_view = "#{fs_view_remote}";
+             params.r_fs_path_getdir = "#{fs_path_getdir_remote}";
+             params.r_fs_path_login = "#{fs_path_login_remote}";
+             params.r_fs_path_logout = "#{fs_path_logout_remote}";
+             params.r_fs_root = "#{fs_root_remote}";
+             params.r_fs_server = "#{fs_server_remote}";
+             params.r_fs_view = "#{fs_view_remote}";
 
              // start the stager ui
-             run_stager_ui();
+             run_stager_ui(params);
        });
   <!-- HTML body -->
   body
