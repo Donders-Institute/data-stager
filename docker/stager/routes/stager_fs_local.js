@@ -26,7 +26,7 @@ var _getDirList = function(request, response) {
             var ff = dir + f;
 
             // only list those readable
-            if ( fs.accessSync(ff, fs.constants.R_OK) ) {
+            if ( fs.accessSync(ff, fs.R_OK | fs.X_OK ) ) {
                 var stats = fs.lstatSync(ff);
 
                 switch ( true ) {
