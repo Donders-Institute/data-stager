@@ -24,11 +24,24 @@ var _getDirList = function(request, response) {
         var files = fs.readdirSync(dir);
         files.forEach(function(f){
             var ff = dir + f;
-            var stats = fs.lstatSync(ff)
-            if (stats.isDirectory()) {
-                f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
-            } else {
-                f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
+
+            // only list those readable
+            if ( fs.accessSync(ff, fs.constants.R_OK) ) {
+                var stats = fs.lstatSync(ff);
+
+                switch ( true ) {
+                    case stats.isDirectory():
+                        f_data.push( { 'name': f, 'type': 'd', 'size': 0 } );
+                        break;
+
+                    case stats.isSymbolicLink():
+                        console.log( f_data.readlinkSync(ff) );
+                        break;
+
+                    default:
+                        f_data.push( { 'name': f, 'type': 'f', 'size': stats.size } );
+                        break;
+                }
             }
         });
     } catch(e) {
