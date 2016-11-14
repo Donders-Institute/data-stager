@@ -61,14 +61,14 @@ is_src_dir=0
 echo $src | egrep '^i:' > /dev/null 2>&1
 if [ $? -eq 0 ]; then
     src_coll=$( echo $src | sed 's/^i://' | sed 's/\/$//' )
-    ils $src_coll > /dev/null 2>&1
+    ils "$src_coll" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "file or collection not found: $src_coll" 1>&2
         exit 1
     fi
 
     # TODO: find a better way to determine the source is a collection or a data object
-    ils ${src_coll}/ > /dev/null 2>&1
+    ils "${src_coll}/" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         is_src_dir=1
         # determine size of the sync task: number of data objects in the source collection 
@@ -78,11 +78,11 @@ if [ $? -eq 0 ]; then
         w_total=1
     fi 
 else
-    if [ -e $src ]; then
-        if [ -d $src ]; then
+    if [ -e "$src" ]; then
+        if [ -d "$src" ]; then
             is_src_dir=1
             # determine size of the sync task: number of files in the directory 
-            w_total=$( find $src -type f | wc -l )
+            w_total=$( find "$src" -type f | wc -l )
         else
             w_total=1
         fi
@@ -101,9 +101,9 @@ if [ $? -eq 0 ]; then
     is_irods=1
     dst_coll=$( echo $dst | sed 's/^i://' )
     # TODO: find a better way to determine whether the irods namespace is existing and whether it's a directory
-    ils ${dst_coll} > /dev/null 2>&1
+    ils "${dst_coll}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
-        ils ${dst_coll}/ > /dev/null 2>&1
+        ils "${dst_coll}/" > /dev/null 2>&1
         # this is an existing irods collection
         if [ $? -eq 0 ]; then
             is_dst_dir=1
@@ -113,8 +113,8 @@ if [ $? -eq 0 ]; then
         is_dst_dir=$is_src_dir
     fi
 else
-    if [ -e $dst ]; then
-        if [ -d $dst ]; then
+    if [ -e "$dst" ]; then
+        if [ -d "$dst" ]; then
             is_dst_dir=1
         fi
     else
@@ -141,7 +141,7 @@ fi
 
 # reconstruct the dst w/ proper filename
 if [ $is_src_dir -eq 0 ] && [ $is_dst_dir -eq 1 ] ; then
-    fname=$( echo $src | awk -F '/' '{print $NF}' )
+    fname=$( echo "$src" | awk -F '/' '{print $NF}' )
     dst=${dst}/${fname}
 fi
 
