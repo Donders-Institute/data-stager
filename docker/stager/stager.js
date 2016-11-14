@@ -79,6 +79,10 @@ if (cluster.isMaster) {
     //app.post('/fslogin/rdm', rdm_fs.authenticateUser);
     //app.post('/fstree/rdm', rdm_fs.getDirList);
 
+    // RDM-specific functions
+    var prj_map = require('./routes/project_map_dccn');
+    app.get('/rdm/:collType/project/:projectId', prj_map.getCollNameByProject);
+
     app.listen(3000);
 
     // memory cache of paths of irods authentication tokens

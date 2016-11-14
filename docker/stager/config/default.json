@@ -19,6 +19,12 @@
         "icatPort": 1247,
         "restEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
         "davEndpoint": "https://webdav.rdmappacc.uci.ru.nl",
-        "davRootNamespace": "/rdm/di"
+        "davRootNamespace": "/rdm/di",
+        "projectMapDAC": {
+            "3010000.01": "/rdm/di/dccn/DAC_3010000.01_173",
+            "3015046.02": "/rdm/di/dccn/DAC_3015046.02_360"
+        },
+        "projectMapRDC": {},
+        "projectMapDSC": {}
     }
 }
