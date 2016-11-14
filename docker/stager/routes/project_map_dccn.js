@@ -26,7 +26,7 @@ var _getCollNameByProject = function(request, response) {
             break;
     }
 
-    if ( typeof map[projectId] ) {
+    if ( typeof map[projectId] !== 'undefined' ) {
         response.json({'collName': map[projectId]});
     } else {
         response.status(404);
