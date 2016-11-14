@@ -27,10 +27,10 @@ var _getCollNameByProject = function(request, response) {
     }
 
     if ( typeof map[projectId] ) {
-        resp.json({'collName': map[projectId]});
+        response.json({'collName': map[projectId]});
     } else {
-        resp.status(404);
-        resp.json({'errmsg': collType + ' not found for project: ' + projectId});
+        response.status(404);
+        response.json({'errmsg': collType + ' not found for project: ' + projectId});
     }
 }
 
