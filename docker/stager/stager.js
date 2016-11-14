@@ -212,7 +212,7 @@ if ( cluster.worker ) {
                             cmd += 's-duck.sh';
                         }
 
-                        var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser, irodsA ];
+                        var cmd_args = [ "'" + job.data.srcURL + "''", "'" + job.data.dstURL + "'", job.data.rdmUser, irodsA ];
                         var cmd_opts = {
                             maxBuffer: 10*1024*1024
                         };
