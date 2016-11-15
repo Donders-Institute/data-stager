@@ -21,7 +21,7 @@
         "davEndpoint": "https://webdav.rdmappacc.uci.ru.nl",
         "davRootNamespace": "/rdm/di",
         "projectMapDAC": {
-            "3010000.01": "/rdm/di/dccn/DAC_3010000.01_173",
+            "_CATCHALL": "/rdm/di/dccn/DAC_3010000.01_173",
             "3015046.02": "/rdm/di/dccn/DAC_3015046.02_360"
         },
         "projectMapRDC": {},

@@ -26,8 +26,11 @@ var _getCollNameByProject = function(request, response) {
             break;
     }
 
-    if ( typeof map[projectId] !== 'undefined' ) {
-        response.json({'collName': map[projectId]});
+    var collNameCatchall = (map['_CATCHALL']) ? map['_CATCHALL'] + '/' + projectId:undefined;
+    var collName = (map[projectId]) ? map[projectId]:collNameCatchall;
+
+    if ( collName ) {
+        response.json({'collName': collName});
     } else {
         response.status(404);
         response.json({'errmsg': collType + ' not found for project: ' + projectId});
