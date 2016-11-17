@@ -135,7 +135,7 @@ fi
 if [ $w_total -gt 0 ]; then
     w_done=0
     w_done_percent=0
-    unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
+    ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
         w_done=$(( $w_done + 1 ))
         w_done_percent_new=$(( $w_done * 100 / $w_total ))
 
