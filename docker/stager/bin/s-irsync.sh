@@ -36,27 +36,16 @@ if [ $# -ne 4 ]; then
 fi
 
 mydir=$( get_script_dir $0 )
-#rdm_user=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userName'])" )
-#rdm_pass=$( python -c "import json, os.path; c = json.load(open(os.path.join('${mydir}', '../config/default.json'))); print(c['RDM']['userPass'])" )
-
-rdm_user=$3
-
-#rdm_pass=$4
-#export IRODS_AUTHENTICATION_FILE=/tmp/.irodsA.$$
-#export IRODS_USER_NAME=$rdm_user
-#echo $rdm_pass | iinit > /dev/null 2>&1
-
-export IRODS_AUTHENTICATION_FILE=$4
-export IRODS_USER_NAME=$rdm_user
-
 src=$( echo $1 | sed 's/irods:/i:/g' )
 dst=$( echo $2 | sed 's/irods:/i:/g' )
 
-alt_rdm_user=$3
+# set iRODS environment variables
+export IRODS_USER_NAME=$3
+export IRODS_AUTHENTICATION_FILE=$4
 
 w_total=0
 
-## check source type/existence
+# check source type/existence
 is_src_dir=0
 echo $src | egrep '^i:' > /dev/null 2>&1
 if [ $? -eq 0 ]; then
@@ -71,17 +60,17 @@ if [ $? -eq 0 ]; then
     ils "${src_coll}/" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         is_src_dir=1
-        # determine size of the sync task: number of data objects in the source collection 
+        # determine size of the sync task: number of data objects in the source collection
         w_total=$( iquest --no-page "n=%s" "select UNIQUE(DATA_NAME) where COLL_NAME = '${src_coll}'" | grep 'n=' | wc -l )
         w_total=$(( $w_total + $(iquest --no-page "n=%s" "select UNIQUE(DATA_NAME) where COLL_NAME like '${src_coll}/%'" | grep 'n=' | wc -l) ))
     else
         w_total=1
-    fi 
+    fi
 else
     if [ -e "$src" ]; then
         if [ -d "$src" ]; then
             is_src_dir=1
-            # determine size of the sync task: number of files in the directory 
+            # determine size of the sync task: number of files in the directory
             w_total=$( find "$src" -type f | wc -l )
         else
             w_total=1
@@ -90,7 +79,7 @@ else
         echo "file or directory not found: $src" 1>&2
         exit 1
     fi
-fi 
+fi
 
 ## prepare destination directory/collection
 is_irods=0
@@ -127,9 +116,6 @@ if [ $is_src_dir -eq 1 ] && [ $is_dst_dir -ne 1 ] ; then
     exit 1
 fi
 
-# switch to the alternative rdm user to perform changes on the collection content
-export clientUserName=$alt_rdm_user
-
 # make sure the dst_dir is created
 if [ $is_dst_dir -eq 1 ]; then
     if [ $is_irods -eq 1 ]; then
@@ -145,20 +131,35 @@ if [ $is_src_dir -eq 0 ] && [ $is_dst_dir -eq 1 ] ; then
     dst=${dst}/${fname}
 fi
 
-# run irsync 
+# run irsync
 if [ $w_total -gt 0 ]; then
     w_done=0
     w_done_percent=0
     unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
         w_done=$(( $w_done + 1 ))
         w_done_percent_new=$(( $w_done * 100 / $w_total ))
+
+        # the process is still running, therefore the progress should not exceed 99%
+        if [ $w_done_percent_new -ge 100 ]; then
+            w_done_percent_new=99
+        fi
+
+        # print the new progress when there is an update
         if [ $w_done_percent_new -gt $w_done_percent ]; then
             w_done_percent=$w_done_percent_new
             echo $w_done_percent_new
         fi
     done
-    exit ${PIPESTATUS[0]}
+
+    # catch the exit code of the actual irsync command
+    ec=${PIPESTATUS[0]}
+    # make sure the final 100% progress is printed
+    if [ $ec -eq 0 ]; then
+        echo "100"
+    fi
+    # return the irsync exit code
+    exit $ec
 else
-    echo "nothing to sync" 
+    echo "nothing to sync"
     exit 0
 fi
