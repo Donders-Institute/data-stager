@@ -65,6 +65,10 @@ if (cluster.isMaster) {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
+    // queue management
+    var admin = require('./routes/admin');
+    app.delete('/queue/:unit/:age', admin.cleanupQueue(queue));
+
     // start service for RESTful APIs
     app.use(kue.app);
 
