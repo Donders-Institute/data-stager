@@ -244,7 +244,7 @@ if ( cluster.worker ) {
                         // define callback when data piped to child.stdout
                         child.stdout.on('data', function(data) {
                             // use the child process's output to update job's progress
-                            job.progress(parseInt(data.trim()), 100);
+                            job.progress(parseInt(data.toString().trim()), 100);
                             // reset noprogress time counter
                             sec_noprogress = 0;
                         });
