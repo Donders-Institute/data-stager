@@ -224,7 +224,7 @@ if ( cluster.worker ) {
 
                         var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser, irodsA ];
                         var cmd_opts = {
-                            maxBuffer: 10*1024*1024
+                            shell: '/bin/bash'
                         };
 
                         if ( typeof job.data.stagerUser !== "undefined" ) {
@@ -236,13 +236,7 @@ if ( cluster.worker ) {
                         var job_timeout_err;
                         var job_stopped = false;
                         var sec_noprogress = 0;
-                        var child = child_process.execFile(cmd, cmd_args, cmd_opts, function(err, stdout, stderr) {
-                            // push the last 5-lines of stdout to job log
-                            job.log({"stdout": stdout.split("\n").slice(-5)});
-                            // error handling
-                            if (err) { throw new Error(stderr); }
-                            done(null, stdout);
-                        });
+                        var child = child_process.spawn(cmd, cmd_args, cmd_opts);
 
                         // inform master the job has been started
                         process.send({'type':'START', 'jid': job.id, 'pid': child.pid});
@@ -255,16 +249,8 @@ if ( cluster.worker ) {
                             sec_noprogress = 0;
                         });
 
-                        child.stdout.on('error', function(err) {
-                            console.log("error on stdout");
-                        });
-
-                        child.stderr.on('error', function(err) {
-                            console.log("error on stderr");
-                        });
-
                         // define callback when child process exits
-                        child.on( "exit", function(code, signal) {
+                        child.on( "close", function(code, signal) {
                             // set interal flag indicating the job has been stopped
                             job_stopped = true;
                             // inform master the job has been stopped
@@ -272,10 +258,12 @@ if ( cluster.worker ) {
                             // interruption handling (null if process is not interrupted)
                             if ( signal != null ) {
                                 if ( job_timeout_err === undefined ) {
-                                    throw new Error('job terminated by ' + signal);
+                                    done(new Error('job terminated by ' + signal));
                                 } else {
-                                    throw new Error('job terminated by ' + signal + ':' + job_timeout_err );
+                                    done(new Error('job terminated by ' + signal + ':' + job_timeout_err ));
                                 }
+                            } else {
+                                done(null, code);
                             }
                         });
 
