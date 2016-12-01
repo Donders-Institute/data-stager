@@ -244,9 +244,13 @@ if ( cluster.worker ) {
                         // define callback when data piped to child.stdout
                         child.stdout.on('data', function(data) {
                             // use the child process's output to update job's progress
-                            job.progress(parseInt(data.toString().trim()), 100);
-                            // reset noprogress time counter
-                            sec_noprogress = 0;
+                            var _d = data.toString().trim();
+                            if ( new RegExp('^progress:[0-9]{1,3}:?.*').exec(_d) ) {
+                                var _p = _d.split(':');
+                                job.progress(parseInt(_p[1]), 100, _p[2] + '/' + _p[3]);
+                                // reset noprogress time counter
+                                sec_noprogress = 0;
+                            }
                         });
 
                         // define callback when child process exits
