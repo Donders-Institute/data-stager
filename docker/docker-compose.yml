@@ -32,6 +32,6 @@ services:
     image: stager-ui
     network_mode: "host"
     volumes:
-      - ./stager-ui/config:/opt/stager-ui/config
+      - /data/stager-ui/config:/opt/stager-ui/config
     depends_on:
       - stager
