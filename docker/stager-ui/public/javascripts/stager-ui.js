@@ -12,17 +12,13 @@ var run_stager_ui = function(params) {
                      "columnDefs": [
                           {
                               "render": function(data, type, row) {
-                                  if ( row[5] ) {
-                                      return data + ' (' + row[5] + ')';
+                                  if ( row.progress_data ) {
+                                      return data + ' (' + row.progress_data + ')';
                                   } else {
                                       return data;
                                   }
                               },
                               "targets": 4
-                          },
-                          {
-                              "visible": false,
-                              "targets": [5]
                           }
                      ],
                      "columns": [
@@ -40,8 +36,6 @@ var run_stager_ui = function(params) {
                            "render": $.fn.dataTable.render.ellipsis(20)},
                          { "data": "state",
                            "className": "dt-body-left"},
-                         { "data": "progress_data",
-                           "defaultContent": "?/?"},
                          { "data": "progress",
                            "render": $.fn.dataTable.render.percentBar('square','#FFF','#269ABC','#31B0D5','#286090',0)}
                      ],
