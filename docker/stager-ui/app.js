@@ -39,6 +39,7 @@ app.use( session({
     rolling: true,
     saveUninitialized: true,
     unset: 'destroy',
+    name: 'stager-ui.sid',
     cookie: {
         maxAge: 4 * 3600 * 1000
     }
