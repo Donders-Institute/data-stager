@@ -41,6 +41,7 @@ app.use( session({
     unset: 'destroy',
     name: 'stager-ui.sid',
     cookie: {
+        httpOnly: false,
         maxAge: 4 * 3600 * 1000
     }
 }));
