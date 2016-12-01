@@ -9,6 +9,22 @@ var run_stager_ui = function(params) {
                      "ajax": function(data, callback, settings) {
                          callback({data: jobsData});
                      },
+                     "columnDefs": [
+                          {
+                              "render": function(data, type, row) {
+                                  if ( row[5] ) {
+                                      return data + ' (' + row[5] + ')';
+                                  } else {
+                                      return data;
+                                  }
+                              },
+                              "targets": 4
+                          },
+                          {
+                              "visible": false,
+                              "targets": [5]
+                          }
+                     ],
                      "columns": [
                          {
                              "className": 'details-control',
@@ -23,7 +39,9 @@ var run_stager_ui = function(params) {
                          { "data": "data.dstURL",
                            "render": $.fn.dataTable.render.ellipsis(20)},
                          { "data": "state",
-                           "className": "dt-body-center"},
+                           "className": "dt-body-left"},
+                         { "data": "progress_data",
+                           "defaultContent": "?/?"},
                          { "data": "progress",
                            "render": $.fn.dataTable.render.percentBar('square','#FFF','#269ABC','#31B0D5','#286090',0)}
                      ],
