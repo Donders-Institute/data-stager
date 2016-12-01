@@ -99,6 +99,16 @@ var run_stager_ui = function(params) {
       }
   } );
 
+  // function to check session validity every minute
+  var checkSessionValidity = function() {
+      setInterval( function() {
+          if ( ! Cookies.get('stager-ui.sid') ) {
+              // block the whole page with a warning; and ask user to refresh the page
+              appError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
+          }
+      }, 60 * 1000 );
+  }
+
   // function to stop job table refresh task
   var stopJobTableRefresh = function() {
       if ( jobTableRefreshId != null ) {
@@ -483,4 +493,7 @@ var run_stager_ui = function(params) {
   $('#button_refresh_history').click(function() {
       update_job_history_table();
   });
+
+  // enable periodic check on session validity
+  checkSessionValidity();
 }

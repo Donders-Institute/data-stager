@@ -137,25 +137,23 @@ if [ $w_total -gt 0 ]; then
     w_done_percent=0
     ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
         w_done=$(( $w_done + 1 ))
-        w_done_percent_new=$(( $w_done * 100 / $w_total ))
+        w_done_percent=$(( $w_done * 100 / $w_total ))
 
         # the process is still running, therefore the progress should not exceed 99%
-        if [ $w_done_percent_new -ge 100 ]; then
-            w_done_percent_new=99
+        if [ $w_done -ge $w_total ] || [ $w_done_percent -ge 100 ]; then
+            w_done=$(( $w_total - 1 ))
+            w_done_percent=99
         fi
 
-        # print the new progress when there is an update
-        if [ $w_done_percent_new -gt $w_done_percent ]; then
-            w_done_percent=$w_done_percent_new
-            echo $w_done_percent_new
-        fi
+        # print current progress
+        echo "progress:${w_done_percent}:${w_done}:${w_total}"
     done
 
     # catch the exit code of the actual irsync command
     ec=${PIPESTATUS[0]}
     # make sure the final 100% progress is printed
     if [ $ec -eq 0 ]; then
-        echo "100"
+        echo "progress:100:${w_total}:${w_total}"
     fi
     # return the irsync exit code
     exit $ec
