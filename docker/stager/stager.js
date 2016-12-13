@@ -260,11 +260,11 @@ if ( cluster.worker ) {
                             // inform master the job has been stopped
                             process.send({'type':'STOP', 'jid': job.id});
                             // interruption handling (null if process is not interrupted)
-                            if ( signal != null ) {
+                            if ( signal != null || code != 0 ) {
                                 if ( job_timeout_err === undefined ) {
-                                    done(new Error('job terminated by ' + signal));
+                                    done(new Error('job terminated by ' + signal + " (ec=" + code + ")"));
                                 } else {
-                                    done(new Error('job terminated by ' + signal + ':' + job_timeout_err ));
+                                    done(new Error('job terminated by ' + signal + " (ec=" + code + "): " + job_timeout_err ));
                                 }
                             } else {
                                 done(null, code);
