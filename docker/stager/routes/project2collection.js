@@ -1,30 +1,15 @@
-var config = require('config');
 var auth = require('basic-auth');
 
 var _getCollNameByProject = function(request, response) {
 
-    var map = {};
-
     var collType = request.params.collType;
     var projectId = request.params.projectId;
 
-    switch( collType ) {
+    var collections = require('../config/project2collection.json');
 
-        case "DAC":
-            map = config.RDM.projectMapDAC;
-            break;
+    delete require.cache[require.resolve('../config/project2collection.json')];
 
-        case "RDC":
-            map = config.RDM.projectMapRDC;
-            break;
-
-        case "DSC":
-            map = config.RDM.projectMapDSC;
-            break;
-
-        default:
-            break;
-    }
+    var map = (collections[collType]) ? collections[collType]:{};
 
     var collNameCatchall = (map['_CATCHALL']) ? map['_CATCHALL'] + '/' + projectId:undefined;
     var collName = (map[projectId]) ? map[projectId]:collNameCatchall;

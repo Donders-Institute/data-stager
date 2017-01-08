@@ -1,0 +1,11 @@
+{
+   "DAC": {
+       "_CATCHALL.MEG": "/rdm/di/dccn/DAC_3010102.00_087",
+       "_CATCHALL.MRI": "/rdm/di/dccn/DAC_3010000.01_173",
+       "3010000.01": "/rdm/di/dccn/DAC_3010000.01_998",
+       "3010000.02": "/rdm/di/dccn/DAC_3010000.02_457",
+       "3010000.03": "/rdm/di/dccn/DAC_3010000.03_123"
+   },
+   "RDC": {},
+   "DSC": {}
+}

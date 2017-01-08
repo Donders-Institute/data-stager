@@ -81,7 +81,7 @@ if (cluster.isMaster) {
 
     // RESTful interfaces for RDM-specific functions
     // 1. get collecnt namespace for project
-    var prj_map = require('./routes/project_map_dccn');
+    var prj_map = require('./routes/project2collection');
     app.get('/rdm/:collType/project/:projectId', prj_map.getCollNameByProject);
 
     // RESTful interface for queue management
