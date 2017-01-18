@@ -118,6 +118,7 @@ if (cluster.isMaster) {
                     var su = msg['stager_user'];
 
                     var cmd_opts = {
+                        timeout: 3*60*1000,
                         maxBuffer: 10*1024*1024
                     };
 
@@ -131,18 +132,28 @@ if (cluster.isMaster) {
                          typeof valid_auths[u].validity === 'undefined' ||
                          valid_auths[u].validity < Date.now() - 600*1000 ) {
 
-                        valid_auths[u] = { 'path':'', 'validity':0 };
-                        // get fresh One-time password for the user
-                        var cmd = stager_bindir + path.sep + 's-otp.sh';
-                        var out = child_process.execFileSync( cmd, [u]);
-                        var rdmPass = out.toString().split('\n')[0];
+                        var nattemps = 0;
+                        var isOk = false;
+                        var irodsA = '';
+                        while ( ! isOk ) {
+                            nattemps += 1;
+                            if ( nattempts < 3 ) {
+                                var cmd = stager_bindir + path.sep + 's-otp.sh';
+                                var out = child_process.execFileSync( cmd, [u]);
+                                var rdmPass = out.toString().split('\n')[0];
 
-                        // call iinit to initialize token
-                        cmd = stager_bindir + path.sep + 's-iinit.sh';
-                        out = child_process.execFileSync( cmd, [ u, rdmPass ], cmd_opts);
-                        var irodsA = out.toString().split('\n')[0];
-                        var s = fs.statSync(irodsA);
-                        if ( s.isFile() ) {
+                                // call iinit to initialize token
+                                cmd = stager_bindir + path.sep + 's-iinit.sh';
+                                out = child_process.execFileSync( cmd, [ u, rdmPass ], cmd_opts);
+                                irodsA = out.toString().split('\n')[0];
+                                try {
+                                    isOk = fs.statSync(irodsA).isFile();
+                                } catch (err) {}
+                            }
+                        }
+
+                        valid_auths[u] = { 'path':'', 'validity':0 };
+                        if ( isOk ) {
                             console.log( '[' + new Date().toISOString() + '] initiate irods token: ' + u);
                             valid_auths[u].path = irodsA;
                             valid_auths[u].validity = Date.now() + 12 * 3600 * 1000;
@@ -168,7 +179,8 @@ if (cluster.isMaster) {
 // Worker process of the cluster
 if ( cluster.worker ) {
 
-    var irodsA = undefined;
+    var irodsA = '';
+    var authed = false;
 
     // message handling when the worker receives message from the master
     process.on('message', function(msg) {
@@ -181,6 +193,7 @@ if ( cluster.worker ) {
 
             case 'UAUTH':
                 irodsA = msg.path;
+                authed = true;
                 break;
 
             default:
@@ -203,17 +216,20 @@ if ( cluster.worker ) {
             } else {
 
                 // ask master process to retrieve irodsA path
-                irodsA = undefined;
+                irodsA = '';
+                authed = false;
                 process.send({'type':'UAUTH',
                               'rdm_user': job.data.rdmUser,
                               'stager_user': (typeof job.data.stagerUser === 'undefined')?'':job.data.stagerUser});
 
                 // set timer to wait until the irodsA is retrieved from the master process
                 var authTimer = setInterval( function() {
-                    if ( typeof irodsA === 'undefined' ) {
-                        //console.log('.');
-                    } else {
+                    if ( authed ) {
                         clearInterval(authTimer);
+                        if ( irodsA == '' ) {
+                            return done(new Error('user not successfully authenticated: ' + job.data.rdmUser));
+                        }
+
                         // TODO: make the logic implementation as a plug-in
                         var cmd = stager_bindir + path.sep;
                         if ( job.data.clientIF === undefined || job.data.clientIF == 'irods' ) {
