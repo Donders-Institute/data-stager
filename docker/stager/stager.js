@@ -132,11 +132,11 @@ if (cluster.isMaster) {
                          typeof valid_auths[u].validity === 'undefined' ||
                          valid_auths[u].validity < Date.now() - 600*1000 ) {
 
-                        var nattemps = 0;
+                        var nattempts = 0;
                         var isOk = false;
                         var irodsA = '';
                         while ( ! isOk ) {
-                            nattemps += 1;
+                            nattempts += 1;
                             if ( nattempts < 3 ) {
                                 var cmd = stager_bindir + path.sep + 's-otp.sh';
                                 var out = child_process.execFileSync( cmd, [u]);
