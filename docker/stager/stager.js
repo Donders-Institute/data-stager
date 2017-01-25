@@ -101,7 +101,7 @@ queue.on( 'error', function(err) {
             msgHtml += '</html>';
 
             mailer.sendToAddresses(uprofile.email, false, msgSubject, null, msgHtml, null);
-        };
+        });
 
         console.log('[' + new Date().toISOString() + '] job %d complete', id);
     }
@@ -145,7 +145,7 @@ queue.on( 'error', function(err) {
             msgHtml += '</html>';
 
             mailer.sendToAdmin(msgSubject, null, msgHtml, null);
-        };
+        });
         console.log('[' + new Date().toISOString() + '] job %d failed', id);
     }
 }).on( 'job remove', function(id, err) {
