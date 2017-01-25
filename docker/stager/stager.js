@@ -35,9 +35,9 @@ var get_rdm_userprofile = function(uid) {
         // as the rule always return a profile regardless the user existence,
         // we check on the availability of the homeOrganisation attribute
         if (! data.profile.homeOrganisation) {
-            return data.profile;
+            throw new Error('invalid user due to missing "homeOrganisational"');
         } else {
-            return null;
+            return data.profile;
         }
     } catch( err ){
         console.error(err.toString());
@@ -57,6 +57,7 @@ queue.on( 'error', function(err) {
     if ( cluster.isMaster) {
         // send notification to user
         kue.Job.get( id, function( error, job ) {
+
             if (error) {
                 console.error('[' + new Date().toISOString() + '] cannot retrieve information of job: ' + error);
                 return;
@@ -76,6 +77,7 @@ queue.on( 'error', function(err) {
 
             var t_create = new Date(parseInt(job.created_at));
             var t_update = new Date(parseInt(job.updated_at));
+            var t_start = new Date(parseInt(job.started_at));
             var msgSubject = emoji.get('ok_hand') + '[INFO] stager job complete';
             var encoder = new HtmlEncoder('entity');
             var msgHtml = '<html>'
@@ -89,10 +91,11 @@ queue.on( 'error', function(err) {
             msgHtml += '<b>Please be informed by the following completed stager job:</b>';
             msgHtml += '<div><table>';
             msgHtml += '<tr><th>id</th><td>' + id + '</td></tr>';
-            msgHtml += '<tr><th>state</th><td>' + job.state + '</td></tr>';
+            msgHtml += '<tr><th>state</th><td>' + job.state() + '</td></tr>';
             msgHtml += '<tr><th>owner</th><td>' + job.data.stagerUser + '</td></tr>';
             msgHtml += '<tr><th>repository user</th><td>' + job.data.rdmUser + '</td></tr>';
             msgHtml += '<tr><th>submitted at</th><td>' + t_create.toDateString() + ' ' + t_create.toTimeString() + '</td></tr>';
+            msgHtml += '<tr><th>started at</th><td>' + t_start.toDateString() + ' ' + t_start.toTimeString() + '</td></tr>';
             msgHtml += '<tr><th>complete at</th><td>' + t_update.toDateString() + ' ' + t_update.toTimeString() + '</td></tr>';
             msgHtml += '<tr><th>source</th><td>' + encoder.htmlEncode(job.data.srcURL) + '</td></tr>';
             msgHtml += '<tr><th>destination</th><td>' + encoder.htmlEncode(job.data.dstURL) + '</td></tr>';
@@ -133,7 +136,7 @@ queue.on( 'error', function(err) {
             msgHtml += '<b>Please be alamed by the following stager job failure:</b>';
             msgHtml += '<div><table>';
             msgHtml += '<tr><th>id</th><td>' + id + '</td></tr>';
-            msgHtml += '<tr><th>state</th><td>' + job.state + '</td></tr>';
+            msgHtml += '<tr><th>state</th><td>' + job.state() + '</td></tr>';
             msgHtml += '<tr><th>owner</th><td>' + job.data.stagerUser + '</td></tr>';
             msgHtml += '<tr><th>repository user</th><td>' + job.data.rdmUser + '</td></tr>';
             msgHtml += '<tr><th>submitted at</th><td>' + t_create.toDateString() + ' ' + t_create.toTimeString() + '</td></tr>';
