@@ -19,4 +19,4 @@ function get_script_dir() {
     echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 
-$NODEJS_PREFIX/bin/npm start
+export PATH=${NODEJS_PREFIX}/bin:$PATH && npm start
