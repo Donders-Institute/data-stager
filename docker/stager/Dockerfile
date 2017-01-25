@@ -1,7 +1,7 @@
 FROM irodsclient
 
 # application metadata
-MAINTAINER "Donders Institute"
+MAINTAINER Donders Institute
 LABEL donders.ru.nl.app_name "stager"
 LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
 LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
