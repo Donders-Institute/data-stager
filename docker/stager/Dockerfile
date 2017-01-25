@@ -1,5 +1,11 @@
 FROM irodsclient
 
+# application metadata
+MAINTAINER "Donders Institute"
+LABEL donders.ru.nl.app_name "stager"
+LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
+LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
+
 # install cyberduck command-line interface
 RUN ( echo -e "[duck-stable]\n\
 name=duck-stable\n\
@@ -14,13 +20,13 @@ RUN ( mkdir -p /tmp )
 WORKDIR /tmp
 
 # install python 2.7.12 and pycurl (as the system pycurl seems to have problem with data encoding)
-ADD https://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz /tmp 
+ADD https://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz /tmp
 RUN ( tar xvf Python-2.7.12.tgz \
       && cd Python-2.7.12 \
       && ./configure --prefix=/opt/python \
       && make && make install && rm -rf /tmp/Python-* )
 
-ADD https://dl.bintray.com/pycurl/pycurl/pycurl-7.43.0.tar.gz /tmp 
+ADD https://dl.bintray.com/pycurl/pycurl/pycurl-7.43.0.tar.gz /tmp
 RUN ( tar xvf pycurl-7.43.0.tar.gz \
       && cd pycurl-7.43.0 \
       && /opt/python/bin/python setup.py --with-nss install && rm -rf pycurl-* )
@@ -29,7 +35,7 @@ RUN ( tar xvf pycurl-7.43.0.tar.gz \
 ADD https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz /tmp
 RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 /opt/nodejs )
 
-# install expect so that we get unbuffer to get irsync progress, progressively 
+# install expect so that we get unbuffer to get irsync progress, progressively
 RUN ( yum -y install expect )
 
 # install stager scripts and required nodejs modules

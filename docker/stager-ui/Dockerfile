@@ -1,5 +1,11 @@
 FROM centos:7
 
+# application metadata
+MAINTAINER "Donders Institute"
+LABEL donders.ru.nl.app_name "stager-ui"
+LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
+LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
+
 # create temporary directory
 RUN ( mkdir -p /tmp )
 WORKDIR /tmp
@@ -9,7 +15,7 @@ ARG nodejs_prefix=/opt/nodejs
 ADD https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz /tmp
 RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 $nodejs_prefix )
 
-# install the stager-ui nodejs applicaiton 
+# install the stager-ui nodejs applicaiton
 RUN ( mkdir -p /opt/stager-ui/bin )
 WORKDIR /opt/stager-ui
 COPY package.json package.json

@@ -6,7 +6,7 @@ RUN ( yum -y install wget gcc gcc-c++ \
                      openssl openssl-devel openssl-libs \
                      sssd-client \
                      environment-modules which \
-                     help2man unixODBC fuse-devel bzip2-devel pam-devel perl-JSON \ 
+                     help2man unixODBC fuse-devel bzip2-devel pam-devel perl-JSON \
                      python-devel rpm-build curl curl-devel libxml2-devel )
 
 # create temporary directory
