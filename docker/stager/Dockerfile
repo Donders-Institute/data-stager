@@ -42,7 +42,7 @@ RUN ( yum -y install expect )
 RUN ( mkdir -p /opt/stager/bin )
 WORKDIR /opt/stager
 COPY package.json package.json
-RUN ( /opt/nodejs/bin/npm install )
+RUN ( export PATH=/opt/nodejs/bin:$PATH && /opt/nodejs/bin/npm install )
 COPY *.js ./
 COPY bin ./bin
 COPY lib ./lib

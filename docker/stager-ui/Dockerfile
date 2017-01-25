@@ -29,7 +29,7 @@ COPY start_stager-ui.sh start_stager-ui.sh
 RUN ( chmod +x start_stager-ui.sh )
 
 # install nodejs modules for the application
-RUN ( $nodejs_prefix/bin/npm install )
+RUN ( export PATH=$nodejs_prefix/bin:$PATH && /opt/nodejs/bin/npm install )
 
 # run a stager-ui
 ENV NODEJS_PREFIX $nodejs_prefix
