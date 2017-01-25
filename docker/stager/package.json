@@ -1,7 +1,7 @@
 {
   "name": "stager",
   "description": "generic staging service",
-  "version": "0.0.1",
+  "version": "1.4",
   "author": "Hurng-Chun Lee <h.lee@donders.ru.nl>",
   "main": "stager.js",
   "dependencies" : {
@@ -19,6 +19,9 @@
     "ssh2": "~0.5.2",
     "node-rest-client": "~2.0.1",
     "body-parser": "~1.15.2",
-    "posix": "~4.1.1"
+    "posix": "~4.1.1",
+    "nodemailer": "~2.7.2",
+    "node-html-encoder": "~0.0.2",
+    "emoji": "~1.5.1"
   }
 }

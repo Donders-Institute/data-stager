@@ -13,6 +13,9 @@ var queue = kue.createQueue({
     }
 });
 var path = require('path');
+var mailer = require('./routes/mailer.js');
+var HtmlEncoder = require('node-html-encoder').Encoder;
+var emoji = require('node-emoji');
 
 var active_pids = {};
 
@@ -28,6 +31,7 @@ queue.on( 'error', function(err) {
     }
 }).on( 'job complete', function(id, result) {
     if ( cluster.isMaster) {
+        // TODO: send notification to user
         console.log('[' + new Date().toISOString() + '] job %d complete', id);
     }
 }).on( 'job failed attempt', function(id, err, nattempts) {
@@ -36,6 +40,40 @@ queue.on( 'error', function(err) {
     }
 }).on( 'job failed' , function(id, err) {
     if ( cluster.isMaster) {
+        // TODO: send alarm to both user and system admin
+        kue.Job.get( id, function( error, job ) {
+            if ( ! error ) {
+                var t_create = new Date(parseInt(job.created_at));
+                var t_failed = new Date(parseInt(job.updated_at));
+                var msgSubject = emoji.get('warning') + '[ALARM] stager job failed';
+                var encoder = new HtmlEncoder('entity');
+                var msgHtml = '<html>'
+                msgHtml += '<style>';
+                msgHtml += 'div { width: 100%; padding-top: 10px; padding-bottom: 10px;}';
+                msgHtml += 'table { width: 95%; border-collapse: collapse; }';
+                msgHtml += 'th { width: 20%; border: 1px solid #ddd; background-color: #f5f5f5; text-align: left; padding: 10px; }';
+                msgHtml += 'td { width: 80%; border: 1px solid #ddd; text-align: left; padding: 10px; }';
+                msgHtml += '</style>';
+                msgHtml += '<body>';
+                msgHtml += '<b>Please be alamed by the following stager job failure:</b>';
+                msgHtml += '<div><table>';
+                msgHtml += '<tr><th>id</th><td>' + id + '</td></tr>';
+                msgHtml += '<tr><th>state</th><td>' + job.state + '</td></tr>';
+                msgHtml += '<tr><th>owner</th><td>' + job.data.stagerUser + '</td></tr>';
+                msgHtml += '<tr><th>repository user</th><td>' + job.data.rdmUser + '</td></tr>';
+                msgHtml += '<tr><th>submitted at</th><td>' + t_create.toDateString() + ' ' + t_create.toTimeString() + '</td></tr>';
+                msgHtml += '<tr><th>failed at</th><td>' + t_failed.toDateString() + ' ' + t_failed.toTimeString() + '</td></tr>';
+                msgHtml += '<tr><th>source</th><td>' + encoder.htmlEncode(job.data.srcURL) + '</td></tr>';
+                msgHtml += '<tr><th>destination</th><td>' + encoder.htmlEncode(job.data.dstURL) + '</td></tr>';
+                msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
+                msgHtml += '</div></table>';
+                msgHtml += '</html>';
+
+                mailer.sendToAdmin(msgSubject, null, msgHtml, null);
+            } else {
+                console.error('[' + new Date().toISOString() + '] cannot retrieve information of job: ' + error);
+            }
+        };
         console.log('[' + new Date().toISOString() + '] job %d failed', id);
     }
 }).on( 'job remove', function(id, err) {
