@@ -32,8 +32,8 @@ RUN ( tar xvf pycurl-7.43.0.tar.gz \
       && /opt/python/bin/python setup.py --with-nss install && rm -rf pycurl-* )
 
 # install nodejs
-ADD https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz /tmp
-RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 /opt/nodejs )
+ADD https://nodejs.org/dist/v6.9.4/node-v6.9.4-linux-x64.tar.xz /tmp
+RUN ( tar xf node-v6.9.4-linux-x64.tar.xz && mv node-v6.9.4-linux-x64 /opt/nodejs )
 
 # install expect so that we get unbuffer to get irsync progress, progressively
 RUN ( yum -y install expect )

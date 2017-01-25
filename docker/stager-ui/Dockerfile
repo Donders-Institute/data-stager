@@ -12,8 +12,8 @@ WORKDIR /tmp
 
 # install nodejs
 ARG nodejs_prefix=/opt/nodejs
-ADD https://nodejs.org/dist/v4.4.7/node-v4.4.7-linux-x64.tar.xz /tmp
-RUN ( tar xf node-v4.4.7-linux-x64.tar.xz && mv node-v4.4.7-linux-x64 $nodejs_prefix )
+ADD https://nodejs.org/dist/v6.9.4/node-v6.9.4-linux-x64.tar.xz /tmp
+RUN ( tar xf node-v6.9.4-linux-x64.tar.xz && mv node-v6.9.4-linux-x64 $nodejs_prefix )
 
 # install the stager-ui nodejs applicaiton
 RUN ( mkdir -p /opt/stager-ui/bin )
