@@ -22,6 +22,6 @@
     "posix": "~4.1.1",
     "nodemailer": "~2.7.2",
     "node-html-encoder": "~0.0.2",
-    "emoji": "~1.5.1"
+    "node-emoji": "~1.5.1"
   }
 }
