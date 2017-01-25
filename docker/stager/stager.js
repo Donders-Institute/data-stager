@@ -351,7 +351,7 @@ if ( cluster.worker ) {
                             cmd = path.join(stager_bindir,'s-duck.sh');
                         }
 
-                        var cmd_args = [ job.data.srcURL, job.data.dstURL, job.data.rdmUser, irodsA ];
+                        var cmd_args = [ "'"+job.data.srcURL+"'", "'"+job.data.dstURL+"'", job.data.rdmUser, irodsA ];
                         var cmd_opts = {
                             shell: '/bin/bash'
                         };
