@@ -13,7 +13,7 @@ var queue = kue.createQueue({
     }
 });
 var path = require('path');
-var mailer = require('./routes/mailer.js');
+var mailer = require('./routes/mailer');
 var HtmlEncoder = require('node-html-encoder').Encoder;
 var emoji = require('node-emoji');
 
