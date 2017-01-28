@@ -226,10 +226,12 @@ var run_stager_ui = function(params) {
       var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
       var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
       var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
+      var ele_userbutton = ( loc == 'local' ) ? $("#button_user_local"):$("#button_user_remote");
       var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
       var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
+      var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
 
-      if ( typeof(u) === 'undefined' ) {
+      if ( typeof(u) === 'undefined' && login_path ) {
           show_login_form(loc, '');
       } else {
 
@@ -240,12 +242,21 @@ var run_stager_ui = function(params) {
          ele_actions.show();
          ele_filetree.show();
 
-         ele_username.html(u);
+         if ( ! login_path ) {
+             ele_userbutton.hide();
+         } else {
+             ele_username.html(u);
+             ele_userbutton.show();
+         }
 
          // jsTree
-         ele_filetree.jstree({
+         ele_filetree.on('activate_node.jstree', function(err, data) {
+             console.log('' + data.node.id);
+             console.log('' + data.event);
+         }).jstree({
             core: {
                 animation: 0,
+                check_callback: true,
                 error: function(err) {
                     appError(err.reason + ": " + err.data);
                 },
@@ -265,6 +276,7 @@ var run_stager_ui = function(params) {
                 keep_selected_style: false,
                 tie_selection: false,
                 three_state: false,
+                whole_node: false,
                 cascade: 'undetermined',
             },
             sort: function(a, b) {
@@ -279,8 +291,26 @@ var run_stager_ui = function(params) {
                 }
                 return -1;
             },
-            plugins: [ 'checkbox', 'wholerow', 'sort' ]
-         });
+            contextmenu: {
+                select_node: false,
+                show_at_node: false,
+                items: function(node, cb) {
+                    return {
+                        ct01: {
+                            label: 'GOTO',
+                            icon: "fa fa-hand-o-right",
+                            _disabled: (! isDir(node.id)),
+                            action: function(data) {
+                                var id = data.reference[0].id.replace('_anchor','');
+                                ele_filetree.jstree("destroy");
+                                show_filetree(loc, id);
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [ 'checkbox', 'wholerow', 'sort', 'contextmenu' ]
+        });
       }
   };
 
@@ -314,8 +344,10 @@ var run_stager_ui = function(params) {
 
   /* local filetree or login initialisation */
   if ( params.l_fs_view == "login" ) {
+      console.log('check 1: ' + params.l_fs_view);
       show_login_form('local','');
   } else {
+      console.log('check 2: ' + params.l_fs_view);
       show_filetree('local', params.l_fs_root);
   }
 

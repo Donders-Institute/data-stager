@@ -6,6 +6,7 @@ var _getModParams = function(req, mod) {
   var root = ( typeof req.query.local !== 'undefined' ) ? req.query.local:config.get(mod).rootDir;
   var view = "";
   var path_login = "";
+  var path_logout = "";
   var hint_login = "";
   var example_login = "";
   if (config.has(mod + '.pathLogin')) {
