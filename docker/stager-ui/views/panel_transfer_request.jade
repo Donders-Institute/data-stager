@@ -35,7 +35,9 @@ div.container-fluid
                                 button.btn.btn-default#login_local(type="submit",name="login")
                                     i.fa.fa-sign-in &nbsp;Login
                 <!-- local filesystem treeview panel -->
-                div.panel-body.filetree-panel#filetree_local
+                div.panel-body#filetree_local
+                    ol.breadcrumb#cwd
+                    div.filetree-panel#jstree
                 <!-- local filesystem action panel -->
                 div.panel-footer.clearfix#action_local
                     div.pull-right.btn-toolbar
@@ -79,7 +81,9 @@ div.container-fluid
                                 button.btn.btn-default#login_remote(type="submit",name="login")
                                     i.fa.fa-sign-in &nbsp;Login
                 <!-- remote filesystem treeview panel -->
-                div.panel-body.filetree-panel#filetree_remote
+                div.panel-body#filetree_remote
+                    ol.breadcrumb#cwd
+                    div.filetree-panel#jstree
                 <!-- remote filesystem action panel -->
                 div.panel-footer.clearfix#action_remote
                     div.pull-right.btn-toolbar

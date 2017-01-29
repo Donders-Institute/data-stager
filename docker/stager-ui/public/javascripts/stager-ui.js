@@ -230,6 +230,7 @@ var run_stager_ui = function(params) {
       var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
       var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
       var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
+      var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
 
       if ( typeof(u) === 'undefined' && login_path ) {
           show_login_form(loc, '');
@@ -240,6 +241,7 @@ var run_stager_ui = function(params) {
 
          // show filetree and action buttons
          ele_actions.show();
+         //ele_pathaction.show();
          ele_filetree.show();
 
          if ( ! login_path ) {
@@ -249,8 +251,32 @@ var run_stager_ui = function(params) {
              ele_userbutton.show();
          }
 
+         // breadcrumbs: FIXME: too complicated mixture between logic and representation HTML
+         // split current root into list of folders, and replace the init_root with '/root/'
+         var subdirs = root.replace(init_root,'/root/').split('/').filter( function(v) { return v != ''; } );
+
+         // the top folder is presented with a HOME icon
+         var htmlCnt = ((subdirs.length == 1)?'<li class="active">':'<li>') + '<a href="#">' +
+            '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></a></li>';
+
+         // the rests are presented with folder name
+         //  - only the last two folders are fully shown in their them
+         //  - the rests are shown as folder icons
+         for(var i=1; i < subdirs.length; i++) {
+             var anchor = '<a href="#" onClick="">';
+             var li_h = (i == subdirs.length-1) ? '<li class="active">':'<li>' + anchor;
+             var fn = (i < subdirs.length-2) ? '<i class="fa fa-folder" data-toggle="tooltip" title="' + subdirs[i] +'"></i>':subdirs[i];
+             htmlCnt += li_h + fn + ((i == subdirs.length-1) ? '</li>':'</a></li>');
+         }
+
+         // display the breadcrumbs
+         var domCwd = $(ele_filetree.get(0)).find('#cwd');
+         domCwd.html(htmlCnt);
+         $('[data-toggle="tooltip"]').tooltip();
+
          // jsTree
-         ele_filetree.on('activate_node.jstree', function(err, data) {
+         var domJstree = $(ele_filetree.get(0)).find('#jstree');
+         domJstree.on('activate_node.jstree', function(err, data) {
              console.log('' + data.node.id);
              console.log('' + data.event);
          }).jstree({
@@ -297,12 +323,12 @@ var run_stager_ui = function(params) {
                 items: function(node, cb) {
                     return {
                         ct01: {
-                            label: 'GOTO',
+                            label: 'Enter',
                             icon: "fa fa-hand-o-right",
                             _disabled: (! isDir(node.id)),
                             action: function(data) {
                                 var id = data.reference[0].id.replace('_anchor','');
-                                ele_filetree.jstree("destroy");
+                                domJstree.jstree("destroy");
                                 show_filetree(loc, id);
                             }
                         }
@@ -505,7 +531,7 @@ var run_stager_ui = function(params) {
 
   /* action buttons: local */
   $('#button_refresh_local').click(function() {
-      $("#filetree_local").jstree(true).refresh();
+      $($("#filetree_local").get(0)).find('#jstree').jstree(true).refresh();
   });
 
   $('#button_logout_local').click(function() {
@@ -520,7 +546,7 @@ var run_stager_ui = function(params) {
 
   /* action buttons: remote */
   $('#button_refresh_remote').click(function() {
-      $("#filetree_remote").jstree(true).refresh();
+      $($("#filetree_remote").get(0)).find('#jstree').jstree(true).refresh();
   });
 
   $('#button_logout_remote').click(function() {
