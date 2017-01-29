@@ -1,285 +1,123 @@
-/*
-  The main function of stager-ui
-*/
-var run_stager_ui = function(params) {
+/* utility function to determine whether a given path is a directory */
+var isDir = function(p) {
+    return p.match('.*(/|\\\\)$')?true:false;
+}
 
-  // job table initialisation
-  var jobsData = [];
-  var jobTable = $('#job_table').DataTable({
-                     "ajax": function(data, callback, settings) {
-                         callback({data: jobsData});
-                     },
-                     "columnDefs": [
-                          {
-                              "render": function(data, type, row) {
-                                  if ( row.progress_data ) {
-                                      return data + ' (' + row.progress_data + ')';
-                                  } else {
-                                      return data;
-                                  }
-                              },
-                              "targets": 4
-                          }
-                     ],
-                     "columns": [
-                         {
-                             "className": 'details-control',
-                             "orderable": false,
-                             "data": null,
-                             "defaultContent": ''
-                         },
-                         { "data": "id",
-                           "className": "dt-body-center"},
-                         { "data": "data.srcURL",
-                           "render": $.fn.dataTable.render.ellipsis(20)},
-                         { "data": "data.dstURL",
-                           "render": $.fn.dataTable.render.ellipsis(20)},
-                         { "data": "state",
-                           "className": "dt-body-left"},
-                         { "data": "progress",
-                           "render": $.fn.dataTable.render.percentBar('square','#FFF','#269ABC','#31B0D5','#286090',0)}
-                     ],
-                     "order": [[1, 'desc']]
-                 });
+/* utility function to toggle application dialog for error message */
+var appError = function(html_text) {
+    $("#app_dialog").modal('toggle');
+    $("#app_dialog_header").html( 'Error' );
+    $("#app_dialog_message").html( html_text );
+}
 
-  var jobTableRefreshId = null;
+/* utility function to toggle application dialog for information */
+var appInfo = function(html_text) {
+    $("#app_dialog").modal('toggle');
+    $("#app_dialog_header").html( 'Information' );
+    $("#app_dialog_message").html( html_text );
+}
 
-  // function of determine whether a given path is a directory
-  var isDir = function(p) {
-      return p.match('.*(/|\\\\)$')?true:false;
-  }
+/* general function for displaying the login form */
+var show_login_form = function(loc, msg) {
+    var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
+    var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
+    var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+    var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
+    var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
 
-  // function of toggle application dialog for error message
-  var appError = function(html_text) {
-      $("#app_dialog").modal('toggle');
-      $("#app_dialog_header").html( 'Error' );
-      $("#app_dialog_message").html( html_text );
-  }
+    // hide filetree and action buttons
+    ele_filetree.hide();
+    ele_actions.hide();
 
-  // function of toggle application dialog for information
-  var appInfo = function(html_text) {
-      $("#app_dialog").modal('toggle');
-      $("#app_dialog_header").html( 'Information' );
-      $("#app_dialog_message").html( html_text );
-  }
+    // show login form without username on it
+    ele_username.html('');
+    ele_form.find('input[name="password"]').val('')
+    ele_form.show();
 
-  // actions of application error modal panel
-  $("#close_app_error").click(function() {
-      $("#app_error").modal( "hide" );
-  });
+    if ( typeof msg === 'undefined' || msg == '' ) {
+        ele_errmsg.hide();
+    } else {
+        ele_errmsg.text(msg);
+        ele_errmsg.show();
+    }
+};
 
-  // function of job detail fields
-  var formatJobDetail = function(j) {
-      return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
-             + '<tr>'
-             + '<td>From:</td>'
-             + '<td>' + j.data.srcURL + '</td>'
-             + '</tr>'
-             + '<tr>'
-             + '<td>To:</td>'
-             + '<td>' + j.data.dstURL + '</td>'
-             + '</tr>'
-             + '<tr>'
-             + '<td>Created at:</td>'
-             + '<td>' + new Date(Number(j.created_at)).toISOString() + '</td>'
-             + '</tr>'
-             + '<tr>'
-             + '<td>Updated at:</td>'
-             + '<td>' + new Date(Number(j.updated_at)).toISOString() + '</td>'
-             + '</tr>'
-             + '<tr>'
-             + '<td>Attempts:</td>'
-             + '<td>' + j.attempts.made + '</td>'
-             + '</tr>'
-             + '</table>';
-  }
+/* general function for displaying the filetree */
+var show_filetree = function(params, loc, root) {
+    var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
+    var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+    var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
+    var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
+    var ele_userbutton = ( loc == 'local' ) ? $("#button_user_local"):$("#button_user_remote");
+    var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
+    var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
+    var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
+    var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
 
-  // Add event listener for opening and closing details
-  $('#job_table tbody').on('click', 'td.details-control', function () {
-      var tr = $(this).closest('tr');
-      var row = jobTable.row( tr );
+    if ( typeof(u) === 'undefined' && login_path ) {
+        show_login_form(loc, '');
+    } else {
 
-      if ( row.child.isShown() ) {
-          // This row is already open - close it
-          row.child.hide();
-          tr.removeClass('shown');
-      }
-      else {
-          // Open this row
-          row.child( formatJobDetail(row.data()) ).show();
-          tr.addClass('shown');
-      }
-  } );
+        // hide login form
+        ele_form.hide();
 
-  // function to check session validity every minute
-  var checkSessionValidity = function() {
-      setInterval( function() {
-          if ( ! Cookies.get('stager-ui.sid') ) {
-              // block the whole page with a warning; and ask user to refresh the page
-              appError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
-          }
-      }, 60 * 1000 );
-  }
+        // show filetree and action buttons
+        ele_actions.show();
+        //ele_pathaction.show();
+        ele_filetree.show();
 
-  // function to stop job table refresh task
-  var stopJobTableRefresh = function() {
-      if ( jobTableRefreshId != null ) {
-          clearInterval(jobTableRefreshId);
-          jobTableRefreshId = null;
-      }
-  }
-
-  // function to start job table refresh task, with iteration delay in seconds
-  var startJobTableRefresh = function(delay) {
-      if ( jobTableRefreshId == null ) {
-          jobTableRefreshId = setInterval( update_job_history_table, delay * 1000 );
-      }
-  }
-
-  // toggle for background history refresh
-  // action toggle background history refresh
-  var setHistoryRefreshMode = function(e, s) {
-     console.log('switch to: ' + s);
-     if (s) {
-         $('#button_refresh_history').addClass('disabled');
-         startJobTableRefresh(10);
-     } else {
-         $('#button_refresh_history').removeClass('disabled');
-         stopJobTableRefresh();
-     }
-  };
-
-  $('#history-refresh-toggle').bootstrapSwitch({
-      size: "normal",
-      onText: "A",
-      offText: "M",
-      onInit: setHistoryRefreshMode,
-      onSwitchChange: setHistoryRefreshMode
-  });
-
-  // menu tabs
-  $('.navbar-nav a').on('shown.bs.tab', function(event){
-      if ( $(event.target).text() == 'History' ) {
-             update_job_history_table();
-             // by-default disable the auto refresh of job history
-             $('#history-refresh-toggle').bootstrapSwitch('state',false);
-      } else {
-             stopJobTableRefresh();
-      }
-  });
-
-  var update_job_history_table = function() {
-    $.get("/stager/job/state", function(data) {
-        // count totoal amount of jobs
-        var idx_t = -1;
-        Object.keys(data).forEach(function(k) {
-            if ( k.indexOf('Count') >= 0 ) {
-              idx_t += data[k];
-            }
-        });
-
-        // get jobs
-        if ( idx_t >= 0 ) {
-           var url = "/stager/jobs/0-" + idx_t;
-           $.get(url, function(data) {
-               // feed the data to job history table
-               jobsData = data;
-               jobTable.ajax.reload();
-           });
+        if ( ! login_path ) {
+            ele_userbutton.hide();
+        } else {
+            ele_username.html(u);
+            ele_userbutton.show();
         }
-    }).done( function() {
-    }).fail( function() {
-        // whenever there is an error, stop the background process
-        $('#history-refresh-toggle').bootstrapSwitch('state',false);
-        appError('cannot retrieve history');
-    });
-  };
 
-  /* general function for displaying the login form */
-  var show_login_form = function(loc, msg) {
-      var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
-      var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
-      var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
-      var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
-      var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
+        // breadcrumbs
+        // split current root into list of folders, and replace the init_root with '/root/'
+        var subdirs = root.replace(init_root,'/root/').split('/').filter( function(v) { return v != ''; } );
 
-      // hide filetree and action buttons
-      ele_filetree.hide();
-      ele_actions.hide();
-
-      // show login form without username on it
-      ele_username.html('');
-      ele_form.find('input[name="password"]').val('')
-      ele_form.show();
-
-      if ( typeof msg === 'undefined' || msg == '' ) {
-          ele_errmsg.hide();
-      } else {
-          ele_errmsg.text(msg);
-          ele_errmsg.show();
-      }
-  };
-
-  /* general function for displaying the filetree */
-  var show_filetree = function(loc, root) {
-      var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
-      var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
-      var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
-      var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
-      var ele_userbutton = ( loc == 'local' ) ? $("#button_user_local"):$("#button_user_remote");
-      var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
-      var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
-      var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
-      var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
-
-      if ( typeof(u) === 'undefined' && login_path ) {
-          show_login_form(loc, '');
-      } else {
-
-         // hide login form
-         ele_form.hide();
-
-         // show filetree and action buttons
-         ele_actions.show();
-         //ele_pathaction.show();
-         ele_filetree.show();
-
-         if ( ! login_path ) {
-             ele_userbutton.hide();
-         } else {
-             ele_username.html(u);
-             ele_userbutton.show();
-         }
-
-         // breadcrumbs: FIXME: too complicated mixture between logic and representation HTML
-         // split current root into list of folders, and replace the init_root with '/root/'
-         var subdirs = root.replace(init_root,'/root/').split('/').filter( function(v) { return v != ''; } );
-
-         // the top folder is presented with a HOME icon
-         var htmlCnt = ((subdirs.length == 1)?'<li class="active">':'<li>') + '<a href="#">' +
+        // the top folder is presented with a HOME icon
+        // the parent folder is presented with a LEVEL-UP icon
+        var htmlCnt = '';
+        if (subdirs.length == 1) {
+            htmlCnt += '<li class="active">' +
+            '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></li>';
+        } else {
+            htmlCnt += '<li>' + '<a href="#">' +
             '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></a></li>';
 
-         // the rests are presented with folder name
-         //  - only the last two folders are fully shown in their them
-         //  - the rests are shown as folder icons
-         for(var i=1; i < subdirs.length; i++) {
-             var anchor = '<a href="#" onClick="">';
-             var li_h = (i == subdirs.length-1) ? '<li class="active">':'<li>' + anchor;
-             var fn = (i < subdirs.length-2) ? '<i class="fa fa-folder" data-toggle="tooltip" title="' + subdirs[i] +'"></i>':subdirs[i];
-             htmlCnt += li_h + fn + ((i == subdirs.length-1) ? '</li>':'</a></li>');
-         }
+            if ( subdirs.length >= 3 ) {
+                // insert link to go to parent folder
+                var dir_t = init_root + subdirs.slice(1,-1).join('/');
+                htmlCnt += '<li>' + '<a href=#>' +
+                '<i class="fa fa-level-up" data-toggle="tooltip" title="' + dir_t +'"></i></a></li>';
+            }
 
-         // display the breadcrumbs
-         var domCwd = $(ele_filetree.get(0)).find('#cwd');
-         domCwd.html(htmlCnt);
-         $('[data-toggle="tooltip"]').tooltip();
+            // showing the current directory name
+            htmlCnt += '<li class="active">';
+            if ( subdirs[subdirs.length-1].length > 30 ) {
+                htmlCnt += '<span data-toggle="tooltip" title="' + subdirs[subdirs.length-1] + '">' +
+                subdirs[subdirs.length-1].substr(0,30) + '&#8230;</span>';
+            } else {
+                htmlCnt += subdirs[subdirs.length-1];
+            }
+            htmlCnt += '</li>';
+        }
 
-         // jsTree
-         var domJstree = $(ele_filetree.get(0)).find('#jstree');
-         domJstree.on('activate_node.jstree', function(err, data) {
-             console.log('' + data.node.id);
-             console.log('' + data.event);
-         }).jstree({
+        // display the breadcrumbs
+        var domCwd = $(ele_filetree.get(0)).find('#cwd');
+        domCwd.html(htmlCnt);
+        $('[data-toggle="tooltip"]').tooltip();
+
+        // jsTree
+        var domJstree = $(ele_filetree.get(0)).find('#jstree');
+
+        // destroy the existing tree to force the new tree to be reloaded
+        domJstree.jstree("destroy");
+
+        // reload the jstree
+        domJstree.jstree({
             core: {
                 animation: 0,
                 check_callback: true,
@@ -290,7 +128,7 @@ var run_stager_ui = function(params) {
                     url: ajax_script,
                     data: function(node) {
                         return { 'dir': ( node.id == '#') ? root: node.id,
-                                 'isRoot': (node.id == '#') }
+                        'isRoot': (node.id == '#') }
                     }
                 },
                 themes: {
@@ -328,8 +166,7 @@ var run_stager_ui = function(params) {
                             _disabled: (! isDir(node.id)),
                             action: function(data) {
                                 var id = data.reference[0].id.replace('_anchor','');
-                                domJstree.jstree("destroy");
-                                show_filetree(loc, id);
+                                show_filetree(params, loc, id);
                             }
                         }
                     }
@@ -337,233 +174,408 @@ var run_stager_ui = function(params) {
             },
             plugins: [ 'checkbox', 'wholerow', 'sort', 'contextmenu' ]
         });
-      }
-  };
+    }
+};
 
-  /* remote login action */
-  $('#login_form_remote').on( 'submit', function( event ) {
-      event.preventDefault();
-      var u = $(this).find('input[name="username"]').val();
-      $.post(params.r_fs_path_login, $(this).serialize(), function(data) {
-          //console.log(data);
-      }).done( function() {
-          Cookies.set('username_remote', u);
-          show_filetree('remote', params.r_fs_root);
-      }).fail( function() {
-          appError('Authentication failure: ' + params.r_fs_server);
-      });
-  });
+/*
+The main function of stager-ui
+*/
+var run_stager_ui = function(params) {
 
-  /* local login action */
-  $('#login_form_local').on( 'submit', function( event ) {
-      event.preventDefault();
-      var u = $(this).find('input[name="username"]').val();
-      $.post(params.l_fs_path_login, $(this).serialize(), function(data) {
-          //console.log(data);
-      }).done( function() {
-          Cookies.set('username_local', u);
-          show_filetree('local', params.l_fs_root);
-      }).fail( function() {
-          appError('Authentication failure: ' + params.l_fs_server);
-      });
-  });
+    // job table initialisation
+    var jobsData = [];
+    var jobTable = $('#job_table').DataTable({
+        "ajax": function(data, callback, settings) {
+            callback({data: jobsData});
+        },
+        "columnDefs": [
+            {
+                "render": function(data, type, row) {
+                    if ( row.progress_data ) {
+                        return data + ' (' + row.progress_data + ')';
+                    } else {
+                        return data;
+                    }
+                },
+                "targets": 4
+            }
+        ],
+        "columns": [
+            {
+                "className": 'details-control',
+                "orderable": false,
+                "data": null,
+                "defaultContent": ''
+            },
+            { "data": "id",
+            "className": "dt-body-center"},
+            { "data": "data.srcURL",
+            "render": $.fn.dataTable.render.ellipsis(20)},
+            { "data": "data.dstURL",
+            "render": $.fn.dataTable.render.ellipsis(20)},
+            { "data": "state",
+            "className": "dt-body-left"},
+            { "data": "progress",
+            "render": $.fn.dataTable.render.percentBar('square','#FFF','#269ABC','#31B0D5','#286090',0)}
+        ],
+        "order": [[1, 'desc']]
+    });
 
-  /* local filetree or login initialisation */
-  if ( params.l_fs_view == "login" ) {
-      console.log('check 1: ' + params.l_fs_view);
-      show_login_form('local','');
-  } else {
-      console.log('check 2: ' + params.l_fs_view);
-      show_filetree('local', params.l_fs_root);
-  }
+    var jobTableRefreshId = null;
 
-  /* remote filetree or login initialisation */
-  if ( params.r_fs_view == "login" ) {
-      show_login_form('remote','');
-  } else {
-      show_filetree('remote', params.r_fs_root);
-  }
+    // actions of application error modal panel
+    $("#close_app_error").click(function() {
+        $("#app_error").modal( "hide" );
+    });
 
-  /* general function for getting checked file/directory items */
-  var get_checked_items = function( element ) {
-      return (element.jstree(true)) ?
-          element.jstree(true).get_checked():[];
-  };
+    // function of job detail fields
+    var formatJobDetail = function(j) {
+        return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
+        + '<tr>'
+        + '<td>From:</td>'
+        + '<td>' + j.data.srcURL + '</td>'
+        + '</tr>'
+        + '<tr>'
+        + '<td>To:</td>'
+        + '<td>' + j.data.dstURL + '</td>'
+        + '</tr>'
+        + '<tr>'
+        + '<td>Created at:</td>'
+        + '<td>' + new Date(Number(j.created_at)).toISOString() + '</td>'
+        + '</tr>'
+        + '<tr>'
+        + '<td>Updated at:</td>'
+        + '<td>' + new Date(Number(j.updated_at)).toISOString() + '</td>'
+        + '</tr>'
+        + '<tr>'
+        + '<td>Attempts:</td>'
+        + '<td>' + j.attempts.made + '</td>'
+        + '</tr>'
+        + '</table>';
+    }
 
-  /* general function for composing and sending staging jobs */
-  var jobData = [];
-  var send_staging_job = function( action, src, dst ) {
+    // Add event listener for opening and closing details
+    $('#job_table tbody').on('click', 'td.details-control', function () {
+        var tr = $(this).closest('tr');
+        var row = jobTable.row( tr );
 
-      var loc_src = ( action == 'upload' ) ? 'local (left panel)':'remote (right panel)';
-      var loc_dst = ( action == 'upload' ) ? 'remote (right panel)':'local (left panel)';
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            row.child.hide();
+            tr.removeClass('shown');
+        }
+        else {
+            // Open this row
+            row.child( formatJobDetail(row.data()) ).show();
+            tr.addClass('shown');
+        }
+    } );
 
-      var purl_src = ( action == 'upload' ) ? '':'irods:';
-      var purl_dst = ( action == 'upload' ) ? 'irods:':'';
+    // function to check session validity every minute
+    var checkSessionValidity = function() {
+        setInterval( function() {
+            if ( ! Cookies.get('stager-ui.sid') ) {
+                // block the whole page with a warning; and ask user to refresh the page
+                appError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
+            }
+        }, 60 * 1000 );
+    }
 
-      // check: one of the src/dst is missing
-      if ( typeof src === 'undefined' || src.length == 0 ) {
-          appError('No source: please select ' + loc_src + ' directory/files');
-          return false;
-      }
+    // function to stop job table refresh task
+    var stopJobTableRefresh = function() {
+        if ( jobTableRefreshId != null ) {
+            clearInterval(jobTableRefreshId);
+            jobTableRefreshId = null;
+        }
+    }
 
-      if ( typeof dst === 'undefined' || dst.length == 0 ) {
-          appError('No destination: please select ' + loc_dst + ' directory as destination');
-          return false;
-      }
+    // function to start job table refresh task, with iteration delay in seconds
+    var startJobTableRefresh = function(delay) {
+        if ( jobTableRefreshId == null ) {
+            jobTableRefreshId = setInterval( update_job_history_table, delay * 1000 );
+        }
+    }
 
-      // check if dst is not single and not a directory
-      if ( dst.length > 1 ) {
-          appError('Only one destination is allowd, you selected ' + dst.length);
-          return false;
-      } else if (! isDir(dst[0]) ) {
-          appError('Destination not a directory: ' + dst[0]);
-          return false;
-      }
+    // toggle for background history refresh
+    // action toggle background history refresh
+    var setHistoryRefreshMode = function(e, s) {
+        if (s) {
+            $('#button_refresh_history').addClass('disabled');
+            startJobTableRefresh(10);
+        } else {
+            $('#button_refresh_history').removeClass('disabled');
+            stopJobTableRefresh();
+        }
+    };
 
-      var srcDirs = [];
-      var srcFiles = [];
+    $('#history-refresh-toggle').bootstrapSwitch({
+        size: "normal",
+        onText: "A",
+        offText: "M",
+        onInit: setHistoryRefreshMode,
+        onSwitchChange: setHistoryRefreshMode
+    });
 
-      src.forEach( function(s) {
-         if ( isDir(s) ) {
-           srcDirs.push(s);
-         } else {
-           srcFiles.push(s);
-         }
-      });
+    // menu tabs
+    $('.navbar-nav a').on('shown.bs.tab', function(event){
+        if ( $(event.target).text() == 'History' ) {
+            update_job_history_table();
+            // by-default disable the auto refresh of job history
+            $('#history-refresh-toggle').bootstrapSwitch('state',false);
+        } else {
+            stopJobTableRefresh();
+        }
+    });
 
-      jobData = [];
-      srcFiles.forEach( function(s) {
-          var dirs = srcDirs.filter( function(sd) {
-              return s.search(sd) >= 0;
-          });
+    var update_job_history_table = function() {
+        $.get("/stager/job/state", function(data) {
+            // count totoal amount of jobs
+            var idx_t = -1;
+            Object.keys(data).forEach(function(k) {
+                if ( k.indexOf('Count') >= 0 ) {
+                    idx_t += data[k];
+                }
+            });
 
-          // create a job when there is no parent directory on src list
-          if ( dirs.length == 0 ) {
-              jobData.push({ dstURL: purl_dst + dst[0], srcURL: purl_src + s });
-          }
-      });
+            // get jobs
+            if ( idx_t >= 0 ) {
+                var url = "/stager/jobs/0-" + idx_t;
+                $.get(url, function(data) {
+                    // feed the data to job history table
+                    jobsData = data;
+                    jobTable.ajax.reload();
+                });
+            }
+        }).done( function() {
+        }).fail( function() {
+            // whenever there is an error, stop the background process
+            $('#history-refresh-toggle').bootstrapSwitch('state',false);
+            appError('cannot retrieve history');
+        });
+    };
 
-      srcDirs.forEach( function(s) {
-        var dirs = srcDirs.filter( function(sd) {
-            return s != sd && s.search(sd) >= 0;
+    /* remote login action */
+    $('#login_form_remote').on( 'submit', function( event ) {
+        event.preventDefault();
+        var u = $(this).find('input[name="username"]').val();
+        $.post(params.r_fs_path_login, $(this).serialize(), function(data) {
+            //console.log(data);
+        }).done( function() {
+            Cookies.set('username_remote', u);
+            show_filetree(params, 'remote', params.r_fs_root);
+        }).fail( function() {
+            appError('Authentication failure: ' + params.r_fs_server);
+        });
+    });
+
+    /* local login action */
+    $('#login_form_local').on( 'submit', function( event ) {
+        event.preventDefault();
+        var u = $(this).find('input[name="username"]').val();
+        $.post(params.l_fs_path_login, $(this).serialize(), function(data) {
+            //console.log(data);
+        }).done( function() {
+            Cookies.set('username_local', u);
+            show_filetree(params, 'local', params.l_fs_root);
+        }).fail( function() {
+            appError('Authentication failure: ' + params.l_fs_server);
+        });
+    });
+
+    /* local filetree or login initialisation */
+    if ( params.l_fs_view == "login" ) {
+        show_login_form('local','');
+    } else {
+        show_filetree(params, 'local', params.l_fs_root);
+    }
+
+    /* remote filetree or login initialisation */
+    if ( params.r_fs_view == "login" ) {
+        show_login_form('remote','');
+    } else {
+        show_filetree(params, 'remote', params.r_fs_root);
+    }
+
+    /* general function for getting checked file/directory items */
+    var get_checked_items = function( element ) {
+        return (element.jstree(true)) ?
+        element.jstree(true).get_checked():[];
+    };
+
+    /* general function for composing and sending staging jobs */
+    var jobData = [];
+    var send_staging_job = function( action, src, dst ) {
+
+        var loc_src = ( action == 'upload' ) ? 'local (left panel)':'remote (right panel)';
+        var loc_dst = ( action == 'upload' ) ? 'remote (right panel)':'local (left panel)';
+
+        var purl_src = ( action == 'upload' ) ? '':'irods:';
+        var purl_dst = ( action == 'upload' ) ? 'irods:':'';
+
+        // check: one of the src/dst is missing
+        if ( typeof src === 'undefined' || src.length == 0 ) {
+            appError('No source: please select ' + loc_src + ' directory/files');
+            return false;
+        }
+
+        if ( typeof dst === 'undefined' || dst.length == 0 ) {
+            appError('No destination: please select ' + loc_dst + ' directory as destination');
+            return false;
+        }
+
+        // check if dst is not single and not a directory
+        if ( dst.length > 1 ) {
+            appError('Only one destination is allowd, you selected ' + dst.length);
+            return false;
+        } else if (! isDir(dst[0]) ) {
+            appError('Destination not a directory: ' + dst[0]);
+            return false;
+        }
+
+        var srcDirs = [];
+        var srcFiles = [];
+
+        src.forEach( function(s) {
+            if ( isDir(s) ) {
+                srcDirs.push(s);
+            } else {
+                srcFiles.push(s);
+            }
         });
 
-        // create a job when there is no parent directory on srcDirs list
-        if ( dirs.length == 0 ) {
-            // extend destination with the directory name of the source
-            if ( s.match('.*/$') ) {
-                // *nix way
-                jobData.push({ dstURL: purl_dst + dst[0] +
-                  s.split('/').slice(-2)[0] + '/', srcURL: purl_src + s });
-            } else {
-                // Windows way
-                jobData.push({ dstURL: purl_dst + dst[0] +
-                  s.split('\\').slice(-2)[0] + '\\', srcURL: purl_src + s });
+        jobData = [];
+        srcFiles.forEach( function(s) {
+            var dirs = srcDirs.filter( function(sd) {
+                return s.search(sd) >= 0;
+            });
+
+            // create a job when there is no parent directory on src list
+            if ( dirs.length == 0 ) {
+                jobData.push({ dstURL: purl_dst + dst[0], srcURL: purl_src + s });
             }
+        });
+
+        srcDirs.forEach( function(s) {
+            var dirs = srcDirs.filter( function(sd) {
+                return s != sd && s.search(sd) >= 0;
+            });
+
+            // create a job when there is no parent directory on srcDirs list
+            if ( dirs.length == 0 ) {
+                // extend destination with the directory name of the source
+                if ( s.match('.*/$') ) {
+                    // *nix way
+                    jobData.push({ dstURL: purl_dst + dst[0] +
+                        s.split('/').slice(-2)[0] + '/', srcURL: purl_src + s });
+                } else {
+                        // Windows way
+                        jobData.push({ dstURL: purl_dst + dst[0] +
+                            s.split('\\').slice(-2)[0] + '\\', srcURL: purl_src + s });
+                }
+            }
+        });
+
+        // open up the modal and preview the jobs
+        $("#job_confirmation").modal("toggle");
+        $("#job_preview").html( function() {
+            var html_d = '<table class="table">';
+            html_d += '<thead><tr>';
+            html_d += '<th>From (srcURL)</th>';
+            html_d += '<th>To (dstURL)</th>';
+            html_d += '</tr></thead>';
+            html_d += '<tbody>';
+            jobData.forEach( function(j) {
+                html_d += '<tr>';
+                html_d += '<td>' + j.srcURL + '</td>';
+                html_d += '<td>' + j.dstURL + '</td>';
+                html_d += '</tr>';
+            });
+            html_d += '</tbody></table>';
+            return html_d;
+        });
+
+        return true;
+    };
+
+    // action button: submit stager jobs
+    $("#job_submit").click(function() {
+        $("#job_confirmation").modal( "hide" );
+        $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
+            appInfo('Job submited: ' + JSON.stringify(data));
+        }).fail( function() {
+            appError('Job submission failed');
+        });
+    });
+
+    // action button: cancel stager jobs
+    $("#job_cancel").click(function() {
+        jobData = [];
+        $("#job_confirmation").modal( "hide" );
+    });
+
+    /* action button: upload */
+    $('#button_upload').click(function() {
+        //src: local
+        var checked_src = get_checked_items($($("#filetree_local").get(0)).find('#jstree'));
+
+        //dst: remote
+        var checked_dst = get_checked_items($($("#filetree_remote").get(0)).find('#jstree'));
+
+        // send staging job
+        if ( send_staging_job('upload', checked_src, checked_dst) ) {
+            console.log('job submitted');
         }
-      });
+    });
 
-      // open up the modal and preview the jobs
-      $("#job_confirmation").modal("toggle");
-      $("#job_preview").html( function() {
-          var html_d = '<table class="table">';
-          html_d += '<thead><tr>';
-          html_d += '<th>From (srcURL)</th>';
-          html_d += '<th>To (dstURL)</th>';
-          html_d += '</tr></thead>';
-          html_d += '<tbody>';
-          jobData.forEach( function(j) {
-              html_d += '<tr>';
-              html_d += '<td>' + j.srcURL + '</td>';
-              html_d += '<td>' + j.dstURL + '</td>';
-              html_d += '</tr>';
-          });
-          html_d += '</tbody></table>';
-          return html_d;
-      });
+    /* action button: download */
+    $('#button_download').click(function() {
+        //src: local
+        var checked_src = get_checked_items($($("#filetree_remote").get(0)).find('#jstree'));
 
-      return true;
-  };
+        //dst: remote
+        var checked_dst = get_checked_items($($("#filetree_local").get(0)).find('#jstree'));
 
-  // action button: submit stager jobs
-  $("#job_submit").click(function() {
-      $("#job_confirmation").modal( "hide" );
-      $.post('/stager/jobs', {'jobs': JSON.stringify(jobData)}, function(data) {
-          appInfo('Job submited: ' + JSON.stringify(data));
-      }).fail( function() {
-          appError('Job submission failed');
-      });
-  });
+        // send staging job
+        if ( send_staging_job('download', checked_src, checked_dst) ) {
+            console.log('job submitted');
+        }
+    });
 
-  // action button: cancel stager jobs
-  $("#job_cancel").click(function() {
-      jobData = [];
-      $("#job_confirmation").modal( "hide" );
-  });
+    /* action buttons: local */
+    $('#button_refresh_local').click(function() {
+        $($("#filetree_local").get(0)).find('#jstree').jstree(true).refresh();
+    });
 
-  /* action button: upload */
-  $('#button_upload').click(function() {
-      //src: local
-      var checked_src = get_checked_items($("#filetree_local"));
+    $('#button_logout_local').click(function() {
+        $.post(params.l_fs_path_logout, function(data) {
+            appInfo(params.l_fs_server + " user logged out");
+            Cookies.remove('username_local');
+            show_login_form('local','');
+        }).fail( function() {
+            appError('fail logout ' + params.l_fs_server + ' user');
+        });
+    });
 
-      //dst: remote
-      var checked_dst = get_checked_items($("#filetree_remote"));
+    /* action buttons: remote */
+    $('#button_refresh_remote').click(function() {
+        $($("#filetree_remote").get(0)).find('#jstree').jstree(true).refresh();
+    });
 
-      // send staging job
-      if ( send_staging_job('upload', checked_src, checked_dst) ) {
-          console.log('job submitted');
-      }
-  });
+    $('#button_logout_remote').click(function() {
+        $.post(params.r_fs_path_logout, function(data) {
+            appInfo(params.r_fs_server + " user logged out");
+            Cookies.remove('username_remote');
+            show_login_form('remote','');
+        }).fail( function() {
+            appError('fail logout ' + params.r_fs_server + ' user');
+        });
+    });
 
-  /* action button: download */
-  $('#button_download').click(function() {
-      //src: local
-      var checked_src = get_checked_items($("#filetree_remote"));
+    /* action manual history refresh */
+    $('#button_refresh_history').click(function() {
+        update_job_history_table();
+    });
 
-      //dst: remote
-      var checked_dst = get_checked_items($("#filetree_local"));
-
-      // send staging job
-      if ( send_staging_job('download', checked_src, checked_dst) ) {
-          console.log('job submitted');
-      }
-  });
-
-  /* action buttons: local */
-  $('#button_refresh_local').click(function() {
-      $($("#filetree_local").get(0)).find('#jstree').jstree(true).refresh();
-  });
-
-  $('#button_logout_local').click(function() {
-      $.post(params.l_fs_path_logout, function(data) {
-          appInfo(params.l_fs_server + " user logged out");
-          Cookies.remove('username_local');
-          show_login_form('local','');
-      }).fail( function() {
-          appError('fail logout ' + params.l_fs_server + ' user');
-      });
-  });
-
-  /* action buttons: remote */
-  $('#button_refresh_remote').click(function() {
-      $($("#filetree_remote").get(0)).find('#jstree').jstree(true).refresh();
-  });
-
-  $('#button_logout_remote').click(function() {
-      $.post(params.r_fs_path_logout, function(data) {
-          appInfo(params.r_fs_server + " user logged out");
-          Cookies.remove('username_remote');
-          show_login_form('remote','');
-      }).fail( function() {
-          appError('fail logout ' + params.r_fs_server + ' user');
-      });
-  });
-
-  /* action manual history refresh */
-  $('#button_refresh_history').click(function() {
-      update_job_history_table();
-  });
-
-  // enable periodic check on session validity
-  checkSessionValidity();
+    // enable periodic check on session validity
+    checkSessionValidity();
 }

@@ -77,6 +77,11 @@ div.action {
   margin-bottom: 10px;
 }
 
+.tooltip-inner {
+    max-width: none;
+    white-space: nowrap;
+}
+
 div.form_block {
   border:2px solid grey;
   height: 400px;
