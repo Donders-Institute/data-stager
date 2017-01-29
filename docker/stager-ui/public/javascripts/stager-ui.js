@@ -43,7 +43,7 @@ var show_login_form = function(loc, msg) {
 };
 
 /* general function for displaying the filetree */
-var show_filetree = function(params, loc, root) {
+var show_filetree = function(loc, root) {
     var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
     var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
     var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
@@ -84,13 +84,13 @@ var show_filetree = function(params, loc, root) {
             htmlCnt += '<li class="active">' +
             '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></li>';
         } else {
-            htmlCnt += '<li>' + '<a href="#">' +
+            htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+init_root+'");>' +
             '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></a></li>';
 
             if ( subdirs.length >= 3 ) {
                 // insert link to go to parent folder
-                var dir_t = init_root + subdirs.slice(1,-1).join('/');
-                htmlCnt += '<li>' + '<a href=#>' +
+                var dir_t = init_root + subdirs.slice(1,-1).join('/') + '/';
+                htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_t+'");>' +
                 '<i class="fa fa-level-up" data-toggle="tooltip" title="' + dir_t +'"></i></a></li>';
             }
 
@@ -166,7 +166,7 @@ var show_filetree = function(params, loc, root) {
                             _disabled: (! isDir(node.id)),
                             action: function(data) {
                                 var id = data.reference[0].id.replace('_anchor','');
-                                show_filetree(params, loc, id);
+                                show_filetree(loc, id);
                             }
                         }
                     }
@@ -362,7 +362,7 @@ var run_stager_ui = function(params) {
             //console.log(data);
         }).done( function() {
             Cookies.set('username_remote', u);
-            show_filetree(params, 'remote', params.r_fs_root);
+            show_filetree('remote', params.r_fs_root);
         }).fail( function() {
             appError('Authentication failure: ' + params.r_fs_server);
         });
@@ -376,7 +376,7 @@ var run_stager_ui = function(params) {
             //console.log(data);
         }).done( function() {
             Cookies.set('username_local', u);
-            show_filetree(params, 'local', params.l_fs_root);
+            show_filetree('local', params.l_fs_root);
         }).fail( function() {
             appError('Authentication failure: ' + params.l_fs_server);
         });
@@ -386,14 +386,14 @@ var run_stager_ui = function(params) {
     if ( params.l_fs_view == "login" ) {
         show_login_form('local','');
     } else {
-        show_filetree(params, 'local', params.l_fs_root);
+        show_filetree('local', params.l_fs_root);
     }
 
     /* remote filetree or login initialisation */
     if ( params.r_fs_view == "login" ) {
         show_login_form('remote','');
     } else {
-        show_filetree(params, 'remote', params.r_fs_root);
+        show_filetree('remote', params.r_fs_root);
     }
 
     /* general function for getting checked file/directory items */

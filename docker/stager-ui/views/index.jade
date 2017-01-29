@@ -44,10 +44,9 @@ html(lang="en")
     script(src='/javascripts/utility.js')
     script(src='/javascripts/stager-ui.js')
     script.
+      var params = {};
       $( function() {
-
              // variables for running stager ui
-             var params = {};
              params.l_fs_path_getdir = "#{fs_path_getdir_local}";
              params.l_fs_path_login = "#{fs_path_login_local}";
              params.l_fs_path_logout = "#{fs_path_logout_local}";
