@@ -118,7 +118,10 @@ var show_filetree = function(loc, root) {
 
         // reload the jstree
         domJstree.on('activate_node.jstree', function(err, data) {
-            if ( isDir(data.node.id) ) {
+            // data.event is 'undefined' if user clicks on the checkbox
+            // this is the handle to check whether user is clicking on a checkbox
+            // or getting into a folder.
+            if ( isDir(data.node.id) && typeof data.event != 'undefined') {
                 show_filetree(loc, data.node.id);
             }
         }).jstree({
