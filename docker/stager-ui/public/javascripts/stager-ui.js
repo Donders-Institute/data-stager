@@ -117,7 +117,11 @@ var show_filetree = function(loc, root) {
         domJstree.jstree("destroy");
 
         // reload the jstree
-        domJstree.jstree({
+        domJstree.on('activate_node.jstree', function(err, data) {
+            if ( isDir(data.node.id) ) {
+                show_filetree(loc, data.node.id);
+            }
+        }).jstree({
             core: {
                 animation: 0,
                 check_callback: true,
@@ -155,24 +159,7 @@ var show_filetree = function(loc, root) {
                 }
                 return -1;
             },
-            contextmenu: {
-                select_node: false,
-                show_at_node: false,
-                items: function(node, cb) {
-                    return {
-                        ct01: {
-                            label: 'Enter',
-                            icon: "fa fa-hand-o-right",
-                            _disabled: (! isDir(node.id)),
-                            action: function(data) {
-                                var id = data.reference[0].id.replace('_anchor','');
-                                show_filetree(loc, id);
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: [ 'checkbox', 'wholerow', 'sort', 'contextmenu' ]
+            plugins: [ 'checkbox', 'wholerow', 'sort' ]
         });
     }
 };
