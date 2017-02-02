@@ -97,6 +97,9 @@ if [ $? -eq 0 ]; then
         if [ $? -eq 0 ]; then
             is_dst_dir=1
         fi
+    elif [ "${dst_coll: -1}" == "/" ]; then
+        # if the given $dst_coll doesn't exist, and it ends with '/'; it's taken as a directory to be created
+        is_dst_dir=1
     else
         # the namespace doesn't exist at all, whether it should be a directory is determined by is_src_dir
         is_dst_dir=$is_src_dir
