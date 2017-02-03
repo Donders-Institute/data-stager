@@ -212,7 +212,8 @@ if (cluster.isMaster) {
     }
 
     // fork workers
-    var nworkers = require('os').cpus().length - 1;
+    //var nworkers = require('os').cpus().length - 1;
+    var nworkers = 4;
     for (var i = 0; i < nworkers; i++) {
         var w = cluster.fork();
 
