@@ -7,7 +7,7 @@
     "irods_cwd": "/rdm/di",
     "irods_zone_name": "rdm",
     "irods_client_server_negotiation": "request_server_negotiation",
-    "irods_client_server_policy": "CS_NEG_REFUSE",
+    "irods_client_server_policy": "CS_NEG_REQUIRE",
     "irods_encryption_key_size": 32,
     "irods_encryption_salt_size": 8,
     "irods_encryption_num_hash_rounds": 16,
