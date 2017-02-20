@@ -270,7 +270,7 @@ if (cluster.isMaster) {
                         if ( isOk ) {
                             console.log( '[' + new Date().toISOString() + '] initiate irods token: ' + u);
                             valid_auths[u].path = irodsA;
-                            valid_auths[u].validity = Date.now() + 12 * 3600 * 1000;
+                            valid_auths[u].validity = Date.now() + 3600 * 1000;
                         } else {
                             console.error( '[' + new Date().toISOString() + '] cannot create irods token: ' + u);
                         }
