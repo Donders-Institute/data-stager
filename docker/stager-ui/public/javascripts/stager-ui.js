@@ -109,7 +109,14 @@ var show_filetree = function(loc, root) {
         var domCwd = $(ele_filetree.get(0)).find('#cwd');
         domCwd.html(htmlCnt);
         $('[data-toggle="tooltip"]').tooltip();
-
+        
+        // update params.l_fs_cwd or params.r_fs_cwd
+        if ( loc == 'local' ) {
+            params.l_fs_cwd = root;
+        } else {
+            params.r_fs_cwd = root;
+        }
+        
         // jsTree
         var domJstree = $(ele_filetree.get(0)).find('#jstree');
 
@@ -409,8 +416,15 @@ var run_stager_ui = function(params) {
         }
 
         if ( typeof dst === 'undefined' || dst.length == 0 ) {
-            appError('No destination: please select ' + loc_dst + ' directory as destination');
-            return false;
+            // take current directory as the destination if the current directory is not the root
+            var root = ( action == 'upload' ) ? params.r_fs_root:params.l_fs_root;
+            var cwd = ( action == 'upload' ) ? params.r_fs_cwd:params.l_fs_cwd;
+            if ( cwd != root ) {
+                dst = [ cwd ];
+            } else {
+                appError('No destination: please select ' + loc_dst + ' directory as destination');
+                return false;
+            }
         }
 
         // check if dst is not single and not a directory
@@ -519,10 +533,10 @@ var run_stager_ui = function(params) {
 
     /* action button: download */
     $('#button_download').click(function() {
-        //src: local
+        //src: remote
         var checked_src = get_checked_items($($("#filetree_remote").get(0)).find('#jstree'));
 
-        //dst: remote
+        //dst: local
         var checked_dst = get_checked_items($($("#filetree_local").get(0)).find('#jstree'));
 
         // send staging job
