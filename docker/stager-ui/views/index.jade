@@ -61,6 +61,12 @@ html(lang="en")
              params.r_fs_server = "#{fs_server_remote}";
              params.r_fs_view = "#{fs_view_remote}";
 
+             $('#panel_intro a').click(function (e) {
+                 e.preventDefault();
+                 console.log($(this).attr('data-target'));
+                 $('a[href="' + $(this).attr('data-target') + '"]').tab('show');
+             });
+
              // start the stager ui
              run_stager_ui(params);
        });
