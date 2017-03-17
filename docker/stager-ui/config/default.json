@@ -3,6 +3,7 @@
     "local": {
         "module": "stager"
     },
+    "title": "File Staging Service",
     "website": "https://data.donders.ru.nl",
     "helpdesk": "helpdesk@fcdonders.ru.nl",
     "filesystem": {

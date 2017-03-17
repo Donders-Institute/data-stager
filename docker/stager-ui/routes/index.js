@@ -52,7 +52,7 @@ router.get('/', function(req, res, next) {
   // get remote module parameters
   var params_remote = _getModParams(req, 'rdm');
 
-  res.render('index', { title: 'DI-RDM file staging service',
+  res.render('index', { title: config.get('title'),
                         title_request: 'New request',
                         title_history: 'Request history',
                         website: config.get('website'),
