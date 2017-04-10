@@ -139,17 +139,23 @@ if [ $w_total -gt 0 ]; then
     w_done=0
     w_done_percent=0
     ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
-        w_done=$(( $w_done + 1 ))
-        w_done_percent=$(( $w_done * 100 / $w_total ))
 
-        # the process is still running, therefore the progress should not exceed 99%
-        if [ $w_done -ge $w_total ] || [ $w_done_percent -ge 100 ]; then
-            w_done=$(( $w_total - 1 ))
-            w_done_percent=99
+        if [[ $line == *"ERROR:"* ]]; then
+            # return the whole line containing the ERROR: string
+            echo "error:${line}"
+        else
+            w_done=$(( $w_done + 1 ))
+            w_done_percent=$(( $w_done * 100 / $w_total ))
+         
+            # the process is still running, therefore the progress should not exceed 99%
+            if [ $w_done -ge $w_total ] || [ $w_done_percent -ge 100 ]; then
+                w_done=$(( $w_total - 1 ))
+                w_done_percent=99
+            fi
+         
+            # print current progress
+            echo "progress:${w_done_percent}:${w_done}:${w_total}"
         fi
-
-        # print current progress
-        echo "progress:${w_done_percent}:${w_done}:${w_total}"
     done
 
     # catch the exit code of the actual irsync command

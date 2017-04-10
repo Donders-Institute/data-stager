@@ -375,7 +375,15 @@ if ( cluster.worker ) {
                         child.stdout.on('data', function(data) {
                             // use the child process's output to update job's progress
                             var _d = data.toString().trim();
-                            if ( new RegExp('^progress:[0-9]{1,3}:?.*').exec(_d) ) {
+                            if ( new RegExp('^error:.*').exec(_d) ) {
+                                // save error line to job log
+                                job.log(_d);
+                                // kill process
+                                child.stdin.pause();
+                                kill(child.pid, 'SIGKILL', function(err) {
+                                    console.log( '[' + new Date().toISOString() + '] job ' + job.id + ' killed due to error: ' + _d );
+                                });
+                            } else if ( new RegExp('^progress:[0-9]{1,3}:?.*').exec(_d) ) {
                                 var _p = _d.split(':');
                                 job.progress(parseInt(_p[1]), 100, _p[2] + '/' + _p[3]);
                                 // reset noprogress time counter
