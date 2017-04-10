@@ -89,8 +89,10 @@ queue.on( 'error', function(err) {
             msgHtml += '</style>';
             msgHtml += '<body>';
             msgHtml += '<b>Please be informed by the following completed stager job:</b>';
-            msgHtml += '<div><table>';
-            msgHtml += '<tr><th>id</th><td>' + id + '</td></tr>';
+            msgHtml += '<div style="width: 100%; padding-top: 10px; padding-bottom: 10px;">';
+            msgHtml += '<table style="width: 95%; border-collapse: collapse;">';
+            msgHtml += '<tr><th style="width: 20%; border: 1px solid #ddd; background-color: #f5f5f5; text-align: left; padding: 10px;">id</th>'
+            msgHtml += '<td style="width: 80%; border: 1px solid #ddd; text-align: left; padding: 10px;">' + id + '</td></tr>';
             msgHtml += '<tr><th>state</th><td>' + job.state() + '</td></tr>';
             msgHtml += '<tr><th>owner</th><td>' + job.data.stagerUser + '</td></tr>';
             msgHtml += '<tr><th>repository user</th><td>' + job.data.rdmUser + '</td></tr>';
