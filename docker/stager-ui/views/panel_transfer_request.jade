@@ -44,8 +44,12 @@ div.container-fluid
                         div.btn-group
                             button.btn.btn-default#button_refresh_local
                                 i.fa.fa-refresh
-                            button.btn.btn-default.disabled#button_config_local
-                                i.fa.fa-gear
+                            div.btn-group.dropup
+                                button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_local
+                                    i.fa.fa-gear                                        
+                                ui.dropdown-menu(role="manu")
+                                    li: a#button_mkdir_local(ref="#")
+                                        i.fa.fa-plus &nbsp;Create folder ...
                         div.btn-group#button_user_local
                             button.btn.btn-success#fs_username_local
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
@@ -90,8 +94,12 @@ div.container-fluid
                         div.btn-group
                             button.btn.btn-default#button_refresh_remote
                                 i.fa.fa-refresh
-                            button.btn.btn-default.disabled#button_config_remote
-                                i.fa.fa-gear
+                            div.btn-group.dropup
+                                button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_remote
+                                    i.fa.fa-gear                                        
+                                ui.dropdown-menu(role="manu")
+                                    li: a#button_mkdir_remote(ref="#")
+                                        i.fa.fa-plus &nbsp;Create folder ...
                         div.btn-group#button_user_remote
                             button.btn.btn-success#fs_username_remote
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")

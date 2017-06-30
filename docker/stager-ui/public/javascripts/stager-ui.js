@@ -49,6 +49,7 @@ var show_filetree = function(loc, root) {
     var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
     var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
     var ele_userbutton = ( loc == 'local' ) ? $("#button_user_local"):$("#button_user_remote");
+    var ele_configbutton = ( loc == 'local' ) ? $("#button_config_local"):$("#button_config_remote");
     var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
     var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
     var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
@@ -109,14 +110,14 @@ var show_filetree = function(loc, root) {
         var domCwd = $(ele_filetree.get(0)).find('#cwd');
         domCwd.html(htmlCnt);
         $('[data-toggle="tooltip"]').tooltip();
-        
+
         // update params.l_fs_cwd or params.r_fs_cwd
         if ( loc == 'local' ) {
             params.l_fs_cwd = root;
         } else {
             params.r_fs_cwd = root;
         }
-        
+
         // jsTree
         var domJstree = $(ele_filetree.get(0)).find('#jstree');
 
@@ -130,6 +131,13 @@ var show_filetree = function(loc, root) {
             // or getting into a folder.
             if ( isDir(data.node.id) && typeof data.event != 'undefined') {
                 show_filetree(loc, data.node.id);
+            }
+        }).on('ready.jstree', function(err) {
+            // actions when the filesystem tree is ready
+            if ( root != init_root ) {
+                ele_configbutton.removeClass('disabled');
+            } else {
+                ele_configbutton.addClass('disabled');
             }
         }).jstree({
             core: {
