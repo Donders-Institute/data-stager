@@ -20,7 +20,7 @@
     "node-rest-client": "~2.0.1",
     "body-parser": "~1.15.2",
     "posix": "~4.1.1",
-    "nodemailer": "~2.7.2",
+    "nodemailer": "~4.0.1",
     "node-html-encoder": "~0.0.2",
     "node-emoji": "~1.5.1"
   }
