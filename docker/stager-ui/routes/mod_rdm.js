@@ -3,8 +3,8 @@ var path = require('path');
 var RestClient = require('node-rest-client').Client;
 var util = require('../lib/utility');
 
-/* Authenticate user to the RDM service via the RESTful interface */
-var _authenticateUser = function(request, response) {
+/* Authenticate user to the RDM service via the irods-rest interface */
+var _authenticateUserRest = function(request, response) {
 
     var sess = request.session;
     var cfg = {user: request.body.username,
@@ -44,6 +44,39 @@ var _authenticateUser = function(request, response) {
     });
 }
 
+/* Authenticate user to the RDM service via the webdav interface */
+var _authenticateUserWebDav = function(request, response) {
+
+    var sess = request.session;
+
+    var wfs = require("webdav-fs")(
+        config.get('rdm.irodsWebDavEndpoint'),
+        request.body.username,
+        request.body.password
+    );
+
+    wfs.readdir('/', function(err, contents) {
+        if (!err) {
+            // set session data
+            if (typeof sess.user === "undefined" ||
+                typeof sess.user === "undefined" ) {
+                sess.user = {rdm: request.body.username};
+                sess.pass = {rdm: request.body.password};
+            } else {
+                sess.user.rdm = request.body.username;
+                sess.pass.rdm = request.body.password;
+            }
+
+            response.status(200);
+            response.json(contents);
+        } else {
+            console.error('login error: ' + err);
+            response.status(404);
+            response.json({'error': err});
+        }
+    });
+}
+
 /* logout user by removing corresponding session data */
 var _logoutUser = function(request, response) {
     var sess = request.session;
@@ -52,8 +85,8 @@ var _logoutUser = function(request, response) {
     response.json({'logout': true});
 }
 
-/* Get directory content for jsTree */
-var _getDirListJsTree = function(request, response) {
+/* Get directory content for jsTree, using the irods-rest interface */
+var _getDirListJsTreeRest = function(request, response) {
 
     var files = [];
 
@@ -107,53 +140,55 @@ var _getDirListJsTree = function(request, response) {
     });
 }
 
-/* Get directory content for jqueryFileTree */
-var _getDirList = function(request, response) {
+/* Get directory content for jsTree, using the WebDAV interface */
+var _getDirListJsTreeWebDav = function(request, response) {
+
+    var files = [];
 
     var sess = request.session;
 
-    var cfg = { user: sess.user['rdm'],
-                password: sess.pass['rdm'] };
+    var dir = request.query.dir;
+    var isRoot = request.query.isRoot;
 
-    var dir = request.body.dir;
-    var checkbox = ( typeof request.body.multiSelect !== 'undefined' && request.body.multiSelect ) ? '<input type="checkbox" />':'';
+    var wfs = require("webdav-fs")(
+        config.get('rdm.irodsWebDavEndpoint'),
+        sess.user['rdm'],
+        sess.pass['rdm']
+    );
 
-    var r = '<ul class="jqueryFileTree" style="display: none;">';
-
-    var c = new RestClient(cfg);
-    var args = { parameters: { listType: 'both', listing: 'True' },
-                 headers: { "Accept": "application/json" } };
-
-    c.get(config.get('rdm.irodsRestfulEndpoint') + '/collection' + dir, args, function(data, resp) {
-        try {
-            r = '<ul class="jqueryFileTree" style="display: none;">';
-            console.log('irods-rest response status: ' + resp.statusCode);
-            data.children.forEach(function(f){
-                if ( f.objectType == 'COLLECTION' ) {
-                    var rel_name = f.pathOrName.replace(f.parentPath + '/', '');
-                    r += '<li class="directory collapsed">' + checkbox + '<a href="#" rel="' + f.pathOrName + '/">' + rel_name + '</a></li>';
+    wfs.readdir(dir, function(err, contents) {
+        if (!err) {
+            contents.forEach( function(f) {
+                if ( f.isFile() ) {
+                    files.push({
+                        id: dir.replace(/\/$/,'') + '/' + f.name,
+                        type: 'f',
+                        parent: isRoot === 'true' ? '#':dir,
+                        text: f.name,
+                        icon: 'fa fa-file-o',
+                        li_attr: {'title':''+f.size+' bytes'},
+                        children: false
+                    });
                 } else {
-                    var e = f.pathOrName.split('.').pop();
-                    r += '<li title="' + f.dataSize + ' Bytes" class="file ext_' + e + '">' + checkbox + '<a href="#" rel='+ f.parentPath + '/' + f.pathOrName + '>' + f.pathOrName + '</a></li>';
+                    files.push({
+                        id: dir.replace(/\/$/,'') + '/' + f.name + '/',
+                        type: 'd',
+                        parent: isRoot === 'true' ? '#':dir,
+                        text: f.name,
+                        icon: 'fa fa-folder',
+                        li_attr: {},
+                        children: true
+                    });
                 }
             });
-            r += '</ul>';
-            response.send(r);
-        } catch(e) {
-            console.error(e);
-            r += 'Could not load directory: ' + dir;
-            r += '</ul>';
-            util.responseOnError('html',r,response);
+            response.json(files);
+        } else {
+            console.log("Error:", err.message);
+            util.responseOnError('json',[],response);
         }
-    }).on('error', function(e) {
-        console.error(e);
-        r += 'Could not load directory: ' + dir;
-        r += '</ul>';
-        util.responseOnError('html',r,response);
-    });
+    }, 'stat');
 }
 
-module.exports.authenticateUser = _authenticateUser;
+module.exports.authenticateUser = _authenticateUserWebDav;
 module.exports.logoutUser = _logoutUser;
-module.exports.getDirList = _getDirList;
-module.exports.getDirListJsTree = _getDirListJsTree;
+module.exports.getDirListJsTree = _getDirListJsTreeWebDav;

@@ -105,63 +105,6 @@ var _getDirListJsTree = function(request, response) {
     });
 }
 
-/* Get directory content for jqueryFileTree */
-var _getDirList = function(request, response) {
-    var sess = request.session;
-    var dir = request.body.dir;
-
-    var args = { data: { dir: dir },
-                 headers: { "Accept": "application/json",
-                            "Content-Type": "application/json" } };
-
-    var checkbox = ( typeof request.body.multiSelect !== 'undefined' && request.body.multiSelect ) ? '<input type="checkbox" />':'';
-
-    var c = new RestClient({user: sess.user.stager,
-                            password: sess.pass.stager});
-
-    var req = c.post(config.get('stager.restfulEndpoint') + '/fstree/stager', args, function(data, resp) {
-
-    var r = '<ul class="jqueryFileTree" style="display: none;">';
-
-        try {
-            console.log('stager response status: ' + resp.statusCode);
-            if ( resp.statusCode == 200 ) {
-
-                // list files in front of directories
-                data.filter(function(f) { return f.type == 'f'; }).
-                     sort(function(a,b) { return a.name - b.name; }).
-                     forEach( function(f) {
-                        var e = f.name.split('.').pop();
-                        r += '<li title="' + f.size + ' Bytes" class="file ext_' + e + '">' + checkbox + '<a href="#" rel='+ dir + f.name + '>' + f.name + '</a></li>';
-                });
-
-                data.filter(function(f) { return f.type == 'd'; }).
-                     sort(function(a,b) { return a.name - b.name; }).
-                     forEach( function(f) {
-                        r += '<li class="directory collapsed">' + checkbox + '<a href="#" rel="' + dir + f.name + '/">' + f.name + '</a></li>';
-                });
-
-                r += '</ul>';
-                response.send(r);
-            } else {
-                r += 'Could not load directory: ' + dir;
-                r += '</ul>';
-                util.responseOnError('html', r, response);
-            }
-        } catch(e) {
-            console.error(e);
-            r += 'Could not load directory: ' + dir;
-            r += '</ul>';
-            util.responseOnError('html', r, response);
-        }
-    }).on('error', function(e) {
-        console.error(e);
-        r += 'Could not load directory: ' + dir;
-        r += '</ul>';
-        util.responseOnError('html', r, response);
-    });
-}
-
 /* Get transfer-job counts from Stager */
 var _getJobCount = function(request, response) {
 
@@ -330,7 +273,6 @@ var _submitJobs = function(request, response) {
 
 module.exports.authenticateUser = _authenticateUser;
 module.exports.logoutUser = _logoutUser;
-module.exports.getDirList = _getDirList;
 module.exports.getDirListJsTree = _getDirListJsTree;
 module.exports.getJobCount = _getJobCount;
 module.exports.getJobs = _getJobs;

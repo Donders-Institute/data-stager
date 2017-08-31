@@ -24,13 +24,15 @@
     },
     "rdm": {
         "displayName": "DI-RDM",
-        "rootDir": "/rdm/di/",
+        "rootDir": "/",
+        "prefixTurl": "irods:/rdm/di",
         "hintLogin": "Sing in with the DI-RDM data-access account",
         "pathLogin": "/rdm/login",
         "pathLogout": "/rdm/logout",
         "pathListDir": "/rdm/dir",
         "exampleLogin": "U123456-ru.nl",
-        "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest"
+        "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
+        "irodsWebDavEndpoint": "https://webdav.data.donders.ru.nl"
     },
     "stager": {
         "displayName": "File Stager",

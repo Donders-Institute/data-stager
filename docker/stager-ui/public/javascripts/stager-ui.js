@@ -414,8 +414,8 @@ var run_stager_ui = function(params) {
         var loc_src = ( action == 'upload' ) ? 'local (left panel)':'remote (right panel)';
         var loc_dst = ( action == 'upload' ) ? 'remote (right panel)':'local (left panel)';
 
-        var purl_src = ( action == 'upload' ) ? '':'irods:';
-        var purl_dst = ( action == 'upload' ) ? 'irods:':'';
+        var purl_src = ( action == 'upload' ) ? params.l_fs_prefix_turl:params.r_fs_prefix_turl;
+        var purl_dst = ( action == 'upload' ) ? params.r_fs_prefix_turl:params.l_fs_prefix_turl;
 
         // check: one of the src/dst is missing
         if ( typeof src === 'undefined' || src.length == 0 ) {
@@ -480,9 +480,9 @@ var run_stager_ui = function(params) {
                     jobData.push({ dstURL: purl_dst + dst[0] +
                         s.split('/').slice(-2)[0] + '/', srcURL: purl_src + s });
                 } else {
-                        // Windows way
-                        jobData.push({ dstURL: purl_dst + dst[0] +
-                            s.split('\\').slice(-2)[0] + '\\', srcURL: purl_src + s });
+                    // Windows way
+                    jobData.push({ dstURL: purl_dst + dst[0] +
+                        s.split('\\').slice(-2)[0] + '\\', srcURL: purl_src + s });
                 }
             }
         });

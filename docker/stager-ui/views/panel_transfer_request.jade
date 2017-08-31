@@ -12,6 +12,17 @@ div.container-fluid
           div.modal-footer
             button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
             button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
+    <!-- modal panel for creating folder -->
+    div.modal.fade#folder_creation(role='dialog')
+      div.modal-dialog
+        div.modal-content
+          div.modal-head
+              h4.modal-body Creating new folder
+          div.modal-body.scroll-able
+            p: span#folder_creation_content
+          div.modal-footer
+            button.btn.btn-default#folder_creation_submit(data-dismiss="modal",type="button") Create
+            button.btn.btn-danger#folder_creation_cancel(data-dismiss="modal",type="button") Cancel
     <!-- main panel -->
     div.row#filetrees
         <!-- local panel -->
