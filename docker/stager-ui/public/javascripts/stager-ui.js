@@ -49,11 +49,12 @@ var show_filetree = function(loc, root) {
     var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
     var ajax_script = ( loc == 'local' ) ? params.l_fs_path_getdir:params.r_fs_path_getdir;
     var ele_userbutton = ( loc == 'local' ) ? $("#button_user_local"):$("#button_user_remote");
-    var ele_configbutton = ( loc == 'local' ) ? $("#button_config_local"):$("#button_config_remote");
+    var ele_mkdir = ( loc == 'local' ) ? $("#button_mkdir_local"):$("#button_mkdir_remote");
     var ele_username = ( loc == 'local' ) ? $("#fs_username_local"):$("#fs_username_remote");
     var u = ( loc == 'local' ) ? Cookies.get('username_local'):Cookies.get('username_remote');
     var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
     var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
+    var mkdir_path = ( loc == 'local' ) ? params.l_fs_path_mkdir:params.r_fs_path_mkdir;
 
     if ( typeof(u) === 'undefined' && login_path ) {
         show_login_form(loc, '');
@@ -83,22 +84,22 @@ var show_filetree = function(loc, root) {
         var htmlCnt = '';
         if (subdirs.length == 1) {
             htmlCnt += '<li class="active">' +
-            '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></li>';
+            '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + init_root + '"></i></li>';
         } else {
             htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+init_root+'");>' +
-            '<i class="fa fa-home" data-toggle="tooltip" title="' + init_root + '"></i></a></li>';
+            '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + init_root + '"></i></a></li>';
 
             if ( subdirs.length >= 3 ) {
                 // insert link to go to parent folder
                 var dir_t = init_root + subdirs.slice(1,-1).join('/') + '/';
                 htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_t+'");>' +
-                '<i class="fa fa-level-up" data-toggle="tooltip" title="' + dir_t +'"></i></a></li>';
+                '<i class="fa fa-level-up" data-toggle="tp-breadcrumbs" title="' + dir_t +'"></i></a></li>';
             }
 
             // showing the current directory name
             htmlCnt += '<li class="active">';
             if ( subdirs[subdirs.length-1].length > 30 ) {
-                htmlCnt += '<span data-toggle="tooltip" title="' + subdirs[subdirs.length-1] + '">' +
+                htmlCnt += '<span data-toggle="tp-breadcrumbs" title="' + subdirs[subdirs.length-1] + '">' +
                 subdirs[subdirs.length-1].substr(0,30) + '&#8230;</span>';
             } else {
                 htmlCnt += subdirs[subdirs.length-1];
@@ -109,7 +110,7 @@ var show_filetree = function(loc, root) {
         // display the breadcrumbs
         var domCwd = $(ele_filetree.get(0)).find('#cwd');
         domCwd.html(htmlCnt);
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-toggle="tp-breadcrumbs"]').tooltip();
 
         // update params.l_fs_cwd or params.r_fs_cwd
         if ( loc == 'local' ) {
@@ -134,10 +135,10 @@ var show_filetree = function(loc, root) {
             }
         }).on('ready.jstree', function(err) {
             // actions when the filesystem tree is ready
-            if ( root != init_root ) {
-                ele_configbutton.removeClass('disabled');
+            if ( root != init_root && mkdir_path != "") {
+                ele_mkdir.removeClass('disabled');
             } else {
-                ele_configbutton.addClass('disabled');
+                ele_mkdir.addClass('disabled');
             }
         }).jstree({
             core: {
@@ -178,6 +179,104 @@ var show_filetree = function(loc, root) {
                 return -1;
             },
             plugins: [ 'checkbox', 'wholerow', 'sort' ]
+        });
+    }
+};
+
+/* toggle dialog modal for creating new folder */
+var toggle_mkdir_dialog = function(loc) {
+
+    $("#mkdir_dialog_alert").hide();
+
+    var sname = ( loc == 'local' ) ? params.l_fs_server:params.r_fs_server;
+    var cwd = ( loc == 'local' ) ? params.l_fs_cwd:params.r_fs_cwd;
+    $("#mkdir_dialog").modal('toggle');
+    $("#mkdir_dialog_title").html( 'Create new folder on ' + sname );
+
+    // construct the fixe prefix of this current folder
+    cwd_html = '<span>' + cwd + '</span>';
+
+    if ( cwd.length > 20 ) {
+        cwd_html = '<span data-toggle="tp-mkdir-dialog" title="' + cwd + '">' +
+        cwd.substr(0,8) + '&#8230;' + cwd.substr(cwd.length-8, cwd.length-1) + '</span>';
+    }
+
+    $("#mkdir_dialog_cwd_display").html(cwd_html);
+    $('[data-toggle="tp-mkdir-dialog"]').tooltip();
+    $("#mkdir_dialog_cwd").val(cwd);
+    $("#mkdir_dialog_loc").val(loc);
+};
+
+/* receive new directory and trigger make_dir function */
+// !!the event should be handled by the document level as
+//   the #submit_mkdir is a button within the Boostrap modal!!
+$(document).on('click', '#submit_mkdir', function() {
+
+    // retrieve form values from the mkdir_dialog
+    var loc = $("#mkdir_dialog_loc").val();
+    var cwd = $("#mkdir_dialog_cwd").val();
+    var dir = $("#mkdir_dialog_dir").val();
+
+    // close the modal panel from user
+    // TODO: close the modal or show error if values are not valid
+    if ( dir == "" ) {
+        // show error on the mkdir dialog
+        $("#mkdir_dialog_alert_msg").html('Please specify the name of the new folder');
+        $("#mkdir_dialog_alert").show();
+    } else {
+        var parts = dir.split('/').filter( function(v) { return v != ''; } );
+        if ( parts.length > 1 ) {
+            $("#mkdir_dialog_alert_msg").html('sub-folder not supported');
+            $("#mkdir_dialog_alert").show();
+        } else {
+            $("#mkdir_dialog").modal('hide');
+
+            // flush the user input
+            $("#mkdir_dialog_dir").val("");
+
+            //appInfo('Creating ' + cwd + dir + ' at ' + loc);
+
+            // now make the directory
+            make_dir(loc, cwd, dir);
+        }
+    }
+});
+
+/* make alert reusable */
+$(document).on("close.bs.alert", "#mkdir_dialog_alert", function () {
+    $("#mkdir_dialog_alert").hide(); //hide the alert
+    return false;                    //don't remove it from DOM
+});
+
+/* action for creating new folder */
+var make_dir = function(loc, base, dirName) {
+
+    var ajax_script = ( loc == 'local' ) ? params.l_fs_path_mkdir:params.r_fs_path_mkdir;
+    var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+
+    if ( ajax_script == "" ) {
+        appInfo('directory creation not supported');
+    } else {
+        var dir = base + '/' + dirName;
+        $.ajax({
+            type: 'POST',
+            url: ajax_script,
+            data: {
+                dir: dir
+            },
+            statusCode: {
+                500: function(jqxhr, status, err) {
+                    // popup the application error panel
+                    appError(err);
+                },
+                200: function(data, status, jqxhr) {
+                    appInfo('folder ' + dir + ' created!');
+                    // refresh the filetree view
+                    $(ele_filetree.get(0)).find('#jstree').jstree(true).refresh();
+                }
+            }
+        }).done( function() {
+            console.log('directory ' + dir + ' created');
         });
     }
 };
@@ -355,6 +454,10 @@ var run_stager_ui = function(params) {
         }).fail( function() {
             // whenever there is an error, stop the background process
             $('#history-refresh-toggle').bootstrapSwitch('state',false);
+            // empty the jobTable (i.e. reset the data of the table)
+            jobsData = [];
+            jobTable.ajax.reload();
+            // raise an error
             appError('cannot retrieve history');
         });
     };
@@ -568,6 +671,10 @@ var run_stager_ui = function(params) {
         });
     });
 
+    $('#button_mkdir_local').click(function() {
+        toggle_mkdir_dialog('local');
+    });
+
     /* action buttons: remote */
     $('#button_refresh_remote').click(function() {
         $($("#filetree_remote").get(0)).find('#jstree').jstree(true).refresh();
@@ -581,6 +688,10 @@ var run_stager_ui = function(params) {
         }).fail( function() {
             appError('fail logout ' + params.r_fs_server + ' user');
         });
+    });
+
+    $('#button_mkdir_remote').click(function() {
+        toggle_mkdir_dialog('remote');
     });
 
     /* action manual history refresh */

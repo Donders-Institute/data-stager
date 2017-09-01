@@ -23,19 +23,20 @@
         "port": "22"
     },
     "rdm": {
-        "displayName": "DI-RDM",
+        "displayName": "Donders Repository",
         "rootDir": "/",
         "prefixTurl": "irods:/rdm/di",
         "hintLogin": "Sing in with the DI-RDM data-access account",
         "pathLogin": "/rdm/login",
         "pathLogout": "/rdm/logout",
         "pathListDir": "/rdm/dir",
+        "pathMakeDir": "/rdm/mkdir",
         "exampleLogin": "U123456-ru.nl",
         "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
         "irodsWebDavEndpoint": "https://webdav.data.donders.ru.nl"
     },
     "stager": {
-        "displayName": "File Stager",
+        "displayName": "Project Storage",
         "rootDir": "/project/",
         "hintLogin": "Sing in with the DCCN account appended with @dccn.nl",
         "pathLogin": "/stager/login",

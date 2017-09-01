@@ -48,6 +48,7 @@ html(lang="en")
       $( function() {
              // variables for running stager ui
              params.l_fs_path_getdir = "#{fs_path_getdir_local}";
+             params.l_fs_path_mkdir = "#{fs_path_mkdir_local}";
              params.l_fs_path_login = "#{fs_path_login_local}";
              params.l_fs_path_logout = "#{fs_path_logout_local}";
              params.l_fs_root = "#{fs_root_local}";
@@ -56,6 +57,7 @@ html(lang="en")
              params.l_fs_prefix_turl = "#{fs_prefix_turl_local}";
 
              params.r_fs_path_getdir = "#{fs_path_getdir_remote}";
+             params.r_fs_path_mkdir = "#{fs_path_mkdir_remote}";
              params.r_fs_path_login = "#{fs_path_login_remote}";
              params.r_fs_path_logout = "#{fs_path_logout_remote}";
              params.r_fs_root = "#{fs_root_remote}";
@@ -67,7 +69,10 @@ html(lang="en")
                  e.preventDefault();
                  $('a[href="' + $(this).attr('data-target') + '"]').tab('show');
              });
-
+             
+             // enable data-toggle tooltip
+             $('[data-toggle="tooltip"]').tooltip();
+             
              // start the stager ui
              run_stager_ui(params);
        });

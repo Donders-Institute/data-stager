@@ -53,6 +53,7 @@ app.get('/fs/dir', mod_fs.getDirListJsTree)
 
 app.post('/rdm/login', mod_rdm.authenticateUser);
 app.post('/rdm/logout', mod_rdm.logoutUser);
+app.post('/rdm/mkdir', mod_rdm.makeDir);
 app.get('/rdm/dir', mod_rdm.getDirListJsTree);
 
 app.post('/sftp/login', mod_sftp.authenticateUser);

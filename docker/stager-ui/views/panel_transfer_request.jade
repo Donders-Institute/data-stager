@@ -1,28 +1,39 @@
 div.container-fluid
     div.page-header
-      h1= title_request
-    <!-- modal panel for job confirmation -->
+        h1= title_request
+    <!-- dialog modal panel for job confirmation -->
     div.modal.fade#job_confirmation(role='dialog')
-      div.modal-dialog
-        div.modal-content
-          div.modal-head
-              h4.modal-body Transfer requests to be submitted
-          div.modal-body.scroll-able
-            p: span#job_preview
-          div.modal-footer
-            button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
-            button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
-    <!-- modal panel for creating folder -->
-    div.modal.fade#folder_creation(role='dialog')
-      div.modal-dialog
-        div.modal-content
-          div.modal-head
-              h4.modal-body Creating new folder
-          div.modal-body.scroll-able
-            p: span#folder_creation_content
-          div.modal-footer
-            button.btn.btn-default#folder_creation_submit(data-dismiss="modal",type="button") Create
-            button.btn.btn-danger#folder_creation_cancel(data-dismiss="modal",type="button") Cancel
+        div.modal-dialog
+            div.modal-content
+                div.modal-header
+                    h4.modal-body Transfer requests to be submitted
+                div.modal-body.scroll-able
+                    p: span#job_preview
+                div.modal-footer
+                    button.btn.btn-default#job_submit(data-dismiss="modal",type="button") Submit
+                    button.btn.btn-danger#job_cancel(data-dismiss="modal",type="button") Cancel
+    <!-- dialog modal panel for creating folder -->
+    div.modal.fade#mkdir_dialog(role='dialog')
+        div.modal-dialog
+            div.modal-content
+                div.modal-header
+                    button.close(type="button", data-dismiss="modal", aria-label="Close")
+                        span(aria-hidden="true") &times;
+                    h4.modal-title#mkdir_dialog_title
+                form.form-horizontal#mkdir_form
+                    div.modal-body
+                        div.alert.alert-danger.alert-dismissible#mkdir_dialog_alert
+                            button.close(type="button",data-dismiss="alert", aria-label="Close")
+                                span(aria-hidden="true") &times;
+                            span#mkdir_dialog_alert_msg
+                        input.form-control(type="hidden", id="mkdir_dialog_loc" name="mkdir_dialog_loc", value="")
+                        input.form-control(type="hidden", id="mkdir_dialog_cwd" name="mkdir_dialog_cwd", value="")
+                        div.input-group
+                            div.input-group-addon#mkdir_dialog_cwd_display
+                            input.form-control(type="text", id="mkdir_dialog_dir", name="mkdir_dialog_dir", placeholder="Your New Folder Name")
+                    div.modal-footer
+                        button.btn.btn-primary#submit_mkdir(type="button") Create
+                        button.btn.btn-default#close_mkdir(data-dismiss="modal",type="button") Cancel
     <!-- main panel -->
     div.row#filetrees
         <!-- local panel -->
@@ -54,13 +65,12 @@ div.container-fluid
                     div.pull-right.btn-toolbar
                         div.btn-group
                             button.btn.btn-default#button_refresh_local
-                                i.fa.fa-refresh
+                                i.fa.fa-refresh(data-toggle="tooltip", title="refresh")
+                            button.btn.btn-default.disabled#button_mkdir_local
+                                i.fa.fa-plus(data-toggle="tooltip", title="new folder")
                             div.btn-group.dropup
                                 button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_local
-                                    i.fa.fa-gear                                        
-                                ui.dropdown-menu(role="manu")
-                                    li: a#button_mkdir_local(ref="#")
-                                        i.fa.fa-plus &nbsp;Create folder ...
+                                    i.fa.fa-gear
                         div.btn-group#button_user_local
                             button.btn.btn-success#fs_username_local
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
@@ -104,13 +114,12 @@ div.container-fluid
                     div.pull-right.btn-toolbar
                         div.btn-group
                             button.btn.btn-default#button_refresh_remote
-                                i.fa.fa-refresh
+                                i.fa.fa-refresh(data-toggle="tooltip", title="refresh")
+                            button.btn.btn-default.disabled#button_mkdir_remote
+                                i.fa.fa-plus(data-toggle="tooltip", title="new folder")
                             div.btn-group.dropup
                                 button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_remote
-                                    i.fa.fa-gear                                        
-                                ui.dropdown-menu(role="manu")
-                                    li: a#button_mkdir_remote(ref="#")
-                                        i.fa.fa-plus &nbsp;Create folder ...
+                                    i.fa.fa-gear
                         div.btn-group#button_user_remote
                             button.btn.btn-success#fs_username_remote
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")

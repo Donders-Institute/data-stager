@@ -46,12 +46,19 @@ var _getModParams = function(req, mod) {
       prefix_turl = config.get(mod + '.prefixTurl');
   }
 
+  /* support for creating folder */
+  var path_mkdir = "";
+  if (config.has(mod + '.pathMakeDir')) {
+      path_mkdir = config.get(mod + '.pathMakeDir');
+  }
+
   return { view: view,
            root: root,
            prefix_turl: prefix_turl,
            hint_login: hint_login,
            path_login: path_login,
            path_logout: path_logout,
+           path_mkdir: path_mkdir,
            example_login: example_login,
            path_getdir: path_getdir,
            display_name: display_name }
@@ -80,6 +87,7 @@ router.get('/', function(req, res, next) {
                         fs_example_login_local: params_local.example_login,
                         fs_prefix_turl_local: params_local.prefix_turl,
                         fs_path_getdir_local: params_local.path_getdir,
+                        fs_path_mkdir_local: params_local.path_mkdir,
                         fs_root_remote: params_remote.root,
                         fs_view_remote: params_remote.view,
                         fs_server_remote: params_remote.display_name,
@@ -88,7 +96,8 @@ router.get('/', function(req, res, next) {
                         fs_path_logout_remote: params_remote.path_logout,
                         fs_example_login_remote: params_remote.example_login,
                         fs_prefix_turl_remote: params_remote.prefix_turl,
-                        fs_path_getdir_remote: params_remote.path_getdir
+                        fs_path_getdir_remote: params_remote.path_getdir,
+                        fs_path_mkdir_remote: params_remote.path_mkdir,
                        });
 });
 

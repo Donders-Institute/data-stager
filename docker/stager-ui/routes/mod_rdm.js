@@ -189,6 +189,30 @@ var _getDirListJsTreeWebDav = function(request, response) {
     }, 'stat');
 }
 
+/* create new directory via WebDAV */
+var _makeDirWebDav = function(request, response) {
+    var sess = request.session;
+
+    var dir = request.body.dir;
+
+    var wfs = require("webdav-fs")(
+        config.get('rdm.irodsWebDavEndpoint'),
+        sess.user['rdm'],
+        sess.pass['rdm']
+    );
+
+    wfs.mkdir(dir, function(err) {
+        if (!err) {
+            response.status(200);
+            response.json(['OK']);
+        } else {
+            console.log("WebDAV error:", err.message);
+            util.responseOnError('json',[err.message],response);
+        }
+    });
+}
+
 module.exports.authenticateUser = _authenticateUserWebDav;
 module.exports.logoutUser = _logoutUser;
 module.exports.getDirListJsTree = _getDirListJsTreeWebDav;
+module.exports.makeDir = _makeDirWebDav;
