@@ -1,5 +1,5 @@
 body {
-  padding: 50px;
+  padding: 10px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
@@ -27,7 +27,7 @@ div.tree_action_block {
 div.filetrees {
   width: 97%;
   height: 97%;
-  margin:20px auto;
+  margin:10px auto;
   position:relative;
   display: inline-block;
 }
