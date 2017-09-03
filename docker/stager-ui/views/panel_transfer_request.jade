@@ -55,7 +55,8 @@ div.container-fluid
                         div.form-group
                             div.col-sm-offset-4.col-sm-8
                                 button.btn.btn-default#login_local(type="submit",name="login")
-                                    i.fa.fa-sign-in &nbsp;Login
+                                    i.fa.fa-sign-in
+                                    span &nbsp;Login
                 <!-- local filesystem treeview panel -->
                 div.panel-body#filetree_local
                     ol.breadcrumb#cwd
@@ -71,20 +72,23 @@ div.container-fluid
                             div.btn-group.dropup
                                 button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_local
                                     i.fa.fa-gear
-                        div.btn-group#button_user_local
+                        div.btn-group.dropup#button_user_local
                             button.btn.btn-success#fs_username_local
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
                                 span.caret
                             ul.dropdown-menu(role="manu")
                                 li: a#button_logout_local(href="#")
-                                    i.fa.fa-sign-out &nbsp;Logout
+                                    i.fa.fa-sign-out
+                                    span &nbsp;Logout
         <!-- transfer action panel -->
         div.col-md-2
             div.list-group
                 a.list-group-item.list-group-item-action#button_upload(href='#')
-                    i.fa.fa-arrow-right &nbsp;Upload
+                    i.fa.fa-arrow-right
+                    span &nbsp;Upload
                 a.list-group-item.list-group-item-action#button_download(href='#')
-                    i.fa.fa-arrow-left &nbsp;Download
+                    i.fa.fa-arrow-left
+                    span &nbsp;Download
         <!-- remote panel -->
         div.col-md-5
             div.panel.panel-default
@@ -104,7 +108,8 @@ div.container-fluid
                         div.form-group
                             div.col-sm-offset-4.col-sm-8
                                 button.btn.btn-default#login_remote(type="submit",name="login")
-                                    i.fa.fa-sign-in &nbsp;Login
+                                    i.fa.fa-sign-in
+                                    span &nbsp;Login
                 <!-- remote filesystem treeview panel -->
                 div.panel-body#filetree_remote
                     ol.breadcrumb#cwd
@@ -120,10 +125,11 @@ div.container-fluid
                             div.btn-group.dropup
                                 button.btn.btn-default.dropdown-toggle.disabled(data-toggle="dropdown")#button_config_remote
                                     i.fa.fa-gear
-                        div.btn-group#button_user_remote
+                        div.btn-group.dropup#button_user_remote
                             button.btn.btn-success#fs_username_remote
                             button.btn.btn-success.dropdown-toggle(data-toggle="dropdown")
                                 span.caret
                             ul.dropdown-menu(role="manu")
                                 li: a#button_logout_remote(href="#")
-                                    i.fa.fa-sign-out &nbsp;Logout
+                                    i.fa.fa-sign-out
+                                    span &nbsp;Logout

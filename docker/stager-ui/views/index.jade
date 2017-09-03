@@ -83,7 +83,7 @@ html(lang="en")
     <!-- TODO: improve the system error panel -->
     block error
     <!-- navigation bar -->
-    nav.navbar.navbar-inverse
+    nav.navbar.navbar-inverse.navbar-fixed-top
       div.container-fluid
         div.navbar-header
           button.navbar-toggle(type="button", data-toggle="collapse" data-target="#navbar-content")
@@ -97,9 +97,18 @@ html(lang="en")
             li: a(data-toggle="tab", href="#panel_transfer_request") Request
             li: a(data-toggle="tab", href="#panel_transfer_history") History
           ui.nav.navbar-nav.navbar-right
-            li: a(href="#{website}", target="_blank"): i.fa.fa-globe &nbsp;Repository
-            li: a(href="mailto:#{helpdesk}"): i.fa.fa-envelope &nbsp;Help
-            li: a(href="#"): i.fa.fa-code-fork #{version}
+            li
+                a(href="#{website}", target="_blank")
+                    i.fa.fa-globe
+                    span &nbsp;Repository
+            li
+                a(href="mailto:#{helpdesk}")
+                    i.fa.fa-envelope
+                    span &nbsp;Help
+            li
+                a(href="#")
+                    i.fa.fa-code-fork
+                    span &nbsp;#{version}
     <!-- tabs -->
     div.tab-content
       div.tab-pane.fade.in.active#panel_intro
