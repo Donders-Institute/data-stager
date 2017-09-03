@@ -86,14 +86,20 @@ html(lang="en")
     nav.navbar.navbar-inverse
       div.container-fluid
         div.navbar-header
+          button.navbar-toggle(type="button", data-toggle="collapse" data-target="#navbar-content")
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
           a.navbar-brand(href='#') File Stager
-        ul.nav.navbar-nav
-          li.active: a(data-toggle="tab", href="#panel_intro"): i.fa.fa-home
-          li: a(data-toggle="tab", href="#panel_transfer_request") Request
-          li: a(data-toggle="tab", href="#panel_transfer_history") History
-        ui.nav.navbar-nav.navbar-right
-          li: a(href="#{website}", target="_blank"): i.fa.fa-globe &nbsp;Repository
-          li: a(href="mailto:#{helpdesk}"): i.fa.fa-envelope &nbsp;Help
+        div.collapse.navbar-collapse#navbar-content
+          ul.nav.navbar-nav
+            li.active: a(data-toggle="tab", href="#panel_intro"): i.fa.fa-home
+            li: a(data-toggle="tab", href="#panel_transfer_request") Request
+            li: a(data-toggle="tab", href="#panel_transfer_history") History
+          ui.nav.navbar-nav.navbar-right
+            li: a(href="#{website}", target="_blank"): i.fa.fa-globe &nbsp;Repository
+            li: a(href="mailto:#{helpdesk}"): i.fa.fa-envelope &nbsp;Help
+            li: a(href="#"): i.fa.fa-code-fork #{version}
     <!-- tabs -->
     div.tab-content
       div.tab-pane.fade.in.active#panel_intro

@@ -78,6 +78,7 @@ router.get('/', function(req, res, next) {
                         title_history: 'Request history',
                         website: config.get('website'),
                         helpdesk: config.get('helpdesk'),
+                        version: require(__dirname + '/../package').version,
                         fs_root_local: params_local.root,
                         fs_view_local: params_local.view,
                         fs_server_local: params_local.display_name,
