@@ -29,6 +29,20 @@ function get_script_dir() {
     echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 
+# wrapper function for parallel to call for file transfer
+function file_transfer() {
+    _cmd=$1
+    _s=$2
+    _t=$3
+
+    $_cmd -f $_s $_t
+
+    ec=$?
+    echo $4
+    return $ec
+}
+export -f file_transfer
+
 # check if control file is given
 if [ $# -ne 4 ]; then
     print_usage
@@ -193,33 +207,23 @@ if [ $w_total -gt 0 ]; then
         done
 
         # determin transfer method
-        cmd_prefix=""
+        cmd=""
         if [ $(( $is_src_irods + $is_dst_irods )) -eq 2 ]; then
-            cmd_prefix='icp -f'
+            cmd='icp'
         elif [ $is_src_irods -eq 1 ]; then
-            cmd_prefix='iget -f'
+            cmd='iget'
         elif [ $is_dst_irods -eq 1 ]; then
-            cmd_prefix='iput -f'
+            cmd='iput'
         fi
 
-        if [ "$cmd_prefix" == "" ]; then
+        if [ "$cmd" == "" ]; then
             echo "error: unable to determin the command to transfer"
             exit 1
         fi
 
-        # perform transfer with iput/iget
-        ec=0
-        for s in $( cat ${flist} | awk '{print $1}' ); do
-            t=$( echo $s | sed "s|${src}|${dst}|" )
-            ${cmd_prefix} "${s}" "${t}" >> ${flog} 2>&1
-            iec=$?
-            if [ $iec -ne 0 ]; then
-                # return the error with the filename
-                echo "error:${cmd_prefix} \"${s}\" \"${t}\""
-                ec=$iec
-            fi
-
-            w_done=$(( $w_done + 1 ))
+        # perform transfer with iput/iget, and parallelised by 'parallel'
+        cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" {#} | while read -r line; do
+            w_done=$line
             w_done_percent=$(( $w_done * 100 / $w_total ))
 
             # the process is still running, therefore the progress should not exceed 99%
@@ -231,6 +235,7 @@ if [ $w_total -gt 0 ]; then
             # print current progress
             echo "progress:${w_done_percent}:${w_done}:${w_total}"
         done
+        ec=${PIPESTATUS[3]}
     fi
 
     # make sure the final 100% progress is printed
