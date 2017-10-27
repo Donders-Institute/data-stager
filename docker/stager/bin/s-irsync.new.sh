@@ -158,6 +158,20 @@ if [ $w_total -gt 0 ]; then
     w_done_percent=0
     ec=0
     nf_threashold=200000
+
+    # log files
+    flist=/tmp/files2sync_$$.txt
+    flog=/tmp/files2sync_$$.log
+
+    # make sure flog and flist are new
+    if [ -f $flog ]; then
+        rm -f $flog
+    fi
+        
+    if [ -f $flist ]; then
+        rm -f $flist
+    fi
+    
     if [ $w_total -lt $nf_threashold ]; then
         # small dataset with files less than 200,000
         ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
@@ -183,15 +197,22 @@ if [ $w_total -gt 0 ]; then
         ec=${PIPESTATUS[0]}
     else
         # more scalable approach for dataset containing massive amount of files
-        flist=/tmp/files2sync_$$.txt
-        flog=/tmp/files2sync_$$.log
-
-        if [ -f $flog ]; then
-            rm -f $flog
-        fi
-
         # scan files to be synchronised
-        irsync -l -r "${src}" "${dst}" 2>/dev/null >${flist}
+        w_skipped=0
+	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>/dev/null | grep '^ ' | while read -r line; do
+	    ## faking the w_done so that the progress remains at 10% maximum with frequent job progress update
+            w_done=$(( ($w_done + 1) / 10 ))
+            w_done_percent=$(( $w_done * 100 / $w_total ))
+            echo "progress:${w_done_percent}:${w_done}:${w_total}"
+
+            ## keep file to be transferred in the flist
+            echo $line | grep ' --- a match no sync required' >/dev/null 2>&1
+	    if [ $? -ne 0 ]; then
+                echo $line >> $flist
+            else
+                w_skipped=$(( $w_skipped + 1 ))
+            fi
+        done
 
         # remove the heading 'i:' indicating the iRODS endpoint
         dst=$( echo $dst | sed 's/^i://g' )
@@ -222,8 +243,8 @@ if [ $w_total -gt 0 ]; then
         fi
 
         # perform transfer with iput/iget, and parallelised by 'parallel'
-        cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" {#} | while read -r line; do
-            w_done=$line
+        cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+            w_done=$(( $w_skipped + $line ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
 
             # the process is still running, therefore the progress should not exceed 99%
@@ -242,6 +263,16 @@ if [ $w_total -gt 0 ]; then
     if [ $ec -eq 0 ]; then
         echo "progress:100:${w_total}:${w_total}"
     fi
+
+    # cleanup flog and flist files
+    if [ -f $flog ]; then
+        rm -f $flog
+    fi
+        
+    if [ -f $flist ]; then
+        rm -f $flist
+    fi
+
     # return the irsync exit code
     exit $ec
 else
