@@ -31,12 +31,7 @@ function get_script_dir() {
 
 # wrapper function for parallel to call for file transfer
 function file_transfer() {
-    _cmd=$1
-    _s=$2
-    _t=$3
-
-    $_cmd -f $_s $_t
-
+    ${1} -f "${2}" "${3}"
     ec=$?
     echo $4
     return $ec
@@ -155,7 +150,7 @@ if [ $w_total -gt 0 ]; then
 
     # transferring files
     ec=0
-    nf_threashold=2
+    nf_threshold=10
 
     # log files
     flist=/tmp/files2sync_$$.txt
@@ -173,7 +168,7 @@ if [ $w_total -gt 0 ]; then
     # create empty flist
     touch $flist
 
-    if [ $w_total -lt $nf_threashold ]; then
+    if [ $w_total -lt $nf_threshold ]; then
         # small dataset with files less than 200,000
         ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
 
@@ -210,11 +205,21 @@ if [ $w_total -gt 0 ]; then
             echo $line | grep 'a match no sync required' >/dev/null 2>&1
 	    if [ $? -ne 0 ]; then
                 # keep only the line like, because we want the full path:
+                # example would be:
+                # 
                 # /var/lib/irods/test/filesystem/mapping.txt   522206   N
+                # 
                 echo $line | grep "^${isrc}" >/dev/null 2>&1
                 if [ $? -eq 0 ]; then
                     do_cnt=1
-                    echo $line >> $flist
+
+                    # make sure the line contains only the filename to be transferd
+                    # line example with "space" on file name:
+                    #
+                    # /opt/stager/dummy/test data.99 10240 N
+                    #
+                    line=$( echo $line | awk '{out=$1} { for (i=2; i<NF-1; i++) {out=out" "$i;} } {print out}' )
+                    echo "${line}" >> $flist
                 fi
             else
                 do_cnt=1
@@ -260,7 +265,7 @@ if [ $w_total -gt 0 ]; then
         fi
 
         # perform transfer with iput/iget, and parallelised by 'parallel'
-        ${mydir}/s-unbuffer cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+        ${mydir}/s-unbuffer cat ${flist} | awk '{print}' | perl -pe "print; s|${src}|${dst}|" | parallel --will-cite -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
             w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
 
@@ -296,4 +301,3 @@ else
     echo "nothing to sync"
     exit 0
 fi
-
