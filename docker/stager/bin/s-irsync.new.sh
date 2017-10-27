@@ -286,8 +286,6 @@ if [ $w_total -gt 0 ]; then
         ec=${PIPESTATUS[2]}
     fi
 
-    echo $ec
-
     # make sure the final 100% progress is printed
     if [ $ec -eq 0 ]; then
         echo "progress:100:${w_total}:${w_total}"
