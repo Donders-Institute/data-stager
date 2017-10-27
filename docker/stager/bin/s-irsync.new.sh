@@ -154,10 +154,8 @@ fi
 if [ $w_total -gt 0 ]; then
 
     # transferring files
-    w_done=0
-    w_done_percent=0
     ec=0
-    nf_threashold=200000
+    nf_threashold=2
 
     # log files
     flist=/tmp/files2sync_$$.txt
@@ -171,7 +169,10 @@ if [ $w_total -gt 0 ]; then
     if [ -f $flist ]; then
         rm -f $flist
     fi
-    
+
+    # create empty flist
+    touch $flist
+
     if [ $w_total -lt $nf_threashold ]; then
         # small dataset with files less than 200,000
         ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
@@ -198,21 +199,37 @@ if [ $w_total -gt 0 ]; then
     else
         # more scalable approach for dataset containing massive amount of files
         # scan files to be synchronised
-        w_skipped=0
-	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>/dev/null | grep '^ ' | while read -r line; do
-	    ## faking the w_done so that the progress remains at 10% maximum with frequent job progress update
-            w_done=$(( ($w_done + 1) / 10 ))
-            w_done_percent=$(( $w_done * 100 / $w_total ))
-            echo "progress:${w_done_percent}:${w_done}:${w_total}"
+        isrc=$( echo $src | sed 's/^i://g' )
 
+        # increate the w_total by 10% to take into account the scanning overhead
+        w_total=$( echo "($w_total + 0.1 * $w_total)/1" | bc )
+
+	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>/dev/null | grep -v '^C- ' | while read -r line; do
             ## keep file to be transferred in the flist
-            echo $line | grep ' --- a match no sync required' >/dev/null 2>&1
+            do_cnt=0
+            echo $line | grep 'a match no sync required' >/dev/null 2>&1
 	    if [ $? -ne 0 ]; then
-                echo $line >> $flist
+                # keep only the line like, because we want the full path:
+                # /var/lib/irods/test/filesystem/mapping.txt   522206   N
+                echo $line | grep "^${isrc}" >/dev/null 2>&1
+                if [ $? -eq 0 ]; then
+                    do_cnt=1
+                    echo $line >> $flist
+                fi
             else
-                w_skipped=$(( $w_skipped + 1 ))
+                do_cnt=1
+            fi
+
+            if [ $do_cnt -eq  1 ]; then
+                w_done=$(( $w_done + 1 ))
+                w_done_f=$(( $w_done * 10 / $w_total ))
+                w_done_percent=$(( $w_done_f * 100 / $w_total ))
+                echo "progress:${w_done_percent}:${w_done_f}:${w_total}"
             fi
         done
+
+        # calculate the current progress as the $w_done is not available in this scope
+        w_done=$(( $w_total - $( cat $flist | wc -l ) ))
 
         # remove the heading 'i:' indicating the iRODS endpoint
         dst=$( echo $dst | sed 's/^i://g' )
@@ -243,8 +260,8 @@ if [ $w_total -gt 0 ]; then
         fi
 
         # perform transfer with iput/iget, and parallelised by 'parallel'
-        cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
-            w_done=$(( $w_skipped + $line ))
+        ${mydir}/s-unbuffer cat ${flist} | awk '{print $1}' | perl -pe "print; s|${src}|${dst}|" | parallel -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+            w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
 
             # the process is still running, therefore the progress should not exceed 99%
@@ -279,3 +296,4 @@ else
     echo "nothing to sync"
     exit 0
 fi
+
