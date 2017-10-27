@@ -150,7 +150,7 @@ if [ $w_total -gt 0 ]; then
 
     # transferring files
     ec=0
-    nf_threshold=10
+    nf_threshold=10000
 
     # log files
     flist=/tmp/files2sync_$$.txt
@@ -265,7 +265,11 @@ if [ $w_total -gt 0 ]; then
         fi
 
         # perform transfer with iput/iget, and parallelised by 'parallel'
-        ${mydir}/s-unbuffer cat ${flist} | awk '{print}' | perl -pe "print; s|${src}|${dst}|" | parallel --will-cite -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+        # !! NOTE !!
+        # - the very complex awk is to create an additional line with "src" directory replaced properly by "dst"
+        # - the GNU parallel then takes the two lines as inputs to the "file_transfer" function exported from this script
+        cat $flist | awk -v find="$src" -v repl="$dst" '{ print; while (i=index($0,find)) { $0 = substr($0,1,i-1) repl substr($0,i+length(find)); } print }' | parallel --will-cite -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+
             w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
 
@@ -278,8 +282,11 @@ if [ $w_total -gt 0 ]; then
             # print current progress
             echo "progress:${w_done_percent}:${w_done}:${w_total}"
         done
-        ec=${PIPESTATUS[3]}
+  
+        ec=${PIPESTATUS[2]}
     fi
+
+    echo $ec
 
     # make sure the final 100% progress is printed
     if [ $ec -eq 0 ]; then
