@@ -197,7 +197,7 @@ if [ $w_total -gt 0 ]; then
         isrc=$( echo $src | sed 's/^i://g' )
 
         # increate the w_total by 10% to take into account the scanning overhead
-        w_total=$( echo "($w_total + 0.1 * $w_total)/1" | bc )
+        # w_total=$( echo "($w_total + 0.1 * $w_total)/1" | bc )
 
 	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>/dev/null | grep -v '^C- ' | while read -r line; do
             ## keep file to be transferred in the flist
@@ -227,11 +227,20 @@ if [ $w_total -gt 0 ]; then
 
             if [ $do_cnt -eq  1 ]; then
                 w_done=$(( $w_done + 1 ))
-                w_done_f=$(( $w_done * 10 / $w_total ))
-                w_done_percent=$(( $w_done_f * 100 / $w_total ))
-                echo "progress:${w_done_percent}:${w_done_f}:${w_total}"
+                w_done_percent=$(( $w_done * 100 / $w_total ))
+                echo "progress:${w_done_percent}:${w_done}:${w_total}"
+                #w_done_f=$(( $w_done * 10 / $w_total ))
+                #w_done_percent=$(( $w_done_f * 100 / $w_total ))
+                #echo "progress:${w_done_percent}:${w_done_f}:${w_total}"
             fi
         done
+
+        # check status of the irsync scan
+        ec=${PIPESTATUS[0]}
+        if [ $ec -ne 0 ]; then
+            echo "error: irsync scan failed"
+            exit $ec
+        fi
 
         # calculate the current progress as the $w_done is not available in this scope
         w_done=$(( $w_total - $( cat $flist | wc -l ) ))
