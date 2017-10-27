@@ -31,7 +31,7 @@ function get_script_dir() {
 
 # wrapper function for parallel to call for file transfer
 function file_transfer() {
-    ${1} -f "${2}" "${3}"
+    ${1} -f -K "${2}" "${3}"
     ec=$?
     echo $4
     return $ec
