@@ -5,7 +5,12 @@ function print_usage() {
     cat <<EOF
 Usage:
 
-  $ s-irsync.sh <src> <dst> <rdmUser> <rdmPass>
+  $ s-irsync.sh <srcPath> <dstPath> <irodsUserName> <irodsA>
+
+  - srcPath:       the source location, use "irods:" prefix to indicate it's an iRODS path
+  - dstPath:       the target location, use "irods:" prefix to indicate it's an iRODS path
+  - irodsUserName: the iRODS username 
+  - irodsA:        the path of the .irodsA file in which a scrambled password is stored
 
 EOF
 }
