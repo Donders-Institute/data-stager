@@ -252,9 +252,9 @@ if [ $w_total -gt 0 ]; then
         # create each sub-directories in the destination location
         for d in $( cat ${flist} | sed "s|${src}|${dst}|" | awk '{print $1}' | awk -F '/' 'BEGIN {OFS="/"} {$NF=""; print}' | sort | uniq ); do
             if [ $is_dst_irods -eq 1 ]; then
-                imkdir $d >> ${flog} 2>&1
+                imkdir "$d" >> ${flog} 2>&1
             else
-                mkdir $d >> ${flog} 2>&1
+                mkdir "$d" >> ${flog} 2>&1
             fi
         done
 
