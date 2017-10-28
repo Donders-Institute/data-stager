@@ -31,7 +31,7 @@ function get_script_dir() {
 
 # wrapper function for parallel to call for file transfer
 function file_transfer() {
-    ${1} -f -K "${2}" "${3}"
+    ${1} -f -K "${2}" "${3}" >/dev/null 2>&1
     ec=$?
     echo $4
     return $ec
@@ -252,9 +252,9 @@ if [ $w_total -gt 0 ]; then
         # create each sub-directories in the destination location
         for d in $( cat ${flist} | sed "s|${src}|${dst}|" | awk '{print $1}' | awk -F '/' 'BEGIN {OFS="/"} {$NF=""; print}' | sort | uniq ); do
             if [ $is_dst_irods -eq 1 ]; then
-                imkdir "$d" >> ${flog} 2>&1
+                imkdir -p "$d" >> ${flog} 2>&1
             else
-                mkdir "$d" >> ${flog} 2>&1
+                mkdir -p "$d" >> ${flog} 2>&1
             fi
         done
 
@@ -277,7 +277,8 @@ if [ $w_total -gt 0 ]; then
         # !! NOTE !!
         # - the very complex awk is to create an additional line with "src" directory replaced properly by "dst"
         # - the GNU parallel then takes the two lines as inputs to the "file_transfer" function exported from this script
-        cat $flist | awk -v find="$src" -v repl="$dst" '{ print; while (i=index($0,find)) { $0 = substr($0,1,i-1) repl substr($0,i+length(find)); } print }' | parallel --will-cite -N2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+        # - we also assume one single file should not take more than 1800 seconds to transfer
+        cat $flist | awk -v src="$src" -v dst="$dst" '{ print; $0 = substr($0,1,0) dst substr($0,1+length(src)); print }' | parallel --will-cite --pipe --timeout 1800 -N 2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
 
             w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
