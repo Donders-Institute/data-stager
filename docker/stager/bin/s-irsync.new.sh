@@ -284,7 +284,7 @@ if [ $w_total -gt 0 ]; then
         # - the GNU parallel then takes the two lines as inputs to the "file_transfer" function exported from this script
         # - we also assume one single file should not take more than 1800 seconds to transfer
         # TODO: maybe useful to add "retry" feature ??
-        cat $flist | awk -v src="$src" -v dst="$dst" '{ print; $0 = substr($0,1,0) dst substr($0,1+length(src)); print }' | parallel --will-cite --pipe --timeout 1800 -N 2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+        cat $flist | awk -v src="$src" -v dst="$dst" '{ print; $0 = substr($0,1,0) dst substr($0,1+length(src)); print }' | parallel --will-cite --timeout 1800 -N 2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
 
             w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
