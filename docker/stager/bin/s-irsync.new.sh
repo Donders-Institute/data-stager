@@ -155,7 +155,7 @@ if [ $w_total -gt 0 ]; then
 
     # transferring files
     ec=0
-    nf_threshold=10000
+    nf_threshold=100000
 
     # log files
     flist=/tmp/files2sync_$$.txt
@@ -255,11 +255,11 @@ if [ $w_total -gt 0 ]; then
         src=$( echo $src | sed 's/^i://g' )
 
         # create each sub-directories in the destination location
-        for d in $( cat ${flist} | sed "s|${src}|${dst}|" | awk '{print $1}' | awk -F '/' 'BEGIN {OFS="/"} {$NF=""; print}' | sort | uniq ); do
+        cat ${flist} | sed "s|${src}|${dst}|" | awk -F '/' 'BEGIN {OFS="/"} {$NF=""; print}' | sort | uniq | while read -r line; do
             if [ $is_dst_irods -eq 1 ]; then
-                imkdir -p "$d" >> ${flog} 2>&1
+                imkdir -p "$line" >> ${flog} 2>&1
             else
-                mkdir -p "$d" >> ${flog} 2>&1
+                mkdir -p "$line" >> ${flog} 2>&1
             fi
         done
 
