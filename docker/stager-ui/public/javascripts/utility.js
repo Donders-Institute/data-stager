@@ -22,20 +22,10 @@ jQuery.fn.autoWidth = function(options) {
   this.width(maxWidth);
 }
 
-htmlEncode = function(value) {
-    return value.replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .replace(/</g, '&lt;')
-                .replace(/ /g, '&nbsp;')
-                .replace(/>/g, '&gt;');
+htmlEncodeSpace = function(value) {
+    return value.replace(/ /g, '\u00a0');
 }
 
-htmlDecode = function(value) {
-    return value.replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'")
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&nbsp;/g, ' ')
-                .replace(/&amp;/g, '&');
+htmlDecodeSpace = function(value) {
+    return value.replace(/\u00a0/g, ' ');
 }

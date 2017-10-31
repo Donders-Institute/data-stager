@@ -56,6 +56,10 @@ var show_filetree = function(loc, root) {
     var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
     var mkdir_path = ( loc == 'local' ) ? params.l_fs_path_mkdir:params.r_fs_path_mkdir;
 
+    // decode special html characters of the given path
+    root=htmlDecodeSpace(root);
+    init_root=htmlDecodeSpace(init_root);
+
     if ( typeof(u) === 'undefined' && login_path ) {
         show_login_form(loc, '');
     } else {
@@ -86,12 +90,13 @@ var show_filetree = function(loc, root) {
             htmlCnt += '<li class="active">' +
             '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + init_root + '"></i></li>';
         } else {
-            htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+init_root+'");>' +
-            '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + init_root + '"></i></a></li>';
+            var dir_init_root=htmlEncodeSpace(init_root);
+            htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_init_root+'");>' +
+            '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + dir_init_root + '"></i></a></li>';
 
             if ( subdirs.length >= 3 ) {
                 // insert link to go to parent folder
-                var dir_t = init_root + subdirs.slice(1,-1).join('/') + '/';
+                var dir_t = htmlEncodeSpace(init_root + subdirs.slice(1,-1).join('/') + '/');
                 htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_t+'");>' +
                 '<i class="fa fa-level-up" data-toggle="tp-breadcrumbs" title="' + dir_t +'"></i></a></li>';
             }
@@ -99,10 +104,10 @@ var show_filetree = function(loc, root) {
             // showing the current directory name
             htmlCnt += '<li class="active">';
             if ( subdirs[subdirs.length-1].length > 30 ) {
-                htmlCnt += '<span data-toggle="tp-breadcrumbs" title="' + subdirs[subdirs.length-1] + '">' +
-                subdirs[subdirs.length-1].substr(0,30) + '&#8230;</span>';
+                htmlCnt += '<span data-toggle="tp-breadcrumbs" title="' + htmlEncodeSpace(subdirs[subdirs.length-1]) + '">' +
+                htmlEncodeSpace(subdirs[subdirs.length-1].substr(0,30)) + '&#8230;</span>';
             } else {
-                htmlCnt += subdirs[subdirs.length-1];
+                htmlCnt += htmlEncodeSpace(subdirs[subdirs.length-1]);
             }
             htmlCnt += '</li>';
         }
@@ -150,8 +155,8 @@ var show_filetree = function(loc, root) {
                 data: {
                     url: ajax_script,
                     data: function(node) {
-                        return { 'dir': ( node.id == '#') ? root: node.id,
-                        'isRoot': (node.id == '#') }
+                        return { 'dir': ( node.id == '#') ? root : node.id,
+                                 'isRoot': (node.id == '#') }
                     }
                 },
                 themes: {
