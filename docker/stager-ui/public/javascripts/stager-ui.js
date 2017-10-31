@@ -339,7 +339,34 @@ var run_stager_ui = function(params) {
 
     // function of job detail fields
     var formatJobDetail = function(j) {
-        return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
+
+        var bt_start_state = 'disabled';
+        var bt_stop_state = 'disabled';
+
+        if ( ['complete','failed'].includes(j.state) ) {
+            bt_start_state = 'active';
+        }
+
+        if ( ['active'].includes(j.state) ) {
+            bt_stop_state = 'active';
+        }
+
+        var btn_actions = '<div class="btn-group">' +
+                          '<button type="button" class="btn btn-sm btn-default ' +
+                          bt_start_state + '">' +
+                          '<i data-toggle="tp-job-actions" title="start/restart" class="fa fa-play"></i></button>' +
+                          '<button type="button" class="btn btn-sm btn-default ' +
+                          bt_stop_state + '">' +
+                          '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>' +
+                          '<button type="button" class="btn btn-sm btn-danger active">' +
+                          '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>' +
+                          '</div>';
+
+        ///return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
+        return '<div class="panel panel-default">'
+        + '<div class="panel-body">'
+        + '<table class="table table-hover">'
+        + '<tbody>'
         + '<tr>'
         + '<td>From:</td>'
         + '<td>' + j.data.srcURL + '</td>'
@@ -360,7 +387,11 @@ var run_stager_ui = function(params) {
         + '<td>Attempts:</td>'
         + '<td>' + j.attempts.made + '</td>'
         + '</tr>'
-        + '</table>';
+        + '</tbody>'
+        + '</table>'
+        + '<div class="panel-footer">' + btn_actions + '</div>'
+        + '</div>'
+        + '</div>';
     }
 
     // Add event listener for opening and closing details
@@ -377,6 +408,7 @@ var run_stager_ui = function(params) {
             // Open this row
             row.child( formatJobDetail(row.data()) ).show();
             tr.addClass('shown');
+            $('[data-toggle="tp-job-actions"]').tooltip();
         }
     } );
 
