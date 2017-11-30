@@ -10,6 +10,11 @@
         "sftp" : {
             "host": "sftp.dccn.nl",
             "port": "22"
+        },
+        "cifs" : {
+            "server": "cnas.ru.nl",
+            "share": "Wrkgrp",
+            "mount": "/mnt/cnas"
         }
     },
     "RDM": {

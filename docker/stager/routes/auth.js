@@ -2,9 +2,14 @@ var config = require('config');
 var auth = require('basic-auth');
 var ActiveDirectory = require('activedirectory');
 
+
+var _accept = function(req, res, next) {
+    next();
+}
+
 var _basicAuthAD = function(req, res, next) {
 
-    // simple authentication aganist ActiveDirectory 
+    // simple authentication aganist ActiveDirectory
     var ad = new ActiveDirectory(config.get('ActiveDirectory'));
     var user = auth(req);
 
@@ -22,7 +27,7 @@ var _basicAuthAD = function(req, res, next) {
                     admins = config.get('Administrator');
                     if ( admins[user.name] === user.pass ) {
                         next();
-                    } else { 
+                    } else {
                         res.statusCode = 401;
                         res.setHeader('WWW-Authenticate', 'Basic realm="DIRDM Stager"');
                         res.end('Unauthorized');
@@ -41,4 +46,5 @@ var _basicAuthAD = function(req, res, next) {
     }
 }
 
+module.exports.basicAuthAccept = _accept;
 module.exports.basicAuthAD = _basicAuthAD;
