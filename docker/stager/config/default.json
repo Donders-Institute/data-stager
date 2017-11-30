@@ -2,16 +2,27 @@
     "Administrator": {
         "admin": "admin"
     },
-    "ActiveDirectory": {
-        "url": "ldap://dccn-w001.dccn.nl",
-        "baseDN": "OU=dccn,DC=dccn,DC=nl"
+    "BasicAuth": {
+        "mode": "PAM",
+        "Accept": {
+        },
+        "AD": {
+            "url": "ldap://dccn-w001.dccn.nl",
+            "baseDN": "OU=dccn,DC=dccn,DC=nl"
+        },
+        "PAM": {
+            "serviceName": "stager"
+        }
     },
     "StagerLocal": {
-        "sftp" : {
+        "mode": "local",
+        "local": {
+        },
+        "sftp": {
             "host": "sftp.dccn.nl",
             "port": "22"
         },
-        "cifs" : {
+        "cifs": {
             "server": "cnas.ru.nl",
             "share": "Wrkgrp",
             "mount": "/mnt/cnas"

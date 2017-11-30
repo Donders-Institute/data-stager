@@ -173,8 +173,9 @@ if (cluster.isMaster) {
     var app = express();
 
     // basicAuth
-    var auth = require('./routes/auth');
-    app.use(auth.basicAuthAD);
+    console.log('auth mode: ' + config.get('BasicAuth.mode'));
+    var auth = require('./routes/auth' + config.get('BasicAuth.mode') );
+    app.use(auth.basicAuth);
 
     // bodyParser so that FORM data become available in req.body
     app.use(bodyParser.json());
@@ -183,16 +184,10 @@ if (cluster.isMaster) {
     // start service for RESTful APIs
     app.use(kue.app);
 
-    // expose stager's local filesystem via SFTP
-    //var stager_fs = require('./routes/stager_fs_sftp');
-    // expose stager's local filesystem via FS & setuid
-    var stager_fs = require('./routes/stager_fs_local');
+    console.log('fs mode: ' + config.get('StagerLocal.mode'));
+    var stager_fs = require('./routes/stager_fs_' + config.get('StagerLocal.mode'));
     app.post('/fslogin/stager', stager_fs.authenticateUser);
     app.post('/fstree/stager', stager_fs.getDirList);
-
-    //var rdm_fs = require('./routes/rdm_fs_restful');
-    //app.post('/fslogin/rdm', rdm_fs.authenticateUser);
-    //app.post('/fstree/rdm', rdm_fs.getDirList);
 
     // RESTful interfaces for RDM-specific functions
     // 1. get collecnt namespace for project
