@@ -2,7 +2,6 @@ var config = require('config');
 var auth = require('basic-auth');
 var ActiveDirectory = require('activedirectory');
 
-
 var _accept = function(req, res, next) {
     next();
 }
@@ -10,7 +9,7 @@ var _accept = function(req, res, next) {
 var _basicAuthAD = function(req, res, next) {
 
     // simple authentication aganist ActiveDirectory
-    var ad = new ActiveDirectory(config.get('ActiveDirectory'));
+    var ad = new ActiveDirectory(config.get('BasicAuth.AD'));
     var user = auth(req);
 
     try {
@@ -29,14 +28,14 @@ var _basicAuthAD = function(req, res, next) {
                         next();
                     } else {
                         res.statusCode = 401;
-                        res.setHeader('WWW-Authenticate', 'Basic realm="DIRDM Stager"');
+                        res.setHeader('WWW-Authenticate', 'Basic realm="DR Stager"');
                         res.end('Unauthorized');
                     }
                 }
             });
         } else {
             res.statusCode = 401;
-            res.setHeader('WWW-Authenticate', 'Basic realm="DIRDM Stager"');
+            res.setHeader('WWW-Authenticate', 'Basic realm="DR Stager"');
             res.end('Unauthorized');
         }
     } catch(e) {
@@ -46,5 +45,4 @@ var _basicAuthAD = function(req, res, next) {
     }
 }
 
-module.exports.basicAuthAccept = _accept;
-module.exports.basicAuthAD = _basicAuthAD;
+module.exports.basicAuth = _basicAuthAD;
