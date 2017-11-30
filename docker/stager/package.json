@@ -1,9 +1,13 @@
 {
   "name": "stager",
   "description": "generic staging service",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": "Hurng-Chun Lee <h.lee@donders.ru.nl>",
   "main": "stager.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Donders-Institute/data-stager"
+  },
   "dependencies" : {
     "express": "~4.14.0",
     "redis": "~2.6.3",
@@ -22,6 +26,7 @@
     "posix": "~4.1.1",
     "nodemailer": "~4.0.1",
     "node-html-encoder": "~0.0.2",
-    "node-emoji": "~1.5.1"
+    "node-emoji": "~1.5.1",
+    "authenticate-pam": "~1.0.2"
   }
 }
