@@ -86,7 +86,7 @@ var _getDirList = function(request, response) {
     var cfg = { server: config.get('StagerLocal.cifs.server'),
                 share: config.get('StagerLocal.cifs.share'),
                 mount: config.get('StagerLocal.cifs.mount'),
-                username: auth(request).name,
+                username: auth(request).name.toLowerCase(),
                 password: auth(request).pass };
 
     var f_data = [];
@@ -99,7 +99,7 @@ var _getDirList = function(request, response) {
         } else {
             // mount successful or already existing
             //var dir = request.body.dir == '/' ? path.join(cfg.mount, auth(request).name) + '/':request.body.dir;
-            var dir = request.body.dir.replace(/^\//, path.join(cfg.mount, auth(request).name) + '/');
+            var dir = request.body.dir.replace(/^\//, path.join(cfg.mount, cfg.username) + '/');
             try {
                 var files = fs.readdirSync(dir);
                 files.forEach(function(f){
