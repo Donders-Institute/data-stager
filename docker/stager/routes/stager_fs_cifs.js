@@ -12,7 +12,6 @@ var _cifsIsMounted = function( tgt ) {
 
     var p = os.platform();
     var cmd_opts = {
-        shell: '/bin/bash',
         timeout: 10000
     };
 
@@ -47,23 +46,39 @@ var _cifsIsMounted = function( tgt ) {
 /* mount cifs */
 var _cifsMountAsync = function( cfg, cb ) {
 
+    var p = os.platform();
+
     var mnt_tgt = path.join(cfg.mount, cfg.username);
 
     if ( ! fs.existsSync(mnt_tgt) ) {
-        fs.mkdirSync(mnt_tgt);
+        _utility.mkdir(mnt_tgt, 0755);
     }
 
     if ( ! _cifsIsMounted(mnt_tgt) ) {
-        var mnt_src = '//' + cfg.username + ':' + querystring.escape(cfg.password) +
-                      '@'  + cfg.server   + '/' + cfg.share;
-
-        var cmd = 'mount';
-        var cmd_args = [ "-t", "smbfs", mnt_src, mnt_tgt ];
-        var cmd_opts = {
-            shell: '/bin/bash',
-            timeout: 10000
-        };
-        child_process.execFile( cmd, cmd_args, cmd_opts, cb );
+        if ( p == 'linux' ) {
+            var mnt_src = '//' + cfg.server + '/' + cfg.share;
+            var mnt_opt = 'user=' + cfg.username + ',pass=' + cfg.password;
+            var cmd = 'mount';
+            var cmd_args = [ "-t", "cifs", "-o", mnt_opt, mnt_src, mnt_tgt ];
+            var cmd_opts = {
+                shell: '/bin/bash',
+                timeout: 10000
+            };
+            child_process.execFile( cmd, cmd_args, cmd_opts, cb );
+        } else if ( p == 'freebsd' || p == 'darwin' ) {
+            var mnt_src = '//' + cfg.username + ':' + querystring.escape(cfg.password) +
+                          '@'  + cfg.server   + '/' + cfg.share;
+            var cmd = 'mount';
+            var cmd_args = [ "-t", "smbfs", mnt_src, mnt_tgt ];
+            var cmd_opts = {
+                shell: '/bin/bash',
+                timeout: 10000
+            };
+            child_process.execFile( cmd, cmd_args, cmd_opts, cb );
+        } else {
+            // not supported platform
+            cb(new Error('unsupported platform: ' + p), '', '');
+        }
     } else {
         cb(null, 'target alreay a mount: ' + mnt_tgt, '')
     }

@@ -37,7 +37,7 @@ RUN ( if [ ! -d node-v6.11.2-linux-x64 ]; then tar xf node-v6.11.2-linux-x64.tar
       && mv node-v6.11.2-linux-x64 /opt/nodejs )
 
 # install expect so that we get unbuffer to get irsync progress, progressively
-RUN ( yum -y install expect parallel bc )
+RUN ( yum -y install expect parallel bc samba-client cifs-utils )
 
 # install stager scripts and required nodejs modules
 RUN ( mkdir -p /opt/stager/bin )

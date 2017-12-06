@@ -1,3 +1,18 @@
+var fs = require('fs');
+var path = require('path');
+
+// make new directories with necessary parents
+var _mkdir = function(dir, mode) {
+    try{
+        fs.mkdirSync(dir, mode);
+    } catch(e){
+        if(e.code == 'ENOENT'){
+            _mkdir(path.dirname(dir), mode);
+            _mkdir(dir, mode);
+        }
+    }
+}
+
 // general error handler to send response to the client
 var _responseOnError = function(c_type, c_data, resp) {
     resp.status(500);
@@ -26,6 +41,7 @@ var _printErr = function(header, err) {
     console.log(_composeLog(header, err));
 }
 
+module.exports.mkdir = _mkdir;
 module.exports.responseOnError = _responseOnError;
 module.exports.printLog = _printLog;
 module.exports.printErr = _printErr;
