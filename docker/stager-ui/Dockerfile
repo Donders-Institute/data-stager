@@ -35,5 +35,5 @@ RUN ( export PATH=$nodejs_prefix/bin:$PATH && /opt/nodejs/bin/npm install )
 # run a stager-ui
 ENV NODEJS_PREFIX $nodejs_prefix
 VOLUME [ "/opt/stager-ui/config" ]
-EXPOSE 80
+EXPOSE 3080
 CMD [ "/opt/stager-ui/start_stager-ui.sh" ]
