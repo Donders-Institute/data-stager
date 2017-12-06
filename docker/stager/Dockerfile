@@ -70,6 +70,8 @@ RUN ( yum -y install epel-release )
 RUN ( yum -y install supervisor )
 COPY supervisord.conf /opt/stager/supervisord.conf
 
+RUN ( yum -y clean all )
+
 # run a stager and devcron from supervisor
 VOLUME [ "/project", "/cron", "/opt/stager/config", "/opt/stager/log" ]
 EXPOSE 3000
