@@ -31,18 +31,21 @@ if __name__ == "__main__":
     args = parg.parse_args()
     logger = getLogger(name=os.path.basename(__file__), lvl=3)
 
-    config = '%s/config/default.json' % os.path.dirname(os.path.realpath(__file__))
+    configs = []
+    configs.append('%s/config/default.json' % os.path.dirname(os.path.realpath(__file__)))
+    if os.environ.get('NODE_ENV'):
+        configs.append('%s/config/%s.json' % (os.path.dirname(os.path.realpath(__file__)), os.environ.get('NODE_ENV')))
 
+    c = {}
+    for config in configs:
+        if not os.path.exists(config):
+            raise IOError('config file not found: %s' % config)
+        f = open(config, 'r')
+        c.update(json.load(f))
+        f.close()
 
-    if not os.path.exists(config):
-        raise IOError('file not found: %s' % config)
-
-    f = open(config, 'r')
-    c = json.load(f)
-    f.close()
-
-    # update irods_environment.json file 
-    c_irods_env = {} 
+    # update irods_environment.json file
+    c_irods_env = {}
     if os.path.exists(args.p_irods_environment):
         f = open(args.p_irods_environment, 'r')
         c_irods_env = json.load(f)
