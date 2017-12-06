@@ -33,6 +33,11 @@ if [ $? -ne 0 ]; then
 fi
 
 # initialise iRODS authN token for iCommands
-python -c 'import json; c = json.load(open("config/default.json")); print(c["RDM"]["userPass"])' | iinit
+cfg=default.json
+if [ "$NODE_ENV" != "" ]; then
+    cfg=${NODE_ENV}.json
+fi
+
+python -c "import json; c = json.load(open('config/${cfg}')); print(c['RDM']['userPass'])" | iinit
 
 $NODEJS_PREFIX/bin/node stager.js
