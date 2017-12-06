@@ -49,7 +49,7 @@ app.use( session({
 app.use('/', routes);
 
 // AJAX posts
-app.get('/fs/dir', mod_fs.getDirListJsTree)
+app.get('/fs/dir', mod_fs.getDirListJsTree);
 
 app.post('/rdm/login', mod_rdm.authenticateUser);
 app.post('/rdm/logout', mod_rdm.logoutUser);
