@@ -1,6 +1,12 @@
 var config = require('config');
 var RestClient = require('node-rest-client').Client;
 
+/* return the valida full path by appending mount path to root */
+var _expandRoot = function(dir, userName) {
+    // the root provided by the client is expected.
+    return dir;
+}
+
 /* authenticate user's username/password to RDM */
 var _authenticateUser = function(request, response) {
 
@@ -64,5 +70,6 @@ var _getDirList = function(request, response) {
     });
 }
 
+module.exports.expandRoot = _expandRoot;
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;

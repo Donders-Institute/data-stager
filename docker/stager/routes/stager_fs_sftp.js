@@ -2,6 +2,12 @@ var config = require('config');
 var auth = require('basic-auth');
 var Client = require('ssh2').Client;
 
+/* return the valida full path by appending mount path to root */
+var _expandRoot = function(dir, userName) {
+    // the root provided by the client is expected.
+    return dir;
+}
+
 /* authenticate user's username/password to a SFTP server */
 var _authenticateUser = function(request, response) {
 
@@ -88,5 +94,6 @@ var _getDirList = function(request, response) {
     }
 }
 
+module.exports.expandRoot = _expandRoot;
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;

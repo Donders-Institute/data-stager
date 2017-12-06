@@ -88,9 +88,15 @@ var _cifsUnmountAsync = function( cfg, cb ) {
 
 }
 
+/* return the valida full path by appending mount path to root */
+var _expandRoot = function(dir, userName) {
+    var rootDir = path.join(config.get('StagerLocal.cifs.mount'), userName);
+    return dir.replace(/^\//, rootDir + '/');
+}
+
 /* authenticate filesystem user */
 var _authenticateUser = function(request, response) {
-    // dummy response as when this function is called, the authentication is passed
+    // dummy authentication as user has been checked by the basicAuth
     response.status(200);
     response.json({});
 }
@@ -113,8 +119,7 @@ var _getDirList = function(request, response) {
             console.error('Cannot mount: ' + err + ' - ' + stderr);
         } else {
             // mount successful or already existing
-            //var dir = request.body.dir == '/' ? path.join(cfg.mount, auth(request).name) + '/':request.body.dir;
-            var dir = request.body.dir.replace(/^\//, path.join(cfg.mount, cfg.username) + '/');
+            var dir = _expandRoot(request.body.dir, cfg.username);
             try {
                 var files = fs.readdirSync(dir);
                 files.forEach(function(f){
@@ -161,5 +166,6 @@ var _getDirList = function(request, response) {
     });
 }
 
+module.exports.expandRoot = _expandRoot;
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;

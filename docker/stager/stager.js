@@ -165,6 +165,10 @@ queue.on( 'error', function(err) {
     }
 });
 
+// stager's local filesystem
+console.log('fs mode: ' + config.get('StagerLocal.mode'));
+var stager_fs = require('./routes/stager_fs_' + config.get('StagerLocal.mode'));
+
 // Master process of the cluster
 if (cluster.isMaster) {
 
@@ -184,8 +188,7 @@ if (cluster.isMaster) {
     // start service for RESTful APIs
     app.use(kue.app);
 
-    console.log('fs mode: ' + config.get('StagerLocal.mode'));
-    var stager_fs = require('./routes/stager_fs_' + config.get('StagerLocal.mode'));
+    // endpoints for the stager's local filesystem
     app.post('/fslogin/stager', stager_fs.authenticateUser);
     app.post('/fstree/stager', stager_fs.getDirList);
 
@@ -349,7 +352,7 @@ if ( cluster.worker ) {
                             cmd = path.join(stager_bindir,'s-duck.sh');
                         }
 
-                        var cmd_args = [ "'"+job.data.srcURL+"'", "'"+job.data.dstURL+"'", job.data.rdmUser, irodsA ];
+                        var cmd_args = [ "'" + stager_fs.expandRoot(job.data.srcURL, job.data.stagerUser) + "'", "'" + job.data.dstURL + "'", job.data.rdmUser, irodsA ];
                         var cmd_opts = {
                             shell: '/bin/bash'
                         };

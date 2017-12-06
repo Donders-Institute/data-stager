@@ -1,9 +1,14 @@
 var fs = require('fs');
 var auth = require('basic-auth');
 
+/* return the valida full path by appending mount path to root */
+var _expandRoot = function(dir, userName) {
+    // the root provided by the client is expected.
+    return dir;
+}
+
 /* authenticate filesystem user */
 var _authenticateUser = function(request, response) {
-
   // dummy response as when this function is called, the authentication is passed
   response.status(200);
   response.json({});
@@ -66,5 +71,6 @@ var _getDirList = function(request, response) {
     response.send(f_data);
 }
 
+module.exports.expandRoot = _expandRoot;
 module.exports.authenticateUser = _authenticateUser;
 module.exports.getDirList = _getDirList;
