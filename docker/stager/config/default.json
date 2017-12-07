@@ -16,6 +16,7 @@
     },
     "StagerLocal": {
         "mode": "local",
+        "setuid": true,
         "local": {
         },
         "sftp": {
