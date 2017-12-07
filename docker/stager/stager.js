@@ -236,7 +236,7 @@ if (cluster.isMaster) {
                         maxBuffer: 10*1024*1024
                     };
 
-                    if ( su !== "" ) {
+                    if ( su !== "" && config.get('StagerLocal.setuid') ) {
                         var proc_user = posix.getpwnam(su.split('@')[0]);
                         cmd_opts.uid = proc_user.uid;
                         cmd_opts.gid = proc_user.gid;
@@ -352,12 +352,25 @@ if ( cluster.worker ) {
                             cmd = path.join(stager_bindir,'s-duck.sh');
                         }
 
-                        var cmd_args = [ "'" + stager_fs.expandRoot(job.data.srcURL, job.data.stagerUser) + "'", "'" + job.data.dstURL + "'", job.data.rdmUser, irodsA ];
+                        // expand the root path of the stager's local filesystem
+                        var _srcURL = (job.data.srcURL.match(/^irods:/)) ?
+                                        job.data.srcURL : stager_fs.expandRoot(job.data.srcURL, job.data.stagerUser);
+
+                        var _dstURL = (job.data.dstURL.match(/^irods:/)) ?
+                                        job.data.dstURL : stager_fs.expandRoot(job.data.dstURL, job.data.stagerUser);
+
+                        var cmd_args = ["'"+_srcURL+"'",
+                                        "'"+_dstURL+"'",
+                                        job.data.rdmUser,
+                                        irodsA];
+
                         var cmd_opts = {
                             shell: '/bin/bash'
                         };
 
-                        if ( typeof job.data.stagerUser !== "undefined" ) {
+                        // set transfer command uid/gid
+                        if ( typeof job.data.stagerUser !== "undefined" &&
+                             config.get('StagerLocal.setuid') ) {
                             proc_user = posix.getpwnam(job.data.stagerUser.split('@')[0]);
                             cmd_opts.uid = proc_user.uid;
                             cmd_opts.gid = proc_user.gid;
