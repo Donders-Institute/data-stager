@@ -85,20 +85,57 @@ var _cifsMountAsync = function( cfg, cb ) {
 }
 
 var _cifsUnmountAsync = function( cfg, cb ) {
-
+    var mnt_tgt = path.join(cfg.mount, cfg.username);
+    if ( ! _cifsIsMounted(mnt_tgt) ) {
+        cb(null, 'target not mounted: ' + mnt_tgt, '')
+    } else {
+        var cmd = 'umount';
+        var cmd_args = ["-lf", mnt_tgt];
+        var cmd_opts = {
+            shell: '/bin/bash',
+            timeout: 10000
+        };
+        child_process.execFile( cmd, cmd_args, cmd_opts, cb );
+    }
 }
 
 /* return the valida full path by appending mount path to root */
 var _expandRoot = function(dir, userName) {
-    var rootDir = path.join(config.get('StagerLocal.cifs.mount'), userName);
+    var rootDir = path.join(config.get('StagerLocal.cifs.mount'), userName.toLowerCase());
     return dir.replace(/^\//, rootDir + '/');
 }
 
 /* authenticate filesystem user */
-var _authenticateUser = function(request, response) {
+var _authenticateUserDummy = function(request, response) {
     // dummy authentication as user has been checked by the basicAuth
     response.status(200);
     response.json({});
+}
+
+var _authenticateUser = function(request, response) {
+    var cfg = { server: config.get('StagerLocal.cifs.server'),
+                share: config.get('StagerLocal.cifs.share'),
+                mount: '/tmp/cifs_mnt4auth',
+                username: auth(request).name.toLowerCase(),
+                password: auth(request).pass };
+
+    // perform mount and unmount on a tempoary folder for authentication check
+    _cifsMountAsync(cfg, function(err, stdout, stderr) {
+        if ( err ) {
+            response.status(404);
+            response.end("Unauthenticated user: " + cfg.username);
+        } else {
+            _cifsUnmountAsync(cfg, function(err, stdout, stderr){
+                if (err) {
+                    response.status(500);
+                    response.end("Internal Server Error: " + stderr);
+                } else {
+                    response.status(200);
+                    response.json({});
+                }
+            });
+        }
+    });
 }
 
 /* get files and directories within a filesystem directory */
@@ -116,7 +153,7 @@ var _getDirList = function(request, response) {
     _cifsMountAsync(cfg, function(err, stdout, stderr) {
         if (err) {
             // mount failed
-            console.error('Cannot mount: ' + err + ' - ' + stderr);
+            console.error('Cannot mount for user ' + cfg.username + ': ' + stderr);
         } else {
             // mount successful or already existing
             var dir = _expandRoot(request.body.dir, cfg.username);
