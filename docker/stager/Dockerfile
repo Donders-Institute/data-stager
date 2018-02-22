@@ -72,6 +72,16 @@ COPY supervisord.conf /opt/stager/supervisord.conf
 
 RUN ( yum -y clean all )
 
+# runtime environment variables
+ENV IRODS_ADMIN_USER=irods
+ENV IRODS_ADMIN_PASS=test123
+ENV IRODS_ICAT_HOST=irods-icat
+ENV IRODS_ZONE_PORT=1247
+ENV IRODS_ZONE_NAME=rdmtst
+ENV IRODS_REST_ENDPOINT=https://irods-rest
+ENV DAVRODS_ENDPOINT=https://irods-webdav
+ENV DAVRODS_EXPOSED_ROOT=/rdmtst/di
+
 # run a stager and devcron from supervisor
 VOLUME [ "/project", "/cron", "/opt/stager/config", "/opt/stager/log" ]
 EXPOSE 3000

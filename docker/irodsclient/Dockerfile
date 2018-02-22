@@ -20,7 +20,6 @@ RUN ( chmod +x install-icommands.sh && ./install-icommands.sh $irods_version )
 
 # prepare iRODS client environment
 RUN ( mkdir -p  /opt/irods/ssl )
-COPY icat-prod.pem /opt/irods/ssl/icat-prod.pem
 COPY irods_environment.json /opt/irods/irods_environment.json
 ENV IRODS_ENVIRONMENT_FILE /opt/irods/irods_environment.json
 

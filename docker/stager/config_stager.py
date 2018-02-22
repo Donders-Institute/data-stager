@@ -51,9 +51,11 @@ if __name__ == "__main__":
         c_irods_env = json.load(f)
         f.close()
 
-    c_irods_env['irods_user_name'] = c['RDM']['userName']
-    c_irods_env['irods_host'] = c['RDM']['icatHost']
-    c_irods_env['irods_port'] = c['RDM']['icatPort']
+    c_irods_env['irods_user_name'] = os.environ.get('IRODS_ADMIN_USER')
+    c_irods_env['irods_host'] = os.environ.get('IRODS_ICAT_HOST')
+    c_irods_env['irods_port'] = int(os.environ.get('IRODS_ZONE_PORT'))
+    c_irods_env['irods_zone_name'] = os.environ.get('IRODS_ZONE_NAME')
+    c_irods_env['irods_home'] = '/' + c_irods_env['irods_zone_name'] + '/home/' + c_irods_env['irods_user_name']
 
     f = open(args.p_irods_environment, 'w')
     json.dump(c_irods_env, f, indent=4, sort_keys=True)

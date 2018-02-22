@@ -32,6 +32,22 @@ RUN ( chmod +x start_stager-ui.sh )
 # install nodejs modules for the application
 RUN ( export PATH=$nodejs_prefix/bin:$PATH && /opt/nodejs/bin/npm install )
 
+# prepare folder for trusted certificate
+RUN ( mkdir -p /opt/stager-ui/ssl )
+
+# runtime environment variables 
+ENV UI_TITLE="File Stager for Donders Repository"
+ENV UI_WEBSITE=https://data.donders.ru.nl
+ENV EMAIL_HELPDESK=datasupport@donders.ru.nl
+ENV LOGIN_TITLE_STAGER="Stager Storage"
+ENV LOGIN_HINT_STAGER="Sign in with the stager system account"
+ENV LOGIN_TITLE_RDM="Donders Repository"
+ENV LOGIN_HINT_RDM="Sign in with the data-access account"
+ENV DAVRODS_ENDPOINT=https://irods-webdav
+ENV DAVRODS_EXPOSED_ROOT=/rdmtst/di
+
+ENV TURL_PREFIX_RDM=irods:${DAVRODS_EXPOSED_ROOT}
+
 # run a stager-ui
 ENV NODEJS_PREFIX $nodejs_prefix
 VOLUME [ "/opt/stager-ui/config" ]
