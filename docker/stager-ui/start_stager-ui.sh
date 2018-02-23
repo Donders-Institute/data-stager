@@ -19,4 +19,11 @@ function get_script_dir() {
     echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 
+# temporarily disable check on self-signed certificate until
+# webdav-fs module supports it, see issue: 
+# https://github.com/perry-mitchell/webdav-fs/issues/54
+#
+# TODO: replace it with trusting the self-signed certificate
+export NODE_TLS_REJECT_UNAUTHORIZED=0
+
 export PATH=${NODEJS_PREFIX}/bin:$PATH && npm start
