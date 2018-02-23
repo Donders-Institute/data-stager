@@ -31,11 +31,12 @@
     },
     "RDM": {
         "userName": "irods",
-        "userPass": "xxxxxx",
-        "icatHost": "icat.data.donders.ru.nl",
+        "userPass": "test123",
+        "icatHost": "irods-icat",
         "icatPort": 1247,
-        "restEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
-        "davEndpoint": "https://webdav.rdmappacc.uci.ru.nl",
-        "davRootNamespace": "/rdm/di"
+        "icatZone": "rdmtst",
+        "restEndpoint": "https://irods-rest",
+        "davEndpoint": "https://irods-webdav",
+        "davRootNamespace": "/rdmtst/di"
     }
 }

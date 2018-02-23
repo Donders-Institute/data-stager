@@ -1,40 +1,64 @@
 version: "2"
+
 services:
-  redis:
+
+  stager-db:
     build:
       context: ./redis
     image: redis
+    hostname: stager-db
     user: root
-    network_mode: "host"
     volumes:
-      - /data/stager/db:/data
+      - ./data/db:/data
+    networks:
+      - rdm-network
+
   irodsclient:
     build:
       context: ./irodsclient
     image: irodsclient
+
   stager:
     build: ./stager
     image: stager
-    network_mode: "host"
+    hostname: stager
     environment:
-      - REDIS_HOST=127.0.0.1
+      - REDIS_HOST=stager-db
       - REDIS_PORT=6379
+      - IRODS_ICAT_HOST=irods-icat
+      - IRODS_ZONE_PORT=1247
+      - IRODS_ZONE_NAME=rdmtst
     volumes:
-      - /data/stager/config:/opt/stager/config
-      - /data/stager/log:/opt/stager/log
+      - ./stager/config:/opt/stager/config
+      - ./stager/config/icat.pem:/opt/irods/ssl/icat.pem:ro
+      - ./data/log/stager:/opt/stager/log
       - ./stager/cron:/cron
-      - /home:/home:ro
-      - /project:/project
-      - /var/lib/sss/pipes:/var/lib/sss/pipes
-      - /var/lib/sss/mc:/var/lib/sss/mc:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/group:/etc/group:ro
+      - /etc/shadow:/etc/shadow:ro
+      - /home:/data
+    networks:
+      - rdm-network
     depends_on:
       - irodsclient
-      - redis
+      - stager-db
+
   stager-ui:
     build: ./stager-ui
     image: stager-ui
-    network_mode: "host"
+    environment:
+      - DAVRODS_ENDPOINT=https://irods-webdav
+      - DAVRODS_EXPOSED_ROOT=/rdmtst/di
     volumes:
-      - /data/stager-ui/config:/opt/stager-ui/config
+      - ./stager-ui/config:/opt/stager-ui/config
+      - ./stager-ui/config/irods-webdav.pem:/opt/stager-ui/ssl/irods-webdav.pem:ro
+    networks:
+      - rdm-network
+    ports:
+      - 3080:3080
     depends_on:
       - stager
+
+networks:
+    rdm-network:
+      external: true

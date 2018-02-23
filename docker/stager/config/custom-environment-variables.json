@@ -1,0 +1,12 @@
+{
+    "RDM": {
+        "userName": "IRODS_ADMIN_USER",
+        "userPass": "IRODS_ADMIN_PASS",
+        "icatHost": "IRODS_ICAT_HOST",
+        "icatPort": "IRODS_ZONE_PORT",
+        "icatZone": "IRODS_ZONE_NAME",
+        "restEndpoint": "IRODS_REST_ENDPOINT",
+        "davEndpoint": "DAVRODS_ENDPOINT",
+        "davRootNamespace": "DAVRODS_EXPOSED_ROOT"
+    }
+}

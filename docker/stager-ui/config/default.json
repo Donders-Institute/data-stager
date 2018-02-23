@@ -5,7 +5,7 @@
     },
     "title": "File Staging Service",
     "website": "https://data.donders.ru.nl",
-    "helpdesk": "helpdesk@fcdonders.ru.nl",
+    "helpdesk": "datasupport@donders.ru.nl",
     "filesystem": {
         "displayName": "local file system",
         "rootDir": "/tmp/",
@@ -26,23 +26,22 @@
         "displayName": "Donders Repository",
         "rootDir": "/",
         "prefixTurl": "irods:/rdm/di",
-        "hintLogin": "Sing in with the DI-RDM data-access account",
+        "hintLogin": "Sing in with the data-access account",
         "pathLogin": "/rdm/login",
         "pathLogout": "/rdm/logout",
         "pathListDir": "/rdm/dir",
         "pathMakeDir": "/rdm/mkdir",
         "exampleLogin": "U123456-ru.nl",
-        "irodsRestfulEndpoint": "https://webdav.data.donders.ru.nl/irods-rest/rest",
         "irodsWebDavEndpoint": "https://webdav.data.donders.ru.nl"
     },
     "stager": {
-        "displayName": "Project Storage",
-        "rootDir": "/project/",
-        "hintLogin": "Sing in with the DCCN account appended with @dccn.nl",
+        "displayName": "Stager Storage",
+        "rootDir": "/data/",
+        "hintLogin": "Sing in with the Stager account",
         "pathLogin": "/stager/login",
         "pathLogout": "/stager/logout",
         "pathListDir": "/stager/dir",
-        "exampleLogin": "pethag@dccn.nl",
-        "restfulEndpoint": "http://localhost:3000"
+        "exampleLogin": "honlee",
+        "restfulEndpoint": "http://stager:3000"
     }
 }

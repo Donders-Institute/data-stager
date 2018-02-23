@@ -1,0 +1,15 @@
+{
+    "title": "UI_TITLE",
+    "website": "UI_WEBSITE",
+    "helpdesk": "EMAIL_HELPDESK",
+    "stager": {
+        "displayName": "LOGIN_TITLE_STAGER",
+        "hintLogin": "LOGIN_HINT_STAGER"
+    },
+    "rdm": {
+        "displayName": "LOGIN_TITLE_RDM",
+        "hintLogin": "LOGIN_HINT_RDM",
+        "prefixTurl": "TURL_PREFIX_RDM",
+        "irodsWebDavEndpoint": "DAVRODS_ENDPOINT"
+    }
+}

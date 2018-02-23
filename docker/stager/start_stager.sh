@@ -40,4 +40,7 @@ fi
 
 python -c "import json; c = json.load(open('config/${cfg}')); print(c['RDM']['userPass'])" | iinit
 
+# prepare for PAM authentication
+ln -s /etc/pam.d/login /etc/pam.d/stager
+
 $NODEJS_PREFIX/bin/node stager.js
