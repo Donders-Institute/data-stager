@@ -1,0 +1,8 @@
+version: "2"
+services:
+  stager:
+    environment:
+      - NODE_ENV=werkgroepmap
+  stager-ui:
+    environment:
+      - NODE_ENV=werkgroepmap
