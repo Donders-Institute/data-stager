@@ -1,0 +1,14 @@
+{
+    "BasicAuth": {
+        "mode": "Accept"
+    },
+    "StagerLocal": {
+        "mode": "cifs",
+        "setuid": false,
+        "cifs": {
+            "server": "cnas.ru.nl",
+            "share": "Wrkgrp",
+            "mount": "/mnt/cnas"
+        }
+    }
+}
