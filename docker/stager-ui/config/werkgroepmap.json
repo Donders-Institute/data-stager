@@ -1,5 +1,6 @@
 {
     "stager": {
+        "rootDir": "/",
         "exampleLogin": "U123456"
     }
 }

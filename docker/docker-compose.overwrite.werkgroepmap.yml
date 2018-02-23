@@ -3,6 +3,11 @@ services:
   stager:
     environment:
       - NODE_ENV=werkgroepmap
+    cap_add:
+      - SYS_ADMIN
+      - DAC_READ_SEARCH
   stager-ui:
     environment:
       - NODE_ENV=werkgroepmap
+      - LOGIN_TITLE_STAGER=RU Werkgroepmap
+      - LOGIN_HINT_STAGER=Sign in with your RU account

@@ -33,10 +33,6 @@ services:
       - ./stager/config/icat.pem:/opt/irods/ssl/icat.pem:ro
       - ./data/log/stager:/opt/stager/log
       - ./stager/cron:/cron
-      - /etc/passwd:/etc/passwd:ro
-      - /etc/group:/etc/group:ro
-      - /etc/shadow:/etc/shadow:ro
-      - /home:/data
     networks:
       - rdm-network
     depends_on:
