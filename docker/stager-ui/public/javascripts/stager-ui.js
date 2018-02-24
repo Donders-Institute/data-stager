@@ -1,24 +1,44 @@
-/* utility function to determine whether a given path is a directory */
-function isDir(p) {
+/**
+ * The main javascript module for browser client of the File Stager.
+ *
+ * @author Hurng-Chun Lee <h.lee@donders.ru.nl>
+ */
+
+/**
+ * Check if the given path is a JSTree directory.
+ * @param {string} p - the path
+ * @return {boolean}
+ */
+function isJsTreeDir(p) {
     return p.match('.*(/|\\\\)$')?true:false;
 }
 
-/* utility function to toggle application dialog for error message */
-function appError(html_text) {
+/**
+ * Display application dialog to show the ERROR message
+ * @param {string} html_text - the error message in HTML format
+ */
+function showAppError(html_text) {
     $("#app_dialog").modal('toggle');
     $("#app_dialog_header").html( 'Error' );
     $("#app_dialog_message").html( html_text );
 };
 
-/* utility function to toggle application dialog for information */
-function appInfo(html_text) {
+/**
+ * Display application dialog to show the INFO message
+ * @param {string} html_text - the info message in HTML format
+ */
+function showAppInfo(html_text) {
     $("#app_dialog").modal('toggle');
     $("#app_dialog_header").html( 'Information' );
     $("#app_dialog_message").html( html_text );
 }
 
-/* general function for displaying the login form */
-function show_login_form(loc, msg) {
+/**
+ * Display the user login form
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ * @param {string=} msg - if specified, the message to be shown on the error dialog
+ */
+function showLoginForm(loc, msg) {
     var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
     var ele_errmsg = ( loc == 'local' ) ? $("#login_error_local"):$("#login_error_remote");
     var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
@@ -42,8 +62,12 @@ function show_login_form(loc, msg) {
     }
 };
 
-/* general function for displaying the filetree */
-function show_filetree(loc, root) {
+/**
+ * Display the filesystem tree panel
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ * @param {string} root - the top-level directory of the tree
+ */
+function showFileSystemTree(loc, root) {
     var ele_actions = ( loc == 'local' ) ? $("#action_local"):$("#action_remote");
     var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
     var ele_form = ( loc == 'local' ) ? $("#local_login_form"):$("#remote_login_form");
@@ -61,7 +85,7 @@ function show_filetree(loc, root) {
     init_root=htmlDecodeSpace(init_root);
 
     if ( typeof(u) === 'undefined' && login_path ) {
-        show_login_form(loc, '');
+        showLoginForm(loc, '');
     } else {
 
         // hide login form
@@ -91,13 +115,13 @@ function show_filetree(loc, root) {
             '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + init_root + '"></i></li>';
         } else {
             var dir_init_root=htmlEncodeSpace(init_root);
-            htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_init_root+'");>' +
+            htmlCnt += '<li>' + '<a href=# onclick=showFileSystemTree("'+loc+'","'+dir_init_root+'");>' +
             '<i class="fa fa-home" data-toggle="tp-breadcrumbs" title="' + dir_init_root + '"></i></a></li>';
 
             if ( subdirs.length >= 3 ) {
                 // insert link to go to parent folder
                 var dir_t = htmlEncodeSpace(init_root + subdirs.slice(1,-1).join('/') + '/');
-                htmlCnt += '<li>' + '<a href=# onclick=show_filetree("'+loc+'","'+dir_t+'");>' +
+                htmlCnt += '<li>' + '<a href=# onclick=showFileSystemTree("'+loc+'","'+dir_t+'");>' +
                 '<i class="fa fa-level-up" data-toggle="tp-breadcrumbs" title="' + dir_t +'"></i></a></li>';
             }
 
@@ -135,8 +159,8 @@ function show_filetree(loc, root) {
             // data.event is 'undefined' if user clicks on the checkbox
             // this is the handle to check whether user is clicking on a checkbox
             // or getting into a folder.
-            if ( isDir(data.node.id) && typeof data.event != 'undefined') {
-                show_filetree(loc, data.node.id);
+            if ( isJsTreeDir(data.node.id) && typeof data.event != 'undefined') {
+                showFileSystemTree(loc, data.node.id);
             }
         }).on('ready.jstree', function(err) {
             // actions when the filesystem tree is ready
@@ -150,7 +174,7 @@ function show_filetree(loc, root) {
                 animation: 0,
                 check_callback: true,
                 error: function(err) {
-                    appError(err.reason + ": " + err.data);
+                    showAppError(err.reason + ": " + err.data);
                 },
                 data: {
                     url: ajax_script,
@@ -176,10 +200,10 @@ function show_filetree(loc, root) {
                 var nb = this.get_node(b);
 
                 // sorting by type and file/directory name
-                if ( isDir(na.id) == isDir(nb.id) ) {
+                if ( isJsTreeDir(na.id) == isJsTreeDir(nb.id) ) {
                     return ( na.id > nb.id ) ? 1:-1;
                 } else {
-                    return isDir(na.id) ? 1:-1;
+                    return isJsTreeDir(na.id) ? 1:-1;
                 }
                 return -1;
             },
@@ -188,8 +212,13 @@ function show_filetree(loc, root) {
     }
 };
 
-/* general function for user login */
-function login_user( loc, user, credential ) {
+/**
+ * Perform user login, on success display the top-level directory tree
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ * @param {string} user - the username
+ * @param {string} credential - the jQuery serialized form data from the login form
+ */
+function doUserLogin( loc, user, credential ) {
     var login_path = ( loc == 'local' ) ? params.l_fs_path_login:params.r_fs_path_login;
     var init_root = ( loc == 'local' ) ? params.l_fs_root:params.r_fs_root;
     var fs_server = ( loc == 'local' ) ? params.l_fs_server:params.r_fs_server;
@@ -197,27 +226,33 @@ function login_user( loc, user, credential ) {
         //console.log(data);
     }).done( function() {
         Cookies.set('username_' + loc , user);
-        show_filetree(loc, init_root);
+        showFileSystemTree(loc, init_root);
     }).fail( function() {
-        appError('Authentication failure: ' + fs_server);
-    });
-}
-
-/* general function for user logout */
-function logout_user( loc ) {
-    var logout_path = ( loc == 'local' ) ? params.l_fs_path_logout:params.r_fs_path_logout;
-    var fs_server = ( loc == 'local' ) ? params.l_fs_server:params.r_fs_server;
-    $.post(logout_path, function(data) {
-        appInfo(fs_server + " user logged out");
-        Cookies.remove('username_' + loc);
-        show_login_form('local','');
-    }).fail( function() {
-        appError('fail logout ' + fs_server + ' user');
+        showAppError('Authentication failure: ' + fs_server);
     });
 };
 
-/* toggle dialog modal for creating new folder */
-function toggle_mkdir_dialog(loc) {
+/**
+ * Perform user logout, it removes relevent cookie variable
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ */
+function doUserLogout( loc ) {
+    var logout_path = ( loc == 'local' ) ? params.l_fs_path_logout:params.r_fs_path_logout;
+    var fs_server = ( loc == 'local' ) ? params.l_fs_server:params.r_fs_server;
+    $.post(logout_path, function(data) {
+        showAppInfo(fs_server + " user logged out");
+        Cookies.remove('username_' + loc);
+        showLoginForm('local','');
+    }).fail( function() {
+        showAppError('fail logout ' + fs_server + ' user');
+    });
+};
+
+/**
+ * Toggle the dialog for making new directory
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ */
+function showMakeDirDialog(loc) {
 
     $("#mkdir_dialog_alert").hide();
 
@@ -226,7 +261,7 @@ function toggle_mkdir_dialog(loc) {
     var ajax_script = ( loc == 'local' ) ? params.l_fs_path_mkdir:params.r_fs_path_mkdir;
 
     if ( ajax_script == "" ) {
-        appInfo('directory creation not supported');
+        showAppInfo('directory creation not supported');
     } else {
         $("#mkdir_dialog").modal('toggle');
         $("#mkdir_dialog_title").html( 'Create new folder on ' + sname );
@@ -246,18 +281,26 @@ function toggle_mkdir_dialog(loc) {
     }
 };
 
-// function to check session validity every minute
+/**
+ * Toggle period session validity check brackground process.  If the session is
+ * expired, it displays an application error.
+ */
 function checkSessionValidity() {
     setInterval( function() {
         if ( ! Cookies.get('stager-ui.sid') ) {
             // block the whole page with a warning; and ask user to refresh the page
-            appError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
+            showAppError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
         }
     }, 60 * 1000 );
 };
 
-/* action for creating new folder */
-function make_dir(loc, base, dirName) {
+/**
+ * Perform creation of the new directory.
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ * @param {string} base - the parent directory in which the new directory to be created
+ * @param {string} dirName - the name of the new directory
+ */
+function doMakeDir(loc, base, dirName) {
     if ( dirName == "" ) {
         // show error on the mkdir dialog
         $("#mkdir_dialog_alert_msg").html('Please specify the name of the new folder');
@@ -276,7 +319,7 @@ function make_dir(loc, base, dirName) {
             var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
 
             if ( ajax_script == "" ) {
-                appInfo('directory creation not supported');
+                showAppInfo('directory creation not supported');
             } else {
                 var dir = base + '/' + dirName;
                 $.ajax({
@@ -288,10 +331,10 @@ function make_dir(loc, base, dirName) {
                     statusCode: {
                         500: function(jqxhr, status, err) {
                             // popup the application error panel
-                            appError(err);
+                            showAppError(err);
                         },
                         200: function(data, status, jqxhr) {
-                            appInfo('folder ' + dir + ' created!');
+                            showAppInfo('folder ' + dir + ' created!');
                             // refresh the filetree view
                             $(ele_filetree.get(0)).find('#jstree').jstree(true).refresh();
                         }
@@ -304,22 +347,26 @@ function make_dir(loc, base, dirName) {
     }
 };
 
-/* job functions */
-function job_action(id, action) {
+/**
+ * Perform one of the job's actions: start/stop/delete
+ * @param {string} id - the job id
+ * @param {string} action - the action, one of "start", "stop", and "delete"
+ */
+function makeJobAction(id, action) {
     var msg = '';
     var jf;
     switch(action) {
         case 'start':
             msg = 'You are about to (re-)start job: ' + id;
-            jf = start_job;
+            jf = startJob;
             break;
         case 'stop':
             msg = 'You are about to stop job: ' + id;
-            jf = stop_job;
+            jf = stopJob;
             break;
         case 'delete':
             msg = 'You are about to delete job: ' + id;
-            jf = delete_job;
+            jf = deleteJob;
             break;
         default:
             return;
@@ -330,27 +377,57 @@ function job_action(id, action) {
     $('#job_action_dialog').modal('toggle');
 };
 
-function submit_jobs(jobs) {
+/**
+ * Perform submission of new jobs
+ * @param {Object[]} jobs - the job objects
+ * @param {string} jobs[].srcURL - the source URL of the job
+ * @param {string} jobs[].dstURL - the destniation URL of the job
+ */
+function submitJobs(jobs) {
     $("#job_confirmation").modal( "hide" );
     $.post('/stager/jobs', {'jobs': JSON.stringify(jobs)}, function(data) {
-        appInfo('Job submited: ' + JSON.stringify(data));
+        showAppInfo('Job submited: ' + JSON.stringify(data));
     }).fail( function() {
-        appError('Job submission failed');
+        showAppError('Job submission failed');
     });
 };
 
-function start_job(id) {
+/**
+ * Start or restart a stopped/completed/failed job.
+ * @param {string} id - the job id
+ */
+function startJob(id) {
     $('#job_action_dialog').modal('hide');
 };
 
-function stop_job(id) {
+/**
+ * Stop a running job.
+ * @param {string} id - the job id
+ */
+function stopJob(id) {
     $('#job_action_dialog').modal('hide');
 };
 
-function delete_job(id) {
+/**
+ * Delete a stopped job.
+ * @param {string} id - the job id
+ */
+function deleteJob(id) {
     $('#job_action_dialog').modal('hide');
 };
 
+/**
+ * Construct detail panel of given job.
+ * @param {Object} j - the job data object
+ * @param {string} j.id - the job id
+ * @param {string} j.state - the job statusCode
+ * @param {string} j.data.srcURL - the source URL of the job
+ * @param {string} j.data.dstURL - the destination URL of the job
+ * @param {long} j.created_at - job creation (epoch) time in seconds
+ * @param {long} j.updated_at - job last update (epoch) time in seconds
+ * @param {int} j.attempts.made - number of job attempts has been made
+ * @return {string} the job detail in HTML format
+ */
 function formatJobDetail(j) {
 
     var bt_start_state = 'disabled';
@@ -366,12 +443,12 @@ function formatJobDetail(j) {
 
     var btn_actions = '<div class="btn-group" id="job_action">' +
                       '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_start_state + '" onclick="job_action(' + j.id + ', \"start\")">' +
+                      bt_start_state + '" onclick="makeJobAction(' + j.id + ', \"start\")">' +
                       '<i data-toggle="tp-job-actions" title="start/restart" class="fa fa-play"></i></button>' +
                       '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_stop_state + '" onclick="job_action(' + j.id + ', \"stop\")">' +
+                      bt_stop_state + '" onclick="makeJobAction(' + j.id + ', \"stop\")">' +
                       '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>' +
-                      '<button type="button" class="btn btn-sm btn-danger active" onclick="job_action(' + j.id + ', \"delete\")>' +
+                      '<button type="button" class="btn btn-sm btn-danger active" onclick="makeJobAction(' + j.id + ', \"delete\")>' +
                       '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>' +
                       '</div>';
 
@@ -407,10 +484,11 @@ function formatJobDetail(j) {
     + '</div>';
 };
 
-/*
-The main function of stager-ui
-*/
-function run_stager_ui(params) {
+/**
+ * Run the main program of the stager UI.
+ * @param {Object} params - the application configuration parameters
+ */
+function runStagerUI(params) {
 
     // job table initialisation
     var jobsData = [];
@@ -510,7 +588,7 @@ function run_stager_ui(params) {
             jobsData = [];
             jobTable.ajax.reload();
             // raise an error
-            appError('cannot retrieve history');
+            showAppError('cannot retrieve history');
         });
     };
 
@@ -531,7 +609,7 @@ function run_stager_ui(params) {
 
         // check: one of the src/dst is missing
         if ( typeof src === 'undefined' || src.length == 0 ) {
-            appError('No source: please select ' + loc_src + ' directory/files');
+            showAppError('No source: please select ' + loc_src + ' directory/files');
             return false;
         }
 
@@ -542,17 +620,17 @@ function run_stager_ui(params) {
             if ( cwd != root ) {
                 dst = [ cwd ];
             } else {
-                appError('No destination: please select ' + loc_dst + ' directory as destination');
+                showAppError('No destination: please select ' + loc_dst + ' directory as destination');
                 return false;
             }
         }
 
         // check if dst is not single and not a directory
         if ( dst.length > 1 ) {
-            appError('Only one destination is allowd, you selected ' + dst.length);
+            showAppError('Only one destination is allowd, you selected ' + dst.length);
             return false;
-        } else if (! isDir(dst[0]) ) {
-            appError('Destination not a directory: ' + dst[0]);
+        } else if (! isJsTreeDir(dst[0]) ) {
+            showAppError('Destination not a directory: ' + dst[0]);
             return false;
         }
 
@@ -560,7 +638,7 @@ function run_stager_ui(params) {
         var srcFiles = [];
 
         src.forEach( function(s) {
-            if ( isDir(s) ) {
+            if ( isJsTreeDir(s) ) {
                 srcDirs.push(s);
             } else {
                 srcFiles.push(s);
@@ -643,7 +721,7 @@ function run_stager_ui(params) {
     // !!the event should be handled by the document level as
     //   the #submit_mkdir is a button within the Boostrap modal!!
     $(document).on('click', '#submit_mkdir', function() {
-        make_dir($("#mkdir_dialog_loc").val(),
+        doMakeDir($("#mkdir_dialog_loc").val(),
                  $("#mkdir_dialog_cwd").val(),
                  $("#mkdir_dialog_dir").val());
     });
@@ -676,7 +754,7 @@ function run_stager_ui(params) {
 
     // event listener for submitting stager jobs
     $("#job_submit").click(function() {
-        submit_jobs(newJobs);
+        submitJobs(newJobs);
     });
 
     // event listener for cancelling stager job submission
@@ -716,18 +794,18 @@ function run_stager_ui(params) {
 
     // event listener for logging out local user
     $('#button_logout_local').click(function() {
-        logout_user('local');
+        doUserLogout('local');
     });
 
     // event listener for toggling local mkdir dialog
     $('#button_mkdir_local').click(function() {
-        toggle_mkdir_dialog('local');
+        showMakeDirDialog('local');
     });
 
     // event listener for logging in local user
     $('#login_form_local').on( 'submit', function( event ) {
         event.preventDefault();
-        login_user('local',
+        doUserLogin('local',
             $(this).find('input[name="username"]').val(),
             $(this).serialize());
     });
@@ -739,18 +817,18 @@ function run_stager_ui(params) {
 
     // event listener for logging out remote user
     $('#button_logout_remote').click(function() {
-        logout_user('remote');
+        doUserLogout('remote');
     });
 
     // event listener for toggling remote mkdir dialog
     $('#button_mkdir_remote').click(function() {
-        toggle_mkdir_dialog('remote');
+        showMakeDirDialog('remote');
     });
 
     // event listener for logging in remote user
     $('#login_form_remote').on( 'submit', function( event ) {
         event.preventDefault();
-        login_user('remote',
+        doUserLogin('remote',
             $(this).find('input[name="username"]').val(),
             $(this).serialize());
     });
@@ -762,16 +840,16 @@ function run_stager_ui(params) {
 
     /* local filetree or login initialisation */
     if ( params.l_fs_view == "login" ) {
-        show_login_form('local','');
+        showLoginForm('local','');
     } else {
-        show_filetree('local', params.l_fs_root);
+        showFileSystemTree('local', params.l_fs_root);
     }
 
     /* remote filetree or login initialisation */
     if ( params.r_fs_view == "login" ) {
-        show_login_form('remote','');
+        showLoginForm('remote','');
     } else {
-        show_filetree('remote', params.r_fs_root);
+        showFileSystemTree('remote', params.r_fs_root);
     }
 
     // enable periodic check on session validity
