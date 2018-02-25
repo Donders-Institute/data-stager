@@ -21,7 +21,7 @@ function showAppError(html_text) {
     $("#app_dialog").modal('toggle');
     $("#app_dialog_header").html( 'Error' );
     $("#app_dialog_message").html( html_text );
-};
+}
 
 /**
  * Display application dialog to show the INFO message
@@ -60,7 +60,7 @@ function showLoginForm(loc, msg) {
         ele_errmsg.text(msg);
         ele_errmsg.show();
     }
-};
+}
 
 /**
  * Display the filesystem tree panel
@@ -210,7 +210,7 @@ function showFileSystemTree(loc, root) {
             plugins: [ 'checkbox', 'wholerow', 'sort' ]
         });
     }
-};
+}
 
 /**
  * Perform user login, on success display the top-level directory tree
@@ -230,7 +230,7 @@ function doUserLogin( loc, user, credential ) {
     }).fail( function() {
         showAppError('Authentication failure: ' + fs_server);
     });
-};
+}
 
 /**
  * Perform user logout, it removes relevent cookie variable
@@ -246,7 +246,7 @@ function doUserLogout( loc ) {
     }).fail( function() {
         showAppError('fail logout ' + fs_server + ' user');
     });
-};
+}
 
 /**
  * Toggle the dialog for making new directory
@@ -279,7 +279,7 @@ function showMakeDirDialog(loc) {
         $("#mkdir_dialog_cwd").val(cwd);
         $("#mkdir_dialog_loc").val(loc);
     }
-};
+}
 
 /**
  * Toggle period session validity check brackground process.  If the session is
@@ -292,7 +292,7 @@ function checkSessionValidity() {
             showAppError('session expired, please <a href="javascript:location.reload();">refresh</a> the page.');
         }
     }, 60 * 1000 );
-};
+}
 
 /**
  * Perform creation of the new directory.
@@ -345,37 +345,7 @@ function doMakeDir(loc, base, dirName) {
             }
         }
     }
-};
-
-/**
- * Perform one of the job's actions: start/stop/delete
- * @param {string} id - the job id
- * @param {string} action - the action, one of "start", "stop", and "delete"
- */
-function makeJobAction(id, action) {
-    var msg = '';
-    var jf;
-    switch(action) {
-        case 'start':
-            msg = 'You are about to (re-)start job: ' + id;
-            jf = startJob;
-            break;
-        case 'stop':
-            msg = 'You are about to stop job: ' + id;
-            jf = stopJob;
-            break;
-        case 'delete':
-            msg = 'You are about to delete job: ' + id;
-            jf = deleteJob;
-            break;
-        default:
-            return;
-    }
-
-    $('#job_action_msg').html(msg);
-    $('#job_action_dialog').on('click','button.confirm', jf(id));
-    $('#job_action_dialog').modal('toggle');
-};
+}
 
 /**
  * Perform submission of new jobs
@@ -390,31 +360,49 @@ function submitJobs(jobs) {
     }).fail( function() {
         showAppError('Job submission failed');
     });
-};
+}
 
 /**
  * Start or restart a stopped/completed/failed job.
  * @param {string} id - the job id
  */
 function startJob(id) {
-    $('#job_action_dialog').modal('hide');
-};
+    $('#job_action_msg').html('You are about to (re-)start job: ' + id);
+    $('#job_action_dialog').modal('toggle');
+
+    $('#job_action_dialog').on('click','button.confirm', function() {
+        // TODO: perform job start REST call to stager
+        $('#job_action_dialog').modal('hide');
+    });
+}
 
 /**
  * Stop a running job.
  * @param {string} id - the job id
  */
 function stopJob(id) {
-    $('#job_action_dialog').modal('hide');
-};
+    $('#job_action_msg').html('You are about to stop job: ' + id);
+    $('#job_action_dialog').modal('toggle');
+
+    $('#job_action_dialog').on('click','button.confirm', function() {
+        // TODO: perform job stop REST call to stager
+        $('#job_action_dialog').modal('hide');
+    });
+}
 
 /**
  * Delete a stopped job.
  * @param {string} id - the job id
  */
 function deleteJob(id) {
-    $('#job_action_dialog').modal('hide');
-};
+    $('#job_action_msg').html('You are about to delete job: ' + id);
+    $('#job_action_dialog').modal('toggle');
+
+    $('#job_action_dialog').on('click','button.confirm', function() {
+        // TODO: perform job deletion REST call to stager
+        $('#job_action_dialog').modal('hide');
+    });
+}
 
 /**
  * Construct detail panel of given job.
@@ -443,12 +431,12 @@ function formatJobDetail(j) {
 
     var btn_actions = '<div class="btn-group" id="job_action">' +
                       '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_start_state + '" onclick="makeJobAction(' + j.id + ', \"start\")">' +
+                      bt_start_state + '" onclick="startJob(' + j.id + ')">' +
                       '<i data-toggle="tp-job-actions" title="start/restart" class="fa fa-play"></i></button>' +
                       '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_stop_state + '" onclick="makeJobAction(' + j.id + ', \"stop\")">' +
+                      bt_stop_state + '" onclick="stopJob(' + j.id + ')">' +
                       '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>' +
-                      '<button type="button" class="btn btn-sm btn-danger active" onclick="makeJobAction(' + j.id + ', \"delete\")>' +
+                      '<button type="button" class="btn btn-sm btn-danger active" onclick="deleteJob(' + j.id + ')">' +
                       '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>' +
                       '</div>';
 
@@ -482,7 +470,7 @@ function formatJobDetail(j) {
     + '<div class="panel-footer">' + btn_actions + '</div>'
     + '</div>'
     + '</div>';
-};
+}
 
 /**
  * Run the main program of the stager UI.
@@ -854,4 +842,4 @@ function runStagerUI(params) {
 
     // enable periodic check on session validity
     checkSessionValidity();
-};
+}
