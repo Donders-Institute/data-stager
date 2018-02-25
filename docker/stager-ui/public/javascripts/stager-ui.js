@@ -355,6 +355,7 @@ function doMakeDir(loc, base, dirName) {
 
 /**
  * Perform update on the table of historical jobs.
+ * @param {Object} table - a jQuery DataTables object, see {@link https://datatables.net|DataTables}
  */
 function updateJobHistoryTable(table) {
     $.get("/stager/job/state", function(data) {
@@ -525,7 +526,6 @@ function runStagerUI(params) {
 
     /**
      * the jQuery DataTables object, see {@link https://datatables.net|DataTables}
-     * @var {Object} jobTable
      */
     var jobTable = $('#job_table').DataTable({
         "ajax": function(data, callback, settings) {
