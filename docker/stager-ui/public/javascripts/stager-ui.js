@@ -5,6 +5,12 @@
  */
 
 /**
+ * data of historical jobs
+ * @var {Object[]} jobsData
+ */
+var jobsData = [];
+
+/**
  * Check if the given path is a JSTree directory.
  * @param {string} p - the path
  * @return {boolean}
@@ -348,6 +354,40 @@ function doMakeDir(loc, base, dirName) {
 }
 
 /**
+ * Perform update on the table of historical jobs.
+ */
+function updateJobHistoryTable(table) {
+    $.get("/stager/job/state", function(data) {
+        // count totoal amount of jobs
+        var idx_t = -1;
+        Object.keys(data).forEach(function(k) {
+            if ( k.indexOf('Count') >= 0 ) {
+                idx_t += data[k];
+            }
+        });
+
+        // get jobs
+        if ( idx_t >= 0 ) {
+            var url = "/stager/jobs/0-" + idx_t;
+            $.get(url, function(data) {
+                // feed the data to job history table
+                jobsData = data;
+                table.ajax.reload();
+            });
+        }
+    }).done( function() {
+    }).fail( function() {
+        // whenever there is an error, stop the background process
+        $('#history-refresh-toggle').bootstrapSwitch('state',false);
+        // empty the jobTable (i.e. reset the data of the table)
+        jobsData = [];
+        table.ajax.reload();
+        // raise an error
+        showAppError('cannot retrieve history');
+    });
+}
+
+/**
  * Perform submission of new jobs
  * @param {Object[]} jobs - the job objects
  * @param {string} jobs[].srcURL - the source URL of the job
@@ -478,8 +518,15 @@ function formatJobDetail(j) {
  */
 function runStagerUI(params) {
 
-    // job table initialisation
-    var jobsData = [];
+    var jobTableRefreshId = null;
+
+    // data for new jobs
+    var newJobs = [];
+
+    /**
+     * the jQuery DataTables object, see {@link https://datatables.net|DataTables}
+     * @var {Object} jobTable
+     */
     var jobTable = $('#job_table').DataTable({
         "ajax": function(data, callback, settings) {
             callback({data: jobsData});
@@ -517,11 +564,6 @@ function runStagerUI(params) {
         "order": [[1, 'desc']]
     });
 
-    var jobTableRefreshId = null;
-
-    // data for new jobs
-    var newJobs = [];
-
     // function to stop job table refresh task
     function stopJobTableRefresh() {
         if ( jobTableRefreshId != null ) {
@@ -533,7 +575,8 @@ function runStagerUI(params) {
     // function to start job table refresh task, with iteration delay in seconds
     function startJobTableRefresh(delay) {
         if ( jobTableRefreshId == null ) {
-            jobTableRefreshId = setInterval( update_job_history_table, delay * 1000 );
+            jobTableRefreshId = setInterval( function() {
+                updateJobHistoryTable(jobTable); }, delay * 1000 );
         }
     };
 
@@ -547,37 +590,6 @@ function runStagerUI(params) {
             $('#button_refresh_history').removeClass('disabled');
             stopJobTableRefresh();
         }
-    };
-
-    function update_job_history_table() {
-        $.get("/stager/job/state", function(data) {
-            // count totoal amount of jobs
-            var idx_t = -1;
-            Object.keys(data).forEach(function(k) {
-                if ( k.indexOf('Count') >= 0 ) {
-                    idx_t += data[k];
-                }
-            });
-
-            // get jobs
-            if ( idx_t >= 0 ) {
-                var url = "/stager/jobs/0-" + idx_t;
-                $.get(url, function(data) {
-                    // feed the data to job history table
-                    jobsData = data;
-                    jobTable.ajax.reload();
-                });
-            }
-        }).done( function() {
-        }).fail( function() {
-            // whenever there is an error, stop the background process
-            $('#history-refresh-toggle').bootstrapSwitch('state',false);
-            // empty the jobTable (i.e. reset the data of the table)
-            jobsData = [];
-            jobTable.ajax.reload();
-            // raise an error
-            showAppError('cannot retrieve history');
-        });
     };
 
     /* general function for getting checked file/directory items */
@@ -732,7 +744,7 @@ function runStagerUI(params) {
     // event listener to disable automatic job history update by default
     $('.navbar-nav a').on('shown.bs.tab', function(event){
         if ( $(event.target).text() == 'History' ) {
-            update_job_history_table();
+            updateJobHistoryTable(jobTable);
             // by-default disable the auto refresh of job history
             $('#history-refresh-toggle').bootstrapSwitch('state',false);
         } else {
@@ -823,7 +835,7 @@ function runStagerUI(params) {
 
     // event listener for maunally update job history
     $('#button_refresh_history').click(function() {
-        update_job_history_table();
+        updateJobHistoryTable(jobTable);
     });
 
     /* local filetree or login initialisation */
