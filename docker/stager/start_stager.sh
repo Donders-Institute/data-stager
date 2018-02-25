@@ -19,8 +19,15 @@ function get_script_dir() {
     echo "$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 }
 
-# load environment variables
+# get the directory in which this script is located
 cwd=$( get_script_dir $0 )
+
+# update environment variables files with variables only available at runtime
+if [ "$NODE_ENV" != "" ]; then
+    echo "export NODE_ENV=${NODE_ENV}" >> ${cwd}/envvars
+fi
+
+# load environment variables
 source ${cwd}/envvars
 export PATH=$PYTHON_BINDIR:$PATH
 
@@ -32,15 +39,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# initialise iRODS authN token for iCommands
-cfg=default.json
-if [ "$NODE_ENV" != "" ]; then
-    cfg=${NODE_ENV}.json
-fi
+# initiate the iRODS authentication token
+/cron/renew_irods_token.sh
 
-python -c "import json; c = json.load(open('config/${cfg}')); print(c['RDM']['userPass'])" | iinit
-
-# prepare for PAM authentication
+# prepare for PAM authentication for the stager local filesystem
 ln -s /etc/pam.d/login /etc/pam.d/stager
 
+# start the stager service
 $NODEJS_PREFIX/bin/node stager.js

@@ -1,6 +1,5 @@
 #!/bin/bash
 
 source /opt/stager/envvars
-export PATH=$PYTHON_BINDIR:$PATH
 
-python -c 'import json; c = json.load(open("/opt/stager/config/default.json")); print(c["RDM"]["userPass"])' | iinit
+$NODEJS_PREFIX/bin/node -e "var cfg=require('config'); var pass = cfg.get('RDM.userPass'); console.log(pass)" | iinit 
