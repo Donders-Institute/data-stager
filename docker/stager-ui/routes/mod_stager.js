@@ -209,6 +209,37 @@ var _getJobs = function(request, response) {
     });
 }
 
+/* Get single transfer job by id */
+var _getJob = function(request, response) {
+
+    var args = { headers: { "Accept": "application/json" } };
+    var sess = request.session;
+    var c = new RestClient({user: sess.user.stager,
+                            password: sess.pass.stager});
+
+    var job = {};
+    var url = config.get('stager.restfulEndpoint') + '/job/' + request.params.id;
+    var req = c.get(url, args, function(j, resp) {
+        try {
+            console.log('stager response status: ' + resp.statusCode);
+            if ( resp.statusCode == 200 ) {
+                job = (typeof j.data !== 'undefined') && (typeof j.data.stagerUser !== 'undefined') && (j.data.stagerUser == sess.user.stager) ? j:{};
+                response.status(200);
+                response.json(job);
+            } else {
+                response.status(404);
+                response.json({});
+            }
+        } catch(e) {
+            console.error(e);
+            util.responseOnError('json', {}, response);
+        }
+    }).on('error', function(e) {
+        console.error(e);
+        util.responseOnError('json', {}, response);
+    });
+}
+
 /* Submit transfer jobs to stager */
 var _submitJobs = function(request, response) {
 
@@ -276,5 +307,6 @@ module.exports.logoutUser = _logoutUser;
 module.exports.getDirListJsTree = _getDirListJsTree;
 module.exports.getJobCount = _getJobCount;
 module.exports.getJobs = _getJobs;
+module.exports.getJob = _getJob;
 module.exports.getJobsInState = _getJobsInState;
 module.exports.submitJobs = _submitJobs;

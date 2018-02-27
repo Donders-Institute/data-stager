@@ -66,6 +66,7 @@ app.get('/stager/dir', mod_stager.getDirListJsTree);
 
 app.post('/stager/jobs', mod_stager.submitJobs);
 app.get('/stager/job/state', mod_stager.getJobCount);
+app.get('/stager/job/:id', mod_stager.getJob);
 app.get('/stager/jobs/:state/:from-:to', mod_stager.getJobsInState);
 app.get('/stager/jobs/:from-:to', mod_stager.getJobs);
 
