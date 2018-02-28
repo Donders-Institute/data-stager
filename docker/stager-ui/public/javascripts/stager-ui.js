@@ -9,6 +9,7 @@
  * @var {Object[]} jobsData
  */
 var jobsData = [];
+var jobTable;
 
 /**
  * Check if the given path is a JSTree directory.
@@ -446,6 +447,32 @@ function deleteJob(id) {
 }
 
 /**
+ * Refresh a job's detail.
+ * @param {string} id - the job id
+ */
+function refreshJob(id) {
+    var url = "/stager/job/" + id;
+    $.get(url, function(data) {
+        // update the job detail in the jobsData array
+        var idx = jobsData.map(function(j) { return j.id; }).indexOf(id);
+        console.log('find job at: ' + idx);
+        if ( idx >= 0 ) {
+            console.log('update job with ' + data);
+            jobsData[idx] = data;
+            // find the row referred with the job id
+            var row = jobTable.row( function(idx, data, node) {
+                return data.id == id;
+            });
+
+            if ( row ) {
+                console.log(data);
+                row.child( formatJobDetail(data) ).show();
+            }
+        }
+    });
+}
+
+/**
  * Construct detail panel of given job.
  * @param {Object} j - the job data object
  * @param {string} j.id - the job id
@@ -477,11 +504,12 @@ function formatJobDetail(j) {
                       '<button type="button" class="btn btn-sm btn-default ' +
                       bt_stop_state + '" onclick="stopJob(' + j.id + ')">' +
                       '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>' +
+                      '<button type="button" class="btn btn-sm btn-default active" onclick="refreshJob(' + j.id + ')">' +
+                      '<i data-toggle="tp-job-actions" title="refresh" class="fa fa-refresh"></i></button>' +
                       '<button type="button" class="btn btn-sm btn-danger active" onclick="deleteJob(' + j.id + ')">' +
-                      '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>' +
+                      '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>'
                       '</div>';
 
-    ///return '<table width="80%" cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">'
     return '<div class="panel panel-default">'
     + '<div class="panel-body">'
     + '<table class="table table-hover">'
@@ -527,7 +555,7 @@ function runStagerUI(params) {
     /**
      * the jQuery DataTables object, see {@link https://datatables.net|DataTables}
      */
-    var jobTable = $('#job_table').DataTable({
+    jobTable = $('#job_table').DataTable({
         "ajax": function(data, callback, settings) {
             callback({data: jobsData});
         },
