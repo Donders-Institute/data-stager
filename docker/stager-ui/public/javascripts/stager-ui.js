@@ -405,45 +405,36 @@ function submitJobs(jobs) {
 }
 
 /**
- * Start or restart a stopped/completed/failed job.
+ * Display dialog for (re-)starting a stopped/completed/failed job.
  * @param {string} id - the job id
  */
-function startJob(id) {
+function showJobStartDialog(id) {
     $('#job_action_msg').html('You are about to (re-)start job: ' + id);
+    $('#job_action_dialog button#confirm').data('job-action','start');
+    $('#job_action_dialog button#confirm').data('job-id',id);
     $('#job_action_dialog').modal('toggle');
-
-    $('#job_action_dialog').on('click','button.confirm', function() {
-        // TODO: perform job start REST call to stager
-        $('#job_action_dialog').modal('hide');
-    });
 }
 
 /**
- * Stop a running job.
+ * Display dialog for stopping a running job.
  * @param {string} id - the job id
  */
-function stopJob(id) {
+function showJobStopDialog(id) {
     $('#job_action_msg').html('You are about to stop job: ' + id);
+    $('#job_action_dialog button#confirm').data('job-action','stop');
+    $('#job_action_dialog button#confirm').data('job-id',id);
     $('#job_action_dialog').modal('toggle');
-
-    $('#job_action_dialog').on('click','button.confirm', function() {
-        // TODO: perform job stop REST call to stager
-        $('#job_action_dialog').modal('hide');
-    });
 }
 
 /**
- * Delete a stopped job.
+ * Display dialog for deleting a job.
  * @param {string} id - the job id
  */
-function deleteJob(id) {
+function showJobDeleteDialog(id) {
     $('#job_action_msg').html('You are about to delete job: ' + id);
+    $('#job_action_dialog button#confirm').data('job-action','delete');
+    $('#job_action_dialog button#confirm').data('job-id',id);
     $('#job_action_dialog').modal('toggle');
-
-    $('#job_action_dialog').on('click','button.confirm', function() {
-        // TODO: perform job deletion REST call to stager
-        $('#job_action_dialog').modal('hide');
-    });
 }
 
 /**
@@ -455,9 +446,9 @@ function refreshJob(id) {
     $.get(url, function(data) {
         // update the job detail in the jobsData array
         var idx = jobsData.map(function(j) { return j.id; }).indexOf(id);
-        console.log('find job at: ' + idx);
         if ( idx >= 0 ) {
-            console.log('update job with ' + data);
+            //convert data.id to integer when it is a string
+            data.id = (typeof data.id === 'string') ? parseInt(data.id):data.id;
             jobsData[idx] = data;
             // find the row referred with the job id
             var row = jobTable.row( function(idx, data, node) {
@@ -465,8 +456,10 @@ function refreshJob(id) {
             });
 
             if ( row ) {
-                console.log(data);
+                row.child.hide();
+                $(row.node()).removeClass('shown');
                 row.child( formatJobDetail(data) ).show();
+                $(row.node()).addClass('shown');
             }
         }
     });
@@ -486,28 +479,28 @@ function refreshJob(id) {
  */
 function formatJobDetail(j) {
 
-    var bt_start_state = 'disabled';
-    var bt_stop_state = 'disabled';
-
+    // HTML tag for start button
+    var bt_start_html = '<button type="button" class="btn btn-sm btn-default ';
     if ( ['complete','failed'].includes(j.state) ) {
-        bt_start_state = 'active';
+        bt_start_html += 'active" onclick="showJobStartDialog(' + j.id + ')">';
+    } else {
+        bt_start_html += 'disabled">';
     }
+    bt_start_html += '<i data-toggle="tp-job-actions" title="start/restart" class="fa fa-play"></i></button>';
 
+    // HTML tag for stop button
+    var bt_stop_html = '<button type="button" class="btn btn-sm btn-default ';
     if ( ['active'].includes(j.state) ) {
-        bt_stop_state = 'active';
+        bt_stop_html += 'active" onclick="showJobStopDialog(' + j.id + ')">';
+    } else {
+        bt_stop_html += 'disabled">';
     }
+    bt_stop_html += '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>';
+
+    var bt_delete_html = '<button type="button" class="btn btn-sm btn-danger active" onclick="showJobDeleteDialog(' + j.id + ')"><i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>';
 
     var btn_actions = '<div class="btn-group" id="job_action">' +
-                      '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_start_state + '" onclick="startJob(' + j.id + ')">' +
-                      '<i data-toggle="tp-job-actions" title="start/restart" class="fa fa-play"></i></button>' +
-                      '<button type="button" class="btn btn-sm btn-default ' +
-                      bt_stop_state + '" onclick="stopJob(' + j.id + ')">' +
-                      '<i data-toggle="tp-job-actions" title="stop/cancel" class="fa fa-stop"></i></button>' +
-                      '<button type="button" class="btn btn-sm btn-default active" onclick="refreshJob(' + j.id + ')">' +
-                      '<i data-toggle="tp-job-actions" title="refresh" class="fa fa-refresh"></i></button>' +
-                      '<button type="button" class="btn btn-sm btn-danger active" onclick="deleteJob(' + j.id + ')">' +
-                      '<i data-toggle="tp-job-actions" title="delete" class="fa fa-trash"></i></button>'
+                      bt_start_html + bt_stop_html + bt_delete_html +
                       '</div>';
 
     return '<div class="panel panel-default">'
@@ -864,6 +857,21 @@ function runStagerUI(params) {
     // event listener for maunally update job history
     $('#button_refresh_history').click(function() {
         updateJobHistoryTable(jobTable);
+    });
+
+    // event listener for job action dialog
+    $('#job_action_dialog button#confirm').click( function() {
+
+        var action = $(this).data('job-action');
+        var id = $(this).data('job-id');
+
+        console.log('action: ' + action);
+        console.log('id: ' + id);
+
+        // TODO: perform job stop REST call to stager
+
+        $('#job_action_dialog').modal('hide');
+        refreshJob(id);
     });
 
     /* local filetree or login initialisation */
