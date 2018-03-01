@@ -211,33 +211,108 @@ var _getJobs = function(request, response) {
 
 /* Get single transfer job by id */
 var _getJob = function(request, response) {
-
-    var args = { headers: { "Accept": "application/json" } };
     var sess = request.session;
-    var c = new RestClient({user: sess.user.stager,
-                            password: sess.pass.stager});
-
-    var job = {};
-    var url = config.get('stager.restfulEndpoint') + '/job/' + request.params.id;
-    var req = c.get(url, args, function(j, resp) {
-        try {
-            console.log('stager response status: ' + resp.statusCode);
-            if ( resp.statusCode == 200 ) {
-                job = (typeof j.data !== 'undefined') && (typeof j.data.stagerUser !== 'undefined') && (j.data.stagerUser == sess.user.stager) ? j:{};
-                response.status(200);
-                response.json(job);
-            } else {
-                response.status(404);
-                response.json({});
+    try {
+        _getJobDetail(request.params.id, sess.user.stager, sess.pass.stager, function(job, error) {
+            if (error) {
+                console.error(error);
+                util.responseOnError('json', {}, response);
             }
-        } catch(e) {
-            console.error(e);
-            util.responseOnError('json', {}, response);
-        }
-    }).on('error', function(e) {
+            response.status(200);
+            response.json(job);
+        });
+    } catch(e) {
         console.error(e);
         util.responseOnError('json', {}, response);
+    }
+}
+
+/* retrieve job detail by the given id */
+var _getJobDetail = function(id, user, pass, cb) {
+    var url = config.get('stager.restfulEndpoint') + '/job/' + id;
+    var c = new RestClient({user: user, password: pass});
+    var args = { headers: { "Accept": "application/json" } };
+    var req = c.get(url, args, function(j, resp) {
+        console.log('stager response status: ' + resp.statusCode);
+        if ( resp.statusCode == 200 ) {
+            if ((typeof j.data !== 'undefined') &&
+                (typeof j.data.stagerUser !== 'undefined') &&
+                (j.data.stagerUser == user)) {
+                cb(j, '');
+            } else {
+                cb(null, "job not found or user doesn't own the job: " + id)
+            }
+        } else {
+            cb(null, "fail retrieving job detail: " + id + " code: " + resp.statusCode);
+        }
+    }).on('error', function(e) {
+        cb(null, e);
     });
+}
+
+/* delete an existing job */
+var _deleteJob = function(request, response) {
+    var sess = request.session;
+    var c = new RestClient({user: sess.user.stager,
+                            password: sess.pass.stager});                        
+    // get the job to check if the job is owned by the stager users
+    try {
+        _getJobDetail(request.params.id, sess.user.stager, sess.pass.stager, function(job, error) {
+            if (error) {
+                console.error(e);
+                util.responseOnError('json', {}, response);
+            }
+            var url = config.get('stager.restfulEndpoint') + '/job/' + request.params.id;
+            var args = { headers: { "Accept": "application/json" } };
+            var req = c.delete(url, args, function(msg, resp) {
+                console.log('stager response status: ' + resp.statusCode);
+                if ( resp.statusCode == 200 ) {
+                    response.json(msg);
+                } else {
+                    response.status(404);
+                    response.json({});
+                }            
+            });
+        });
+    } catch(e) {
+        console.error(e);
+        util.responseOnError('json', {}, response);
+    }
+}
+
+/* Start or restart a stopped job */
+var _startJob = function(request, response) {
+    var sess = request.session;
+    var c = new RestClient({user: sess.user.stager,
+                            password: sess.pass.stager});                        
+    // get the job to check if the job is owned by the stager users
+    try {
+        _getJobDetail(request.params.id, sess.user.stager, sess.pass.stager, function(job, error) {
+            if (error) {
+                console.error(e);
+                util.responseOnError('json', {}, response);
+            }
+            var url = config.get('stager.restfulEndpoint') + '/job/' + request.params.id + '/state/inactive';
+            var args = { headers: { "Accept": "application/json" } };
+            var req = c.put(url, args, function(msg, resp) {
+                console.log('stager response status: ' + resp.statusCode);
+                if ( resp.statusCode == 200 ) {
+                    response.json(msg);
+                } else {
+                    response.status(404);
+                    response.json({});
+                }            
+            });
+        });
+    } catch(e) {
+        console.error(e);
+        util.responseOnError('json', {}, response);
+    }    
+}
+
+/* Stop a running job */
+var _stopJob = function(request, response) {
+    
 }
 
 /* Submit transfer jobs to stager */
@@ -279,7 +354,7 @@ var _submitJobs = function(request, response) {
         var url = config.get('stager.restfulEndpoint') + '/job';
         var req = c.post(url, args, function(data, resp) {
             try {
-                console.log('stager response status: ' + resp.statusCode);
+                console.log('stager service response status: ' + resp.statusCode);
                 if ( resp.statusCode == 200 ) {
                     response.status(200);
                     response.json(data);
@@ -308,5 +383,8 @@ module.exports.getDirListJsTree = _getDirListJsTree;
 module.exports.getJobCount = _getJobCount;
 module.exports.getJobs = _getJobs;
 module.exports.getJob = _getJob;
+module.exports.startJob = _startJob;
+module.exports.stopJob = _stopJob;
+module.exports.deleteJob = _deleteJob;
 module.exports.getJobsInState = _getJobsInState;
 module.exports.submitJobs = _submitJobs;

@@ -398,7 +398,7 @@ function updateJobHistoryTable(table) {
 function submitJobs(jobs) {
     $("#job_confirmation").modal( "hide" );
     $.post('/stager/jobs', {'jobs': JSON.stringify(jobs)}, function(data) {
-        showAppInfo('Job submited: ' + JSON.stringify(data));
+        showAppInfo('IDs of submitted jobs: ' + data.map(function(j) { return j.id; }).join(', '));
     }).fail( function() {
         showAppError('Job submission failed');
     });
@@ -435,6 +435,47 @@ function showJobDeleteDialog(id) {
     $('#job_action_dialog button#confirm').data('job-action','delete');
     $('#job_action_dialog button#confirm').data('job-id',id);
     $('#job_action_dialog').modal('toggle');
+}
+
+/**
+ * Perform deletion on a job.
+ * @param {string} id - the job id
+ */
+function deleteJob(id) {
+    var url = "/stager/job/" + id;
+    $.ajax(url, {
+        type: 'DELETE',
+        success: function(data) {
+            if ( data.message ) { showAppInfo(data.message); }
+            // remove entry from the jobsData
+            var idx = jobsData.map(function(j) { return j.id; }).indexOf(id);
+            // make clearn deletion, i.e. no empty slots left over in array
+            if ( idx >= 0 ) { jobsData.splice(idx,1); }
+            // refresh the jobsTable
+            jobTable.ajax.reload();
+        },
+        error: function(xhr, status, error) {
+            showAppError('Job deletion failed: ' + id + ' status: ' + status + ' error: ' + error);
+        }
+    });
+}
+
+/**
+ * Perform start or restart on a job.
+ * @param {string} id - the job id
+ */
+function startJob(id) {
+    var url = "/stager/job/" + id + '/state/inactive';
+    $.ajax(url, {
+        type: 'PUT',
+        success: function(data) {
+            if ( data.message ) { showAppInfo(data.message); }
+            refreshJob(id);
+        },
+        error: function(xhr, status, error) {
+            showAppError('Job deletion failed: ' + id + ' status: ' + status + ' error: ' + error);
+        }
+    });
 }
 
 /**
@@ -861,17 +902,23 @@ function runStagerUI(params) {
 
     // event listener for job action dialog
     $('#job_action_dialog button#confirm').click( function() {
-
         var action = $(this).data('job-action');
         var id = $(this).data('job-id');
-
-        console.log('action: ' + action);
-        console.log('id: ' + id);
-
-        // TODO: perform job stop REST call to stager
-
+        switch(action) {
+            case 'delete':
+                deleteJob(id);
+                break;
+            case 'start':
+                startJob(id);
+                break;
+            case 'stop':
+                break;
+            default:
+                break;
+        }
+        
+        // hide the job action dialog
         $('#job_action_dialog').modal('hide');
-        refreshJob(id);
     });
 
     /* local filetree or login initialisation */
