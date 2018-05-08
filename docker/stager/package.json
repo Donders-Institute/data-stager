@@ -1,7 +1,7 @@
 {
   "name": "stager",
   "description": "generic staging service",
-  "version": "1.5.0",
+  "version": "2.0.0",
   "author": "Hurng-Chun Lee <h.lee@donders.ru.nl>",
   "main": "stager.js",
   "repository": {
