@@ -60,6 +60,9 @@ RUN ( wget https://bootstrap.pypa.io/get-pip.py && \
 # install devcron
 RUN ( yum -y install mercurial )
 RUN ( /opt/python/bin/pip install -e hg+https://bitbucket.org/dbenamy/devcron#egg=devcron )
+# copy default crontab into container
+RUN ( mkdir -p /cron )
+COPY cron /cron
 
 # install Cheetah template engine
 RUN ( wget https://pypi.python.org/packages/cd/b0/c2d700252fc251e91c08639ff41a8a5203b627f4e0a2ae18a6b662ab32ea/Cheetah-2.4.4.tar.gz#md5=853917116e731afbc8c8a43c37e6ddba && tar xvzf Cheetah-2.4.4.tar.gz && \
@@ -74,7 +77,7 @@ RUN ( yum -y clean all )
 
 # runtime environment variables
 ENV IRODS_ADMIN_USER=irods
-ENV IRODS_ADMIN_PASS=test123
+ENV IRODS_ADMIN_CREDENTIAL=/opt/stager/config/secret
 ENV IRODS_ICAT_HOST=irods-icat
 ENV IRODS_ZONE_PORT=1247
 ENV IRODS_ZONE_NAME=rdmtst

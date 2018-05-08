@@ -25,6 +25,8 @@ services:
     environment:
       - REDIS_HOST=stager-db
       - REDIS_PORT=6379
+      - IRODS_ADMIN_USER=irods
+      - IRODS_ADMIN_CREDENTIAL=/opt/stager/config/secret
       - IRODS_ICAT_HOST=irods-icat
       - IRODS_ZONE_PORT=1247
       - IRODS_ZONE_NAME=rdmtst
@@ -32,7 +34,6 @@ services:
       - ./stager/config:/opt/stager/config
       - ./stager/config/icat.pem:/opt/irods/ssl/icat.pem:ro
       - ./data/log/stager:/opt/stager/log
-      - ./stager/cron:/cron
     networks:
       - rdm-network
     depends_on:

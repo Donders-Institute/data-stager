@@ -31,7 +31,6 @@
     },
     "RDM": {
         "userName": "irods",
-        "userPass": "test123",
         "icatHost": "irods-icat",
         "icatPort": 1247,
         "icatZone": "rdmtst",

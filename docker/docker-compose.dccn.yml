@@ -1,0 +1,86 @@
+# This docker compose file is only working with the docker stack in the swarm cluster.
+# The settings are also customized for DCCN with the project storage NFS mounted on
+# the /project directory.
+version: "3.1"
+
+services:
+
+    db:
+        image: docker-registry.dccn.nl:5000/redis
+        volumes:
+            - /mnt/docker/data/stager/ui/db:/data
+        networks:
+            default:
+                aliases:
+                    - stagerdb4ui
+        deploy:
+            placement:
+                constraints: [node.labels.function == production]
+
+    service:
+        image: docker-registry.dccn.nl:5000/stager:2.0.0
+        ports:
+            - 3100:3000
+        volumes:
+            - /mnt/docker/data/stager/config.v2:/opt/stager/config
+            - /mnt/docker/data/stager/ui/log:/opt/stager/log
+            - /project:/project
+            - /var/lib/sss/pipes:/var/lib/sss/pipes
+            - /var/lib/sss/mc:/var/lib/sss/mc:ro
+            - /mnt/docker/data/stager/config.v2/icat.pem:/opt/irods/ssl/icat.pem:ro
+        networks:
+            default:
+                aliases:
+                    - stager4ui
+        environment:
+            - REDIS_HOST=stagerdb4ui
+            - REDIS_PORT=6379
+            - IRODS_ICAT_HOST=icat.data.donders.ru.nl
+            - IRODS_ZONE_PORT=1247
+            - IRODS_ZONE_NAME=rdm
+            - IRODS_ADMIN_USER=irods
+            - IRODS_ADMIN_CREDENTIAL=/run/secrets/drdr_admin_password
+            - DAVRODS_ENDPOINT=https://webdav.data.donders.ru.nl
+            - DAVRODS_EXPOSED_ROOT=/rdm/di
+        depends_on:
+            - db
+        secrets:
+            - drdr_admin_password
+        deploy:
+            placement:
+                constraints: [node.labels.function == production]
+
+    ui:
+        image: docker-registry.dccn.nl:5000/stager-ui:2.0.0
+        ports:
+            - 3080:3080
+        volumes:
+            - /mnt/docker/data/stager/ui/config:/opt/stager-ui/config
+            - /mnt/docker/data/stager/ui/config/irods-webdav.pem:/opt/stager-ui/ssl/irods-webdav.pem:ro
+        networks:
+            default:
+                aliases:
+                    - stager-ui
+        environment:
+            - UI_TITLE=File Stager Service
+            - UI_WEBSITE=https://data.donders.ru.nl
+            - EMAIL_HELPDESK=datasupport@donders.ru.nl
+            - LOGIN_TITLE_STAGER=Project Storage
+            - LOGIN_HINT_STAGER=Sing in with the DCCN account appended with @dccn.nl
+            - LOGIN_TITLE_RDM=Donders Repository
+            - LOGIN_HINT_RDM=Sing in with the DR data-access account
+            - DAVRODS_ENDPOINT=https://webdav.data.donders.ru.nl
+            - DAVRODS_EXPOSED_ROOT=/rdm/di
+            - TURL_PREFIX_RDM=irods:/rdm/di
+        depends_on:
+            - service
+        deploy:
+            placement:
+                constraints: [node.labels.function == production]
+
+secrets:
+    drdr_admin_password:
+        external: true
+
+networks:
+    default:
