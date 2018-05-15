@@ -249,7 +249,7 @@ function doUserLogout( loc ) {
     $.post(logout_path, function(data) {
         showAppInfo(fs_server + " user logged out");
         Cookies.remove('username_' + loc);
-        showLoginForm('local','');
+        showLoginForm(loc,'');
     }).fail( function() {
         showAppError('fail logout ' + fs_server + ' user');
     });
