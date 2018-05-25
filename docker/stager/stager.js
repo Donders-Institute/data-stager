@@ -33,9 +33,9 @@ var get_rdm_userprofile = function(uid) {
     try {
         var data = JSON.parse(child_process.execFileSync(cmd, cmd_args, cmd_opts));
         // as the rule always return a profile regardless the user existence,
-        // we check on the availability of the homeOrganisation attribute
-        if (! data.profile.homeOrganisation) {
-            throw new Error('invalid user due to missing "homeOrganisational"');
+        // we check on the availability of the identityProvider attribute
+        if (! data.profile.identityProvider) {
+            throw new Error('invalid user due to missing "identityProvider"');
         } else {
             return data.profile;
         }
