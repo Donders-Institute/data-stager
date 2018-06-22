@@ -361,7 +361,7 @@ function doMakeDir(loc, base, dirName) {
 function updateJobHistoryTable(table) {
     $.get("/stager/job/state", function(data) {
         // count totoal amount of jobs
-        var idx_t = -1;
+        var idx_t = 0;
         Object.keys(data).forEach(function(k) {
             if ( k.indexOf('Count') >= 0 ) {
                 idx_t += data[k];
@@ -369,7 +369,7 @@ function updateJobHistoryTable(table) {
         });
 
         // get jobs
-        if ( idx_t >= 0 ) {
+        if ( idx_t > 0 ) {
             var url = "/stager/jobs/0-" + idx_t;
             $.get(url, function(data) {
                 // feed the data to job history table
