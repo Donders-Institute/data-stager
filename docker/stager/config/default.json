@@ -8,7 +8,8 @@
         },
         "AD": {
             "url": "ldap://dccn-w001.dccn.nl",
-            "baseDN": "OU=dccn,DC=dccn,DC=nl"
+            "baseDN": "OU=dccn,DC=dccn,DC=nl",
+            "cacert": "cacert.pem"
         },
         "PAM": {
             "serviceName": "stager"

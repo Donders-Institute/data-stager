@@ -1,3 +1,4 @@
+var fs = require('fs');
 var config = require('config');
 var auth = require('basic-auth');
 var ActiveDirectory = require('activedirectory');
@@ -9,7 +10,19 @@ var _accept = function(req, res, next) {
 var _basicAuthAD = function(req, res, next) {
 
     // simple authentication aganist ActiveDirectory
-    var ad = new ActiveDirectory(config.get('BasicAuth.AD'));
+    c = config.get('BasicAuth.AD');
+    // try to load trusted ca certificate for TLS connection to AD
+    if (c.has('cacert') && fs.existsSync(c.get('cacert')) {
+        try {
+            c.tlsOptions = {
+                ca: [ fs.readFileSync(c.get('cacert')) ]
+            }
+        } catch(e) {
+            // catch and ignore certificate loading error
+            console.error(e);
+        }
+    }
+    var ad = new ActiveDirectory(c);
     var user = auth(req);
 
     try {
