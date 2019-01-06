@@ -204,7 +204,7 @@ if [ $w_total -gt 0 ]; then
         # increate the w_total by 10% to take into account the scanning overhead
         # w_total=$( echo "($w_total + 0.1 * $w_total)/1" | bc )
 
-	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>/dev/null | grep -v '^C- ' | while read -r line; do
+	${mydir}/s-unbuffer irsync -v -l -r "${src}" "${dst}" 2>${flog} | grep -v '^C- ' | while read -r line; do
             ## keep file to be transferred in the flist
             do_cnt=0
             echo $line | grep 'a match no sync required' >/dev/null 2>&1
@@ -234,9 +234,6 @@ if [ $w_total -gt 0 ]; then
                 w_done=$(( $w_done + 1 ))
                 w_done_percent=$(( $w_done * 100 / $w_total ))
                 echo "progress:${w_done_percent}:${w_done}:${w_total}"
-                #w_done_f=$(( $w_done * 10 / $w_total ))
-                #w_done_percent=$(( $w_done_f * 100 / $w_total ))
-                #echo "progress:${w_done_percent}:${w_done_f}:${w_total}"
             fi
         done
 
@@ -284,7 +281,7 @@ if [ $w_total -gt 0 ]; then
         # - the GNU parallel then takes the two lines as inputs to the "file_transfer" function exported from this script
         # - we also assume one single file should not take more than 1800 seconds to transfer
         # TODO: maybe useful to add "retry" feature ??
-        cat $flist | awk -v src="$src" -v dst="$dst" '{ print; $0 = substr($0,1,0) dst substr($0,1+length(src)); print }' | parallel --will-cite --timeout 1800 -N 2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
+        cat $flist | awk -v src="$src" -v dst="$dst" '{ print; $0 = substr($0,1,0) dst substr($0,1+length(src)); print }' | parallel --will-cite --timeout 1800 --joblog ${flog} -N 2 -P 4 -k file_transfer ${cmd} "{1}" "{2}" "{#}" | while read -r line; do
 
             w_done=$(( $w_done + 1 ))
             w_done_percent=$(( $w_done * 100 / $w_total ))
@@ -308,9 +305,9 @@ if [ $w_total -gt 0 ]; then
     fi
 
     # cleanup flog and flist files
-    if [ -f $flog ]; then
-        rm -f $flog
-    fi
+    #if [ -f $flog ]; then
+    #    rm -f $flog
+    #fi
         
     if [ -f $flist ]; then
         rm -f $flist
