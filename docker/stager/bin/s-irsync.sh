@@ -225,6 +225,9 @@ if [ $w_total -gt 0 ]; then
                     #
                     line=$( echo $line | awk '{out=$1} { for (i=2; i<NF-1; i++) {out=out" "$i;} } {print out}' )
                     echo "${line}" >> $flist
+                else
+                    # save unexpected lines to ${flog}.scan file
+                    echo "${line}" >> ${flog}.scan
                 fi
             else
                 do_cnt=1
