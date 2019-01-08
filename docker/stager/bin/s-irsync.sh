@@ -72,8 +72,8 @@ if [ $? -eq 0 ]; then
         exit 1
     fi
 
-    # TODO: find a better way to determine the source is a collection or a data object
-    ils "${src_coll}/" > /dev/null 2>&1
+    # try getting the collection metadata of ${src_coll}. It implies that the ${src_coll} is a collection on success
+    imeta ls -C "${src_coll}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         is_src_dir=1
         # determine size of the sync task: number of data objects in the source collection
@@ -105,11 +105,11 @@ echo $dst | egrep '^i:' > /dev/null 2>&1
 if [ $? -eq 0 ]; then
     is_dst_irods=1
     dst_coll=$( echo $dst | sed 's/^i://' )
-    # TODO: find a better way to determine whether the irods namespace is existing and whether it's a directory
+    # check existance of the ${dst_coll}
     ils "${dst_coll}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
-        ils "${dst_coll}/" > /dev/null 2>&1
-        # this is an existing irods collection
+        # check if ${dst_coll} is a collection
+        imeta ls -C "${dst_coll}" > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             is_dst_dir=1
         fi
@@ -175,7 +175,13 @@ if [ $w_total -gt 0 ]; then
 
     if [ $w_total -lt $nf_threshold ]; then
         # small dataset with files less than 200,000
-        ${mydir}/s-unbuffer irsync -v -K -r "${src}" "${dst}" | while read -r line; do
+        cmd=""
+        if [ $is_src_dir -eq 0 ] || [ $is_dst_dir -eq 0 ]; then
+            cmd="irsync -v -K"
+        else
+            cmd="irsync -v -K -r"
+        fi
+        ${mydir}/s-unbuffer ${cmd} "${src}" "${dst}" | while read -r line; do
 
             if [[ $line == *"ERROR:"* ]]; then
                 # return the whole line containing the ERROR: string
