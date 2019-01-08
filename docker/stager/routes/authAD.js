@@ -12,7 +12,7 @@ var _basicAuthAD = function(req, res, next) {
     // simple authentication aganist ActiveDirectory
     c = config.get('BasicAuth.AD');
     // try to load trusted ca certificate for TLS connection to AD
-    if (c.has('cacert') && fs.existsSync(c.get('cacert')) {
+    if (c.has('cacert') && fs.existsSync(c.get('cacert'))) {
         try {
             c.tlsOptions = {
                 ca: [ fs.readFileSync(c.get('cacert')) ]
