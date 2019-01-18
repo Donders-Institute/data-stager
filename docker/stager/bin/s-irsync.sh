@@ -73,7 +73,7 @@ if [ $? -eq 0 ]; then
     fi
 
     # try getting the collection metadata of ${src_coll}. It implies that the ${src_coll} is a collection on success
-    imeta ls -C "${src_coll}" > /dev/null 2>&1
+    imeta ls -C "${src_coll%/}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         is_src_dir=1
         # determine size of the sync task: number of data objects in the source collection
@@ -109,7 +109,7 @@ if [ $? -eq 0 ]; then
     ils "${dst_coll}" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
         # check if ${dst_coll} is a collection
-        imeta ls -C "${dst_coll}" > /dev/null 2>&1
+        imeta ls -C "${dst_coll%/}" > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             is_dst_dir=1
         fi
