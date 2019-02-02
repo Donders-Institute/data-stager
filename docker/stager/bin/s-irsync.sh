@@ -150,6 +150,15 @@ if [ $is_src_dir -eq 0 ] && [ $is_dst_dir -eq 1 ] ; then
     dst=${dst}/${fname}
 fi
 
+# inline python code for parsing irsync output to get filenames for iput command
+read -r -d '' py_lineparser <<EOF
+import sys
+import re
+m = re.match('(^.*)\s+[0-9]+\s+\S+$', sys.stdin.readline())
+if m:
+    print m.group(1)
+EOF
+
 # run irsync
 if [ $w_total -gt 0 ]; then
 
@@ -223,14 +232,7 @@ if [ $w_total -gt 0 ]; then
                 echo $line | grep "^${isrc}" >/dev/null 2>&1
                 if [ $? -eq 0 ]; then
                     do_cnt=1
-
-                    # make sure the line contains only the filename to be transferd
-                    # line example with "space" on file name:
-                    #
-                    # /opt/stager/dummy/test data.99 10240 N
-                    #
-                    line=$( echo $line | awk '{out=$1} { for (i=2; i<NF-1; i++) {out=out" "$i;} } {print out}' )
-                    echo "${line}" >> $flist
+                    echo "${line}" | python -c "${py_lineparser}" >> $flist
                 else
                     # save unexpected lines to ${flog}.scan file
                     echo "${line}" >> ${flog}.scan
