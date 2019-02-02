@@ -156,7 +156,7 @@ import sys
 import re
 m = re.match('(^.*)\s+[0-9]+\s+\S+$', sys.stdin.readline())
 if m:
-    print m.group(1)
+    print m.group(1).rstrip()
 EOF
 
 # run irsync
