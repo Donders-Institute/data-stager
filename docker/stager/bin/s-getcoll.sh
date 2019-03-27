@@ -7,7 +7,7 @@ Gets collection detail.
 
 Usage:
 
-  $ s-getcoll.sh <collName>
+  $ s-getcoll.sh <DR collection or data namespace>
 
 EOF
 }
@@ -18,4 +18,5 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-irule 'uiGetCollection(*kvstr, *out)' "*kvstr=collName=$1" "*out" | awk -F ' = ' '{$1=""; print}'
+# the command below uses iCAT-side rules to resolve given path to a valid DR collection; and retrieve the attributes of the collection.
+irule 'rdmGetRDMCollection(*path, "null", *coll); uiGetCollection("collName="++*coll, *out)' "*path=$1" "*out" | awk -F ' = ' '{$1=""; print}'
