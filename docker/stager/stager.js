@@ -169,6 +169,16 @@ queue.on( 'error', function(err) {
             msgHtml += '<tr><th>failed at</th><td>' + t_failed.toDateString() + ' ' + t_failed.toTimeString() + '</td></tr>';
             msgHtml += '<tr><th>source</th><td>' + encoder.htmlEncode(job.data.srcURL) + '</td></tr>';
             msgHtml += '<tr><th>destination</th><td>' + encoder.htmlEncode(job.data.dstURL) + '</td></tr>';
+
+            // destination of the transfer is a DR collection, add collection size to the message
+            if (job.data.dstURL.match(/^irods:/)) {
+                col = get_rdm_collection(job.data.dstURL.replace(/^irods:/,""));
+                if ( col ) {
+                    msgHtml += '<tr><th>destination (DR) quota</th><td>' + col.quotaInBytes + 'bytes </td></tr>';
+                    msgHtml += '<tr><th>destination (DR) size</th><td>'  + col.sizeInBytes  + 'bytes </td></tr>';
+                }
+            }
+
             msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
             msgHtml += '</div></table>';
             msgHtml += '</html>';
