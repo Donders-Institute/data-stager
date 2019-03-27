@@ -179,11 +179,19 @@ queue.on( 'error', function(err) {
                 }
             }
 
-            msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
-            msgHtml += '</div></table>';
-            msgHtml += '</html>';
+            // append job's log to the message
+            // NOTE: this makes use the underlying Redis client object associated with the job after analyzing the
+            //       source code of https://github.com/Automattic/kue/blob/master/lib/queue/job.js
+            job.client.lrange(job.client.getKey('job:' + id + ':log'), 0, -1, function(error, logdata) {
+                if ( ! error ) {
+                    msgHtml += '<tr><th>job log</th><td>' + logdata.join("</br>") + '</td></tr>';
+                }
+                msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
+                msgHtml += '</div></table>';
+                msgHtml += '</html>';
 
-            mailer.sendToAdmin(msgSubject, null, msgHtml, null);
+                mailer.sendToAdmin(msgSubject, null, msgHtml, null);        
+            });
         });
         console.log('[' + new Date().toISOString() + '] job %d failed', id);
     }
