@@ -1,7 +1,6 @@
 FROM irodsclient
 
 # application metadata
-MAINTAINER Donders Institute
 LABEL donders.ru.nl.app_name "stager"
 LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
 LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
@@ -29,12 +28,12 @@ RUN ( if [ ! -d Python-2.7.12 ]; then tar xvf Python-2.7.12.tgz; fi \
 ADD https://dl.bintray.com/pycurl/pycurl/pycurl-7.43.0.tar.gz /tmp
 RUN ( if [ ! -d pycurl-7.43.0 ]; then tar xvf pycurl-7.43.0.tar.gz; fi \
       && cd pycurl-7.43.0 \
-      && /opt/python/bin/python setup.py --with-nss install && rm -rf pycurl-* )
+      && /opt/python/bin/python setup.py --with-nss install && rm -rf /tmp/pycurl-* )
 
 # install nodejs
 ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
 RUN ( if [ ! -d node-v6.11.2-linux-x64 ]; then tar xf node-v6.11.2-linux-x64.tar.xz; fi \
-      && mv node-v6.11.2-linux-x64 /opt/nodejs )
+      && mv node-v6.11.2-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
 
 # install expect so that we get unbuffer to get irsync progress, progressively
 RUN ( yum -y install expect parallel bc samba-client cifs-utils )
@@ -94,4 +93,3 @@ RUN ( echo "export PYTHON_BINDIR=/opt/python/bin" > /opt/stager/envvars && \
       echo "export NODEJS_PREFIX=/opt/nodejs" >> /opt/stager/envvars )
 
 CMD [ "/usr/bin/supervisord", "-c", "/opt/stager/supervisord.conf" ]
-#CMD [ "/opt/stager/start_stager.sh" ]
