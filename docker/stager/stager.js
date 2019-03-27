@@ -45,6 +45,30 @@ var get_rdm_userprofile = function(uid) {
     }
 }
 
+// function for retrieving collection attributes from the data repository.
+// It returns the collection attributes in JSON format, or null in case of failure
+// or the collection is not found.
+var get_rdm_collection = function(cid) {
+    var cmd = path.join(stager_bindir, 's-getcoll.sh');
+    var cmd_args = [cid];
+    var cmd_opts = {
+        timeout: 60*1000,
+        maxBuffer: 10*1024*1024
+    };
+
+    try {
+        var data = JSON.parse(child_process.execFileSync(cmd, cmd_args, cmd_opts));
+        if ( data.ec != 0 || (! data.collection.collectionIdentifier)) {
+            throw new Error('invalid collection due to missing "collectionIdentifier"');
+        } else {
+            return data.collection;
+        }
+    } catch( err ){
+        console.error(err.toString());
+        return null;
+    }
+}
+
 queue.on( 'error', function(err) {
     if ( cluster.isMaster) {
         console.error('Oops... ', err);
