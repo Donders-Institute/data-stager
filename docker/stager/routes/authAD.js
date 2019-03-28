@@ -25,6 +25,13 @@ var _basicAuthAD = function(req, res, next) {
     var ad = new ActiveDirectory(c);
     var user = auth(req);
 
+    // append user name with default domain if the given one doesn't seem to have a domain.
+    if (c.has('domain') && c.get('domain') != "") {
+        if ( ! user.name.match(/^\S+@\S+$/) ) {
+            user.name = user.name + "@" + c.get('domain');
+        }
+    }
+
     try {
         if ( typeof user !== 'undefined' ) {
             ad.authenticate(user.name, user.pass, function(err, authenticated) {
