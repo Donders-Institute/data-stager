@@ -1,7 +1,6 @@
 FROM centos:7
 
 # application metadata
-MAINTAINER Donders Institute
 LABEL donders.ru.nl.app_name "stager-ui"
 LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
 LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
@@ -14,7 +13,7 @@ WORKDIR /tmp
 ARG nodejs_prefix=/opt/nodejs
 ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
 RUN ( if [ ! -d node-v6.11.2-linux-x64 ]; then tar xf node-v6.11.2-linux-x64.tar.xz; fi \
-      && mv node-v6.11.2-linux-x64 $nodejs_prefix )
+      && mv node-v6.11.2-linux-x64 $nodejs_prefix && rm -rf /tmp/node-*)
 
 # install the stager-ui nodejs applicaiton
 RUN ( mkdir -p /opt/stager-ui/bin )
