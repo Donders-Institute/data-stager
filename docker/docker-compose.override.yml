@@ -7,3 +7,7 @@ services:
       - /etc/group:/etc/group:ro
       - /etc/shadow:/etc/shadow:ro
       - /home:/data
+  stager-ui:
+    environment:
+      - DAVRODS_ENDPOINT=https://webdav.data.donders.ru.nl
+      - DAVRODS_EXPOSED_ROOT=/rdm/di
