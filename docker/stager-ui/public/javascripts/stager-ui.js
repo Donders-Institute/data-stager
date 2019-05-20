@@ -763,6 +763,9 @@ function runStagerUI(params) {
 
         // open up the modal and preview the jobs
         $("#job_confirmation").modal("toggle");
+        $("#job_preview_header").html( function() {
+            return '<b>' + newJobs.length + '</b> transfer jobs to be submitted.' 
+        });
         $("#job_preview").html( function() {
             var html_d = '<table class="table">';
             html_d += '<thead><tr>';
