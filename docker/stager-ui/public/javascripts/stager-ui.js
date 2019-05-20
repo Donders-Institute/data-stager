@@ -302,6 +302,28 @@ function checkSessionValidity() {
 }
 
 /**
+ * Perform selection of all objects on the jsTree panel.
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ */
+function doSelectAll(loc) {
+    var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+    if ( ele_filetree != null ) {
+        $(ele_filetree.get(0)).find('#jstree').jstree(true).check_all();
+    }
+}
+
+/**
+ * Perform de-selection of all objects on the jsTree panel.
+ * @param {string} loc - location of the panel, either "local" or "remote"
+ */
+function doDeselectAll(loc) {
+    var ele_filetree = ( loc == 'local' ) ? $("#filetree_local"):$("#filetree_remote");
+    if ( ele_filetree != null ) {
+        $(ele_filetree.get(0)).find('#jstree').jstree(true).uncheck_all();
+    }
+}
+
+/**
  * Perform creation of the new directory.
  * @param {string} loc - location of the panel, either "local" or "remote"
  * @param {string} base - the parent directory in which the new directory to be created
@@ -864,6 +886,16 @@ function runStagerUI(params) {
         showMakeDirDialog('local');
     });
 
+    // event listener for toggling local select all on jstree
+    $('#button_selectall_local').click(function() {
+        doSelectAll('local');
+    });
+
+    // event listener for toggling local deselect all on jstree
+    $('#button_deselectall_local').click(function() {
+        doDeselectAll('local');
+    });
+
     // event listener for logging in local user
     $('#login_form_local').on( 'submit', function( event ) {
         event.preventDefault();
@@ -885,6 +917,16 @@ function runStagerUI(params) {
     // event listener for toggling remote mkdir dialog
     $('#button_mkdir_remote').click(function() {
         showMakeDirDialog('remote');
+    });
+
+    // event listener for toggling remote select all on jstree
+    $('#button_selectall_remote').click(function() {
+        doSelectAll('remote');
+    });
+
+    // event listener for toggling remote deselect all on jstree
+    $('#button_deselectall_remote').click(function() {
+        doDeselectAll('remote');
     });
 
     // event listener for logging in remote user

@@ -65,6 +65,11 @@ div.container-fluid
                 div.panel-footer.clearfix#action_local
                     div.pull-right.btn-toolbar
                         div.btn-group
+                            button.btn.btn-default#button_selectall_local
+                                i.fa.fa-check-square-o(data-toggle="tooltip", title="select all")
+                            button.btn.btn-default#button_deselectall_local
+                                i.fa.fa-square-o(data-toggle="tooltip", title="deselect all")                      
+                        div.btn-group
                             button.btn.btn-default#button_refresh_local
                                 i.fa.fa-refresh(data-toggle="tooltip", title="refresh")
                             button.btn.btn-default.disabled#button_mkdir_local
@@ -117,6 +122,11 @@ div.container-fluid
                 <!-- remote filesystem action panel -->
                 div.panel-footer.clearfix#action_remote
                     div.pull-right.btn-toolbar
+                        div.btn-group
+                            button.btn.btn-default#button_selectall_remote
+                                i.fa.fa-check-square-o(data-toggle="tooltip", title="select all")
+                            button.btn.btn-default#button_deselectall_remote
+                                i.fa.fa-square-o(data-toggle="tooltip", title="deselect all")      
                         div.btn-group
                             button.btn.btn-default#button_refresh_remote
                                 i.fa.fa-refresh(data-toggle="tooltip", title="refresh")
