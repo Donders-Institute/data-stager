@@ -224,8 +224,8 @@ if (cluster.isMaster) {
     app.use(auth.basicAuth);
 
     // bodyParser so that FORM data become available in req.body
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json({limit: '50mb'}));
+    app.use(bodyParser.urlencoded({limit: '50mb', extended: false }));
 
     // start service for RESTful APIs
     app.use(kue.app);
