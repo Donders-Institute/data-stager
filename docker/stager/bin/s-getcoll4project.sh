@@ -16,4 +16,4 @@ if [ $# -ne 3 ]; then
     exit 1
 fi
 
-irule "uiFindCollection('organisationalUnit=${1}%type=${2}%projectId=${3}', false, *out)" "null" "*out" | awk -F ' = ' '{print $2}'
+irule "uiFindCollection('organisationalUnit=${1}%type=${2}%state=EDITABLE%projectId=${3}', false, *out)" "null" "*out" | awk -F ' = ' '{print $2}'
