@@ -72,7 +72,7 @@ func GetNumberOfFiles(path string) (int, error) {
 		ipath := strings.TrimSuffix(strings.TrimPrefix(path, "i:"), "/")
 
 		// check if path is a file object.
-		if _, err := exec.Command("ils", ipath).Output(); err == nil {
+		if _, err := exec.Command("imeta", "ls", "-d", ipath).Output(); err == nil {
 			return 1, nil
 		}
 
