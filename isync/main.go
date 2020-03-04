@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -106,7 +107,7 @@ func main() {
 				if *optsProgressBar {
 					bar.Add(1)
 				} else {
-					fmt.Printf("progress: %d:%d:%d\n", c*100./nf, c, nf)
+					fmt.Printf("progress:%d:%d:%d\n", c*100./nf, c, nf)
 				}
 			}
 		case e, ok := <-failure:
@@ -116,6 +117,14 @@ func main() {
 				ec = 2
 				// write error to the stderr
 				log.Errorf("failure: %s\n", e.Error)
+			}
+		default:
+			// this dummy progress string is printed to circumvent stager job killing due to timeout_noprocess (3600 sec.) is reached.
+			if !*optsProgressBar && c == 0 {
+				// sleep for a second.
+				time.Sleep(time.Second)
+				// keep printing progress value while there is still nothing reported back from the irsync scan.
+				fmt.Printf("progress:%d:%d:%d\n", c*100./nf, c, nf)
 			}
 		}
 
