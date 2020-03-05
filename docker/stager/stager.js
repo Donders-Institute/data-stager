@@ -474,7 +474,7 @@ if ( cluster.worker ) {
                                     // calculate the timeout based on _p[3] value with a very simply algorithm:
                                     var timeout = parseInt(m[3]) * 86400 / 500000 >> 0;
 
-                                    if ( job.data.timeout != timeout ) {
+                                    if ( job.data.timeout < timeout ) {
                                         job.data.timeout = timeout;
                                         job.update(function(){});
                                     }
