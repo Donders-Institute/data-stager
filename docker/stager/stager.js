@@ -69,6 +69,29 @@ var get_rdm_collection = function(cid) {
     }
 }
 
+// function for retrieving the up-to-date timeout and timeout_noprogress, which will be
+// dynamically set by the progress monitor.
+var get_job_timout = function(job) {
+    // determine job timeout
+    var timeout;
+    if ( job.data.timeout === undefined || job.data.timeout <= 0 ) {
+        // no timeout
+        timeout = Number.MAX_SAFE_INTEGER;
+    } else {
+        timeout = job.data.timeout;
+    }
+
+    var timeout_noprogress;
+    if ( job.data.timeout_noprogress === undefined || job.data.timeout_noprogress <= 0 ) {
+        // accepting no progress for 1 hour
+        timeout_noprogress = 3600;
+    } else {
+        timeout_noprogress = job.data.timeout_noprogress;
+    }
+
+    return [timeout, timeout_noprogress];
+}
+
 queue.on( 'error', function(err) {
     if ( cluster.isMaster) {
         console.error('Oops... ', err);
@@ -438,11 +461,36 @@ if ( cluster.worker ) {
                                 kill(child.pid, 'SIGKILL', function(err) {
                                     console.log( '[' + new Date().toISOString() + '] job ' + job.id + ' killed due to error: ' + _d );
                                 });
-                            } else if ( new RegExp('^progress:[0-9]{1,3}:?.*').exec(_d) ) {
-                                var _p = _d.split(':');
-                                job.progress(parseInt(_p[1]), 100, _p[2] + '/' + _p[3]);
-                                // reset noprogress time counter
-                                sec_noprogress = 0;
+                            } else {
+                                var m = new RegExp('^progress:([0-9]{1,3}):([0-9]+):([0-9]+)').exec(_d);
+
+                                if ( m ) {
+                                    // reset noprogress time counter
+                                    sec_noprogress = 0;
+
+                                    // update progress of the job
+                                    job.progress(parseInt(m[1]), 100, m[2] + '/' + m[3]);
+    
+                                    // calculate the timeout based on _p[3] value with a very simply algorithm:
+                                    var timeout = parseInt(m[3]) * 86400 / 500000 >> 0;
+                                    var timeout_noprogress = parseInt(m[3]) * 3600 / 500000 >> 0;
+
+                                    var update = false;
+                                    if ( job.data.timeout != timeout ) {
+                                        job.data.timeout = timeout;
+                                        update = true;
+                                    }
+
+                                    if ( job.data.timeout_noprogress != timeout_noprogress ) {
+                                        job.data.timeout_noprogress = timeout_noprogress;
+                                        update = true;
+                                    }
+
+                                    // update job data to the job registry.
+                                    if (update) {
+                                        job.update(function(){});
+                                    }
+                                }
                             }
                         });
 
@@ -464,27 +512,12 @@ if ( cluster.worker ) {
                             }
                         });
 
-                        // determine job timeout
-                        var timeout;
-                        if ( job.data.timeout === undefined || job.data.timeout <= 0 ) {
-                            // no timeout
-                            timeout = Number.MAX_SAFE_INTEGER;
-                        } else {
-                            timeout = job.data.timeout;
-                        }
-
-                        var timeout_noprogress;
-                        if ( job.data.timeout_noprogress === undefined || job.data.timeout_noprogress <= 0 ) {
-                            // no timeout
-                            timeout_noprogress = 3600;
-                        } else {
-                            timeout_noprogress = job.data.timeout_noprogress;
-                        }
-
                         // initiate a monitor loop (timer) for heartbeat check on job status/progress
                         var t_beg = new Date().getTime() / 1000;
                         var timer = setInterval( function() {
                             if ( ! job_stopped ) {
+                                // retrieve the up-to-date timeout and timeout_noprogress from the job data.
+                                var [timeout, timeout_noprogress] = get_job_timout(job);
                                 if ( sec_noprogress > timeout_noprogress ) {
                                     // job does not have any progress within an expected duration
                                     child.stdin.pause();
