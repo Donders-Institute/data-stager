@@ -473,21 +473,9 @@ if ( cluster.worker ) {
     
                                     // calculate the timeout based on _p[3] value with a very simply algorithm:
                                     var timeout = parseInt(m[3]) * 86400 / 500000 >> 0;
-                                    var timeout_noprogress = parseInt(m[3]) * 3600 / 500000 >> 0;
 
-                                    var update = false;
                                     if ( job.data.timeout != timeout ) {
                                         job.data.timeout = timeout;
-                                        update = true;
-                                    }
-
-                                    if ( job.data.timeout_noprogress != timeout_noprogress ) {
-                                        job.data.timeout_noprogress = timeout_noprogress;
-                                        update = true;
-                                    }
-
-                                    // update job data to the job registry.
-                                    if (update) {
                                         job.update(function(){});
                                     }
                                 }
