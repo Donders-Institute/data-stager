@@ -1,4 +1,5 @@
 github.com/Donders-Institute/data-stager v0.0.0-20200305152955-87f2336906aa h1:yr17PSY1vlPIUDyNgMNZ2bNX5+eK/gBuYfUrzw6VbI0=
+github.com/Donders-Institute/data-stager v0.0.0-20200309161547-a156053db548 h1:aIZgTzzWeUaz/Se8u60VRXTqf0lfBp477ijzXePLRRY=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

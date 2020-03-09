@@ -247,16 +247,26 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	return nf, nil
 }
 
-// MakeDir creates directory at the given path either on iCAT (with path prefix "i:") or local filesystem.
-func MakeDir(path string, t PathType) error {
+// DirMaker makes new directory.
+type DirMaker struct {
+	mux sync.Mutex
+}
+
+// MakeDir creates directory at the given path either on iCAT (with path prefix "i:") or local filesystem, in a
+// synchronous manner.
+func (d *DirMaker) MakeDir(path string, t PathType) error {
+
+	defer d.mux.Unlock()
 
 	switch t {
 	case TypeIrods:
+		d.mux.Lock()
 		_, err := exec.Command("imkdir", "-p", strings.TrimPrefix(path, "i:")).Output()
 		if err != nil {
 			return fmt.Errorf("cannot create %s: %s", path, err)
 		}
 	case TypeFileSystem:
+		d.mux.Lock()
 		_, err := exec.Command("mkdir", "-p", path).Output()
 		if err != nil {
 			return fmt.Errorf("cannot create %s: %s", path, err)
@@ -293,9 +303,12 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 	var wg sync.WaitGroup
 	wg.Add(nworkers)
 
+	// create DirMaker to synchronous mkdir operations of concurrent workers.
+	dirMaker := DirMaker{}
+
 	// spin off workers
 	for i := 1; i <= nworkers; i++ {
-		go syncWorker(i, &wg, src, dst, files, success, failure)
+		go syncWorker(i, &wg, &dirMaker, src, dst, files, success, failure)
 	}
 
 	go func() {
@@ -309,7 +322,7 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 	return
 }
 
-func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string, success chan string, failure chan SyncError) {
+func syncWorker(id int, wg *sync.WaitGroup, dirMaker *DirMaker, src, dst PathInfo, files chan string, success chan string, failure chan SyncError) {
 
 	fsrcPrefix := ""
 	fdstPrefix := ""
@@ -327,7 +340,7 @@ func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string
 		fdst := path.Join(dst.Path, strings.TrimPrefix(fsrc, src.Path))
 
 		// make the parent directory available at the destination.
-		if err := MakeDir(filepath.Dir(fdst), dst.Type); err != nil {
+		if err := dirMaker.MakeDir(filepath.Dir(fdst), dst.Type); err != nil {
 			failure <- SyncError{
 				File:  fsrc,
 				Error: err,
@@ -337,7 +350,7 @@ func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string
 
 		// run irsync
 		cmdExec := "irsync"
-		cmdArgs := []string{"-K", "-l", "-v", fmt.Sprintf("%s%s", fsrcPrefix, fsrc), fmt.Sprintf("%s%s", fdstPrefix, fdst)}
+		cmdArgs := []string{"-K", "-v", fmt.Sprintf("%s%s", fsrcPrefix, fsrc), fmt.Sprintf("%s%s", fdstPrefix, fdst)}
 
 		log.Debugf("exec: %s %s", cmdExec, strings.Join(cmdArgs, " "))
 
