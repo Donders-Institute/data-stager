@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -247,34 +246,34 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	return nf, nil
 }
 
-// DirMaker makes new directory.
-type DirMaker struct {
-	mux sync.Mutex
-}
+// // DirMaker makes new directory.
+// type DirMaker struct {
+// 	mux sync.Mutex
+// }
 
-// MakeDir creates directory at the given path either on iCAT (with path prefix "i:") or local filesystem, in a
-// synchronous manner.
-func (d *DirMaker) MakeDir(path string, t PathType) error {
+// // MakeDir creates directory at the given path either on iCAT (with path prefix "i:") or local filesystem, in a
+// // synchronous manner.
+// func (d *DirMaker) MakeDir(path string, t PathType) error {
 
-	defer d.mux.Unlock()
+// 	defer d.mux.Unlock()
 
-	switch t {
-	case TypeIrods:
-		d.mux.Lock()
-		_, err := exec.Command("imkdir", "-p", strings.TrimPrefix(path, "i:")).Output()
-		if err != nil {
-			return fmt.Errorf("cannot create %s: %s", path, err)
-		}
-	case TypeFileSystem:
-		d.mux.Lock()
-		_, err := exec.Command("mkdir", "-p", path).Output()
-		if err != nil {
-			return fmt.Errorf("cannot create %s: %s", path, err)
-		}
-	}
+// 	switch t {
+// 	case TypeIrods:
+// 		d.mux.Lock()
+// 		_, err := exec.Command("imkdir", "-p", strings.TrimPrefix(path, "i:")).Output()
+// 		if err != nil {
+// 			return fmt.Errorf("cannot create %s: %s", path, err)
+// 		}
+// 	case TypeFileSystem:
+// 		d.mux.Lock()
+// 		_, err := exec.Command("mkdir", "-p", path).Output()
+// 		if err != nil {
+// 			return fmt.Errorf("cannot create %s: %s", path, err)
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // SyncError registers the error message of a particular file sync error.
 type SyncError struct {
@@ -297,18 +296,17 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 
 	// initiate a source scanner and performs the scan.
 	scanner := NewScanner(src)
-	files := scanner.Scan(src.Path, nworkers*8)
+	dirmaker := NewDirMaker(dst)
+
+	files := scanner.ScanMakeDir(src.Path, nworkers*8, dirmaker)
 
 	// create worker group
 	var wg sync.WaitGroup
 	wg.Add(nworkers)
 
-	// create DirMaker to synchronous mkdir operations of concurrent workers.
-	dirMaker := DirMaker{}
-
 	// spin off workers
 	for i := 1; i <= nworkers; i++ {
-		go syncWorker(i, &wg, &dirMaker, src, dst, files, success, failure)
+		go syncWorker(i, &wg, src, dst, files, success, failure)
 	}
 
 	go func() {
@@ -322,7 +320,7 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 	return
 }
 
-func syncWorker(id int, wg *sync.WaitGroup, dirMaker *DirMaker, src, dst PathInfo, files chan string, success chan string, failure chan SyncError) {
+func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string, success chan string, failure chan SyncError) {
 
 	fsrcPrefix := ""
 	fdstPrefix := ""
@@ -338,15 +336,6 @@ func syncWorker(id int, wg *sync.WaitGroup, dirMaker *DirMaker, src, dst PathInf
 	for fsrc := range files {
 		// determin destination file path.
 		fdst := path.Join(dst.Path, strings.TrimPrefix(fsrc, src.Path))
-
-		// make the parent directory available at the destination.
-		if err := dirMaker.MakeDir(filepath.Dir(fdst), dst.Type); err != nil {
-			failure <- SyncError{
-				File:  fsrc,
-				Error: err,
-			}
-			continue
-		}
 
 		// run irsync
 		cmdExec := "irsync"

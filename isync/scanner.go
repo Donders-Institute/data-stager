@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"unsafe"
 
@@ -49,18 +50,31 @@ func NewScanner(path PathInfo) Scanner {
 // Scanner defines the interface for scanning files iteratively
 // from a namespace `path`.
 type Scanner interface {
-	// Scan gets a list of files iteratively under the path.
-	Scan(path string, buffer int) chan string
+	// ScanMakeDir gets a list of file-like objects iteratively under the given path, and
+	// performs mkdir-like operations when the iteration visits a directory-like object.
+	//
+	// How the iteration is done depends on the implementation. How the mkdir-like operation is
+	// performed is also based on the implementation of the `dirmaker`.
+	//
+	// For example, it can be that the Scanner is implemented to loop over a local filesystem using
+	// the `filepath.Walk`, while the `dirmaker` is implemented to create a remote iRODS collection.
+	ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string
 }
 
 // FileSystemScanner implements the `Scanner` interface for a POSIX-compliant filesystem.
 type FileSystemScanner struct {
+	dirmaker DirMaker
+	base     string
 }
 
-// Scan gets a list of files iteratively under a file system `path`.
-func (s FileSystemScanner) Scan(path string, buffer int) chan string {
+// ScanMakeDir gets a list of files iteratively under a file system `path`, and performs directory
+// creation based on the implementation of the `dirmaker`.
+func (s FileSystemScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
 
 	files := make(chan string, buffer)
+
+	s.dirmaker = dirmaker
+	s.base = path
 
 	go func() {
 		s.fastWalk(path, false, &files)
@@ -137,6 +151,10 @@ func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan st
 			case syscall.DT_REG:
 				*files <- vpath
 			case syscall.DT_DIR:
+				// construct the directory to be created with dirmaker.
+				if err := s.dirmaker.Mkdir(strings.TrimPrefix(vpath, s.base)); err != nil {
+					log.Errorf("Mkdir failure: %s", err.Error())
+				}
 				s.fastWalk(vpath, followLink, files)
 			case syscall.DT_LNK:
 
@@ -178,12 +196,16 @@ func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan st
 
 // IrodsCollectionScanner implements the `Scanner` interface for iRODS.
 type IrodsCollectionScanner struct {
+	dirmaker DirMaker
 }
 
-// Scan gets a list of files iteratively under a iRODS collection `path`.
-func (s IrodsCollectionScanner) Scan(path string, buffer int) chan string {
+// ScanMakeDir gets a list of data objects iteratively under a iRODS collection `path`, and performs
+// directory creation based on the implementation of `dirmaker`.
+func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
 
 	files := make(chan string, buffer)
+
+	s.dirmaker = dirmaker
 
 	return files
 }
