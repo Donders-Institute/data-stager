@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -196,6 +198,7 @@ func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan st
 
 // IrodsCollectionScanner implements the `Scanner` interface for iRODS.
 type IrodsCollectionScanner struct {
+	base     string
 	dirmaker DirMaker
 }
 
@@ -206,6 +209,71 @@ func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker Di
 	files := make(chan string, buffer)
 
 	s.dirmaker = dirmaker
+	s.base = path
+
+	go func() {
+		s.collWalk(path, &files)
+		defer close(files)
+	}()
 
 	return files
+}
+
+// collWalk uses `iquest` to query file objects and sub-collections within the collection referred
+// by `path`.  It pushs file objects to the `files` channel and loop over the sub-collections iteratively.
+//
+// The caller is responsible for closing the `files` channel.
+func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
+
+	// command execution function
+	executor := func(cmdStr string, out *chan string, closeOut bool) {
+
+		// conditionally close the output channel before leaving the executor function.
+		defer func() {
+			if closeOut {
+				close(*out)
+			}
+		}()
+
+		cmd := exec.Command("bash", "-c", cmdStr)
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Errorf("cannot pipe output: %s", err)
+			return
+		}
+
+		if err = cmd.Start(); err != nil {
+			log.Errorf("cannot start command: %s", err)
+			return
+		}
+
+		outScanner := bufio.NewScanner(stdout)
+		outScanner.Split(bufio.ScanLines)
+
+		for outScanner.Scan() {
+			*out <- outScanner.Text()
+		}
+
+		if err = outScanner.Err(); err != nil {
+			log.Errorf("error reading output of iquest: %s", err)
+		}
+
+		// wait the cmd to finish and the IO pipes are closed.
+		cmd.Wait()
+	}
+
+	// list over file objects
+	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
+	executor(cmdStr, files, false)
+
+	// list over objects
+	chanColl := make(chan string)
+	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
+	go executor(cmdStr, &chanColl, true)
+	for coll := range chanColl {
+		// perform mkdir
+		log.Debugf("iterate over %s", coll)
+		// iteration
+		s.collWalk(coll, files)
+	}
 }

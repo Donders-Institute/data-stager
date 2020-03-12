@@ -18,17 +18,19 @@ import (
 
 var optsVerbose *bool
 var optsProgressBar *bool
+var optsDryrun *bool
 
 func init() {
-	optsVerbose = flag.Bool("d", false, "print debug messages")
-	optsProgressBar = flag.Bool("b", false, "show progress bar")
+	optsVerbose = flag.Bool("v", false, "print debug messages")
+	optsProgressBar = flag.Bool("p", false, "show progress bar")
+	optsDryrun = flag.Bool("d", false, "dry run. Only list actions to be performed.  It is useful for debug purpose.")
 
 	flag.Usage = usage
 	flag.Parse()
 
 	log.SetOutput(os.Stderr)
 	llevel := log.InfoLevel
-	if *optsVerbose {
+	if *optsVerbose || *optsDryrun {
 		llevel = log.DebugLevel
 	}
 
@@ -342,6 +344,11 @@ func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string
 		cmdArgs := []string{"-K", "-v", fmt.Sprintf("%s%s", fsrcPrefix, fsrc), fmt.Sprintf("%s%s", fdstPrefix, fdst)}
 
 		log.Debugf("exec: %s %s", cmdExec, strings.Join(cmdArgs, " "))
+
+		if *optsDryrun {
+			success <- fsrc
+			continue
+		}
 
 		if _, err := exec.Command(cmdExec, cmdArgs...).Output(); err != nil {
 			failure <- SyncError{
