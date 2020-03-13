@@ -271,8 +271,10 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
 	go executor(cmdStr, &chanColl, true)
 	for coll := range chanColl {
-		// perform mkdir
-		log.Debugf("iterate over %s", coll)
+		// perform `MakeDir` with the `dirmaker`
+		if err := s.dirmaker.Mkdir(strings.TrimPrefix(coll, s.base)); err != nil {
+			log.Errorf("Mkdir failure: %s", err.Error())
+		}
 		// iteration
 		s.collWalk(coll, files)
 	}
