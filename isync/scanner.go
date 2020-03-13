@@ -92,19 +92,6 @@ func (s FileSystemScanner) ScanMakeDir(path string, buffer int, dirmaker DirMake
 // initiating and closing the provided channel.
 func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan string) {
 
-	// if mode == nil {
-	// 	// retrieve FileMode when it is not provided by the caller
-	// 	fpm, err := GetFilePathMode(root)
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	// respect the path returned so that symlink can be followed on the referent's path.
-	// 	root = filepath.Clean(fpm.Path)
-	// 	*chanP <- *fpm
-	// } else {
-	// 	*chanP <- FilePathMode{Path: root, Mode: *mode}
-	// }
-
 	dir, err := os.Open(root)
 	if err != nil {
 		log.Error(fmt.Sprintf("%s", err))

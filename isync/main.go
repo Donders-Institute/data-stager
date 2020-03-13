@@ -248,35 +248,6 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	return nf, nil
 }
 
-// // DirMaker makes new directory.
-// type DirMaker struct {
-// 	mux sync.Mutex
-// }
-
-// // MakeDir creates directory at the given path either on iCAT (with path prefix "i:") or local filesystem, in a
-// // synchronous manner.
-// func (d *DirMaker) MakeDir(path string, t PathType) error {
-
-// 	defer d.mux.Unlock()
-
-// 	switch t {
-// 	case TypeIrods:
-// 		d.mux.Lock()
-// 		_, err := exec.Command("imkdir", "-p", strings.TrimPrefix(path, "i:")).Output()
-// 		if err != nil {
-// 			return fmt.Errorf("cannot create %s: %s", path, err)
-// 		}
-// 	case TypeFileSystem:
-// 		d.mux.Lock()
-// 		_, err := exec.Command("mkdir", "-p", path).Output()
-// 		if err != nil {
-// 			return fmt.Errorf("cannot create %s: %s", path, err)
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 // SyncError registers the error message of a particular file sync error.
 type SyncError struct {
 	File  string
