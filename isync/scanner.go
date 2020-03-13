@@ -43,9 +43,9 @@ func clen(n []byte) int {
 func NewScanner(path PathInfo) Scanner {
 	switch path.Type {
 	case TypeIrods:
-		return IrodsCollectionScanner{}
+		return IrodsCollectionScanner{base: path.Path}
 	default:
-		return FileSystemScanner{}
+		return FileSystemScanner{base: path.Path}
 	}
 }
 
@@ -71,12 +71,14 @@ type FileSystemScanner struct {
 
 // ScanMakeDir gets a list of files iteratively under a file system `path`, and performs directory
 // creation based on the implementation of the `dirmaker`.
+//
+// The output is a string channel with the buffer size provided by the `buffer` argument.
+// Each element of the channel refers to a file path.  The channel is closed at the end of the scan.
 func (s FileSystemScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
 
 	files := make(chan string, buffer)
 
 	s.dirmaker = dirmaker
-	s.base = path
 
 	go func() {
 		s.fastWalk(path, false, &files)
@@ -191,12 +193,14 @@ type IrodsCollectionScanner struct {
 
 // ScanMakeDir gets a list of data objects iteratively under a iRODS collection `path`, and performs
 // directory creation based on the implementation of `dirmaker`.
+//
+// The output is a string channel with the buffer size provided by the `buffer` argument.
+// Each element of the channel refers to an iRODS data object.  The channel is closed at the end of the scan.
 func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
 
 	files := make(chan string, buffer)
 
 	s.dirmaker = dirmaker
-	s.base = path
 
 	go func() {
 		s.collWalk(path, &files)
@@ -206,13 +210,13 @@ func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker Di
 	return files
 }
 
-// collWalk uses `iquest` to query file objects and sub-collections within the collection referred
+// collWalk uses the "iquest" command to query file objects and sub-collections within the collection referred
 // by `path`.  It pushs file objects to the `files` channel and loop over the sub-collections iteratively.
 //
 // The caller is responsible for closing the `files` channel.
 func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 
-	// command execution function
+	// define the system command executor that is used for running the "iquest" command.
 	executor := func(cmdStr string, out *chan string, closeOut bool) {
 
 		// conditionally close the output channel before leaving the executor function.
@@ -249,11 +253,11 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 		cmd.Wait()
 	}
 
-	// list over file objects
+	// list file objects and directly pass it to the `files` channel
 	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
 	executor(cmdStr, files, false)
 
-	// list over objects
+	// iterate over sub-collections
 	chanColl := make(chan string)
 	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
 	go executor(cmdStr, &chanColl, true)
@@ -262,7 +266,7 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 		if err := s.dirmaker.Mkdir(strings.TrimPrefix(coll, s.base)); err != nil {
 			log.Errorf("Mkdir failure: %s", err.Error())
 		}
-		// iteration
+		// walk on sub-collection
 		s.collWalk(coll, files)
 	}
 }

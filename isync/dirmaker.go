@@ -15,9 +15,9 @@ import (
 func NewDirMaker(path PathInfo) DirMaker {
 	switch path.Type {
 	case TypeIrods:
-		return IrodsCollectionMaker{Base: path.Path}
+		return IrodsCollectionMaker{base: path.Path}
 	default:
-		return FileSystemDirMaker{Base: path.Path}
+		return FileSystemDirMaker{base: path.Path}
 	}
 }
 
@@ -29,14 +29,14 @@ type DirMaker interface {
 // FileSystemDirMaker implements the DirMaker for local filesystem.
 type FileSystemDirMaker struct {
 	// Base is the top-level directory.
-	Base string
+	base string
 }
 
 // Mkdir ensures the directory referred by the path is created.
 func (m FileSystemDirMaker) Mkdir(path string) error {
 
-	if !strings.HasPrefix(path, m.Base) {
-		path = filepath.Join(m.Base, path)
+	if !strings.HasPrefix(path, m.base) {
+		path = filepath.Join(m.base, path)
 	}
 
 	log.Debugf("creating directory %s", path)
@@ -47,17 +47,17 @@ func (m FileSystemDirMaker) Mkdir(path string) error {
 // IrodsCollectionMaker implements the DirMaker for iRODS, using the `imkdir` system call.
 type IrodsCollectionMaker struct {
 	// Base is the top-level collection.
-	Base string
+	base string
 }
 
 // Mkdir ensures the iRODS collection referred by the path is created.
 func (m IrodsCollectionMaker) Mkdir(coll string) error {
 
-	// tring possible leading `i:` used in irsync syntax for referring to iRODS namespace.
+	// trim the possible leading `i:` used in the syntax of "irsync" for referring to iRODS namespace.
 	coll = strings.TrimPrefix(coll, "i:")
 
-	if !strings.HasPrefix(coll, m.Base) {
-		coll = filepath.Join(m.Base, coll)
+	if !strings.HasPrefix(coll, m.base) {
+		coll = filepath.Join(m.base, coll)
 	}
 
 	log.Debugf("creating collection %s", coll)
