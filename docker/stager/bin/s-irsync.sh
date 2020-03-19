@@ -87,7 +87,7 @@ else
         if [ -d "$src" ]; then
             is_src_dir=1
             # determine size of the sync task: number of files in the directory
-            w_total=$( find "$src" -type f | wc -l )
+            w_total=$( find "$src" -type f 2>/dev/null | wc -l )
         else
             w_total=1
         fi
