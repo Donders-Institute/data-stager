@@ -42,7 +42,7 @@ RUN ( yum -y install expect parallel bc samba-client cifs-utils )
 RUN ( mkdir -p /opt/stager/bin )
 WORKDIR /opt/stager
 COPY package.json package.json
-RUN ( export PATH=/opt/nodejs/bin:$PATH && /opt/nodejs/bin/npm install )
+RUN ( export PATH=/opt/nodejs/bin:$PATH && export USER=root && /opt/nodejs/bin/npm install -g node-gyp && /opt/nodejs/bin/npm install --unsafe-perm )
 COPY *.js ./
 COPY bin ./bin
 COPY lib ./lib
