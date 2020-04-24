@@ -8,13 +8,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	putil "github.com/Donders-Institute/data-stager/utility/pkg/path"
 
-	pb "github.com/schollz/progressbar/v2"
+	pb "github.com/schollz/progressbar/v3"
+
+	ustr "github.com/Donders-Institute/tg-toolset-golang/pkg/strings"
 )
 
 var optsVerbose *bool
@@ -68,77 +69,79 @@ func main() {
 
 	log.Debugf("collection or data path info: %+v\n", collPathInfo)
 
-	// get number of files at source
-	nf, err := GetNumberOfFiles(collPathInfo)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if nf == 0 {
-		log.Warnf("nothing to sync: %s\n", coll)
-		os.Exit(0)
-	}
-
 	// progress bar
-	bar := pb.NewOptions(nf,
-		pb.OptionSetPredictTime(false),
-		pb.OptionSetTheme(pb.Theme{
-			Saucer:        "#",
-			SaucerPadding: "-",
-			BarStart:      "[",
-			BarEnd:        "]",
-		}),
-	)
+	var nf int
+	var bar *pb.ProgressBar
 	if *optsProgressBar {
+		// get number of files at source
+		nf, err = GetNumberOfFiles(collPathInfo)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if nf == 0 {
+			log.Warnf("nothing to sync: %s\n", coll)
+			os.Exit(0)
+		}
+
+		bar := pb.NewOptions(nf,
+			pb.OptionSetPredictTime(false),
+			pb.OptionSetTheme(pb.Theme{
+				Saucer:        "#",
+				SaucerPadding: "-",
+				BarStart:      "[",
+				BarEnd:        "]",
+			}),
+		)
 		bar.RenderBlank()
 	}
 
+	// progress spinner
+	spinner := ustr.NewSpinner()
+
 	success, failure := ScanAndRepl(collPathInfo, *optsRescSrc, *optsRescDst, 4)
 
-	c := 0
+	s := 0
+	f := 0
 	ec := 0
 	for {
 		select {
 		case _, ok := <-success:
 			if !ok {
 				success = nil
-			} else {
-				// increase the counter by 1, and write progress to stdout
-				c++
-				if *optsProgressBar {
-					bar.Add(1)
-				} else {
-					fmt.Printf("progress:%d:%d:%d\n", c*100./nf, c, nf)
-				}
+				break
 			}
+			// increase the success counter by 1
+			s++
 		case e, ok := <-failure:
 			if !ok {
 				failure = nil
-			} else {
-				ec = 2
-				// write error to the stderr
-				log.Errorf("failure: %s\n", e.Error)
+				break
 			}
+			// increase the failure counter by 1
+			f++
+			ec = 2
+			// write error to the stderr
+			log.Errorf("failure: %s\n", e.Error)
 		default:
-			// this dummy progress string is printed to circumvent stager job killing due to timeout_noprocess (3600 sec.) is reached.
-			if !*optsProgressBar && c == 0 {
-				// sleep for a second.
-				time.Sleep(time.Second)
-				// keep printing progress value while there is still nothing reported back from the irsync scan.
-				fmt.Printf("progress:%d:%d:%d\n", c*100./nf, c, nf)
-			}
 		}
 
 		if success == nil && failure == nil {
 			log.Debugln("finish")
 			break
 		}
+
+		// show progress
+		if bar != nil {
+			bar.Add(1)
+		} else {
+			fmt.Printf("\r %s - total: %d success: %d failure: %d", spinner.Next(), s+f, s, f)
+		}
 	}
 
+	fmt.Println()
+
 	// return exit code ec
-	if *optsProgressBar {
-		fmt.Println()
-	}
 	os.Exit(ec)
 }
 

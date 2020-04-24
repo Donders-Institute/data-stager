@@ -15,7 +15,7 @@ import (
 
 	putil "github.com/Donders-Institute/data-stager/utility/pkg/path"
 
-	pb "github.com/schollz/progressbar/v2"
+	pb "github.com/schollz/progressbar/v3"
 )
 
 var optsVerbose *bool
