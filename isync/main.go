@@ -350,7 +350,7 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 			out := scanner.Text()
 
 			// skip files already in sync
-			if strings.Contains(out, `a match no sync required`) {
+			if strings.Contains(out, "a match no sync required") {
 				success <- out
 				continue
 			}
