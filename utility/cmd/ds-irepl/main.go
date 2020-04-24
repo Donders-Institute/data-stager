@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,16 +12,22 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	putil "github.com/Donders-Institute/data-stager/utility/pkg/path"
+
 	pb "github.com/schollz/progressbar/v2"
 )
 
 var optsVerbose *bool
 var optsProgressBar *bool
+var optsRescSrc *string
+var optsRescDst *string
 var optsDryrun *bool
 
 func init() {
 	optsVerbose = flag.Bool("v", false, "print debug messages")
 	optsProgressBar = flag.Bool("p", false, "show progress bar")
+	optsRescSrc = flag.String("S", "resc_dccn", "iRODS resource name as data source")
+	optsRescDst = flag.String("R", "resc_loc", "iRODS resource name as data destination")
 	optsDryrun = flag.Bool("d", false, "dry run. Only list actions to be performed.  It is useful for debug purpose.")
 
 	flag.Usage = usage
@@ -38,47 +43,39 @@ func init() {
 }
 
 func usage() {
-	fmt.Printf("\nSynchronizing data between local filesystem and iRODS\n")
-	fmt.Printf("\nUSAGE: %s [OPTIONS] {path_source} {path_destination}\n", os.Args[0])
+	fmt.Printf("\nReplicate collection from one iRODS resource to another.\n")
+	fmt.Printf("\nUSAGE: %s [OPTIONS] {path_coll}\n", os.Args[0])
 	fmt.Printf("\nOPTIONS:\n")
 	flag.PrintDefaults()
-	fmt.Printf("\n")
-	fmt.Printf("For iRODS path, use the prefix \"i:\" at the front.\n")
 	fmt.Printf("\n")
 }
 
 func main() {
 
-	if flag.NArg() != 2 {
+	if flag.NArg() < 1 {
 		flag.Usage()
 		log.Fatal("insufficient arguments.")
 	}
 
-	// source path: /project/3010000.01
-	src := flag.Args()[0]
+	// get collection from argument
+	coll := flag.Args()[0]
 
-	// destination path: i:/nl.ru.donders/di/dccn/DAC_3010000.01_173
-	dst := flag.Args()[1]
-
-	srcPathInfo, err := GetPathInfo(src)
+	// append the prefix `i:` to get path information from iRODS.
+	collPathInfo, err := GetPathInfo(fmt.Sprintf("i:%s", coll))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Debugf("src path info: %+v\n", srcPathInfo)
-
-	dstPathInfo, _ := GetPathInfo(dst)
-
-	log.Debugf("dst path info: %+v\n", dstPathInfo)
+	log.Debugf("collection or data path info: %+v\n", collPathInfo)
 
 	// get number of files at source
-	nf, err := GetNumberOfFiles(srcPathInfo)
+	nf, err := GetNumberOfFiles(collPathInfo)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if nf == 0 {
-		log.Warnf("nothing to sync: %s\n", src)
+		log.Warnf("nothing to sync: %s\n", coll)
 		os.Exit(0)
 	}
 
@@ -96,7 +93,7 @@ func main() {
 		bar.RenderBlank()
 	}
 
-	success, failure := ScanAndSync(srcPathInfo, dstPathInfo, 4)
+	success, failure := ScanAndRepl(collPathInfo, *optsRescSrc, *optsRescDst, 4)
 
 	c := 0
 	ec := 0
@@ -145,37 +142,17 @@ func main() {
 	os.Exit(ec)
 }
 
-// PathType represents the namespace type a path is referring to.
-type PathType int
-
-const (
-	// TypeFileSystem is the namespace type for local filesystem.
-	TypeFileSystem PathType = iota
-	// TypeIrods is the the namespace type for iRODS.
-	TypeIrods
-)
-
-// PathInfo defines a data structure of the path information.
-type PathInfo struct {
-	// Path is the path in question.
-	Path string
-	// PathType is the namespace type of the path.
-	Type PathType
-	// Mode is the `os.FileMode` of the path.
-	Mode os.FileMode
-}
-
 // GetPathInfo resolves the PathInfo of the given path.
-func GetPathInfo(path string) (PathInfo, error) {
+func GetPathInfo(path string) (putil.PathInfo, error) {
 
-	var info PathInfo
+	var info putil.PathInfo
 
 	if strings.HasPrefix(path, "i:") {
 
 		ipath := strings.TrimSuffix(strings.TrimPrefix(path, "i:"), "/")
 
 		info.Path = ipath
-		info.Type = TypeIrods
+		info.Type = putil.TypeIrods
 
 		// check if the namespace refers to a file object.
 		if _, err := exec.Command("imeta", "ls", "-d", ipath).Output(); err == nil {
@@ -192,7 +169,7 @@ func GetPathInfo(path string) (PathInfo, error) {
 	} else {
 
 		info.Path = path
-		info.Type = TypeFileSystem
+		info.Type = putil.TypeFileSystem
 
 		if fi, err := os.Stat(path); err == nil {
 			info.Mode = fi.Mode()
@@ -204,7 +181,7 @@ func GetPathInfo(path string) (PathInfo, error) {
 }
 
 // GetNumberOfFiles get total number of files at or within the `path`.
-func GetNumberOfFiles(path PathInfo) (int, error) {
+func GetNumberOfFiles(path putil.PathInfo) (int, error) {
 
 	nf := 0
 
@@ -215,7 +192,7 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	}
 
 	// The path is a collection, use iquery to get number of files.
-	if path.Mode.IsDir() && path.Type == TypeIrods {
+	if path.Mode.IsDir() && path.Type == putil.TypeIrods {
 		cmds = append(cmds,
 			fmt.Sprintf("iquest --no-page '%%s' \"SELECT DATA_NAME WHERE COLL_NAME = '%s'\" | wc -l", path.Path),
 			fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME like '%s/%%'\" | wc -l", path.Path),
@@ -223,7 +200,7 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	}
 
 	// The path is a filesystem directory, use command `find -type f` to get number of files.
-	if path.Mode.IsDir() && path.Type == TypeFileSystem {
+	if path.Mode.IsDir() && path.Type == putil.TypeFileSystem {
 		cmds = append(cmds, fmt.Sprintf("find %s -type f | wc -l", path.Path))
 	}
 
@@ -248,30 +225,29 @@ func GetNumberOfFiles(path PathInfo) (int, error) {
 	return nf, nil
 }
 
-// SyncError registers the error message of a particular file sync error.
-type SyncError struct {
+// ReplError registers the error message of a particular file sync error.
+type ReplError struct {
 	File  string
 	Error error
 }
 
-// ScanAndSync walks through the files retrieved from the `bufio.Scanner`,
-// sync each file from the `srcColl` collection to the `dstColl` collection.
+// ScanAndRepl walks through the files retrieved from the `bufio.Scanner`,
+// replicate each file from the `rescSrc` iRODS resrouce to the `rescDst` iORDS resource.
 //
 // The sync operation is performed in a concurrent way.  The degree of concurrency is
 // defined by number of sync workers, `nworkers`.
 //
 // Files being successfully synced will be returned as a map with key as the filename
 // and value as the checksum of the file.
-func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure chan SyncError) {
+func ScanAndRepl(coll putil.PathInfo, rescSrc, rescDst string, nworkers int) (success chan string, failure chan ReplError) {
 
 	success = make(chan string)
-	failure = make(chan SyncError)
+	failure = make(chan ReplError)
 
 	// initiate a source scanner and performs the scan.
-	scanner := NewScanner(src)
-	dirmaker := NewDirMaker(dst)
+	scanner := putil.NewScanner(coll)
 
-	files := scanner.ScanMakeDir(src.Path, nworkers*8, dirmaker)
+	files := scanner.ScanMakeDir(coll.Path, nworkers*8, nil)
 
 	// create worker group
 	var wg sync.WaitGroup
@@ -279,7 +255,7 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 
 	// spin off workers
 	for i := 1; i <= nworkers; i++ {
-		go syncWorker(i, &wg, src, dst, files, success, failure)
+		go replWorker(i, &wg, rescSrc, rescDst, files, success, failure)
 	}
 
 	go func() {
@@ -293,41 +269,27 @@ func ScanAndSync(src, dst PathInfo, nworkers int) (success chan string, failure 
 	return
 }
 
-func syncWorker(id int, wg *sync.WaitGroup, src, dst PathInfo, files chan string, success chan string, failure chan SyncError) {
+func replWorker(id int, wg *sync.WaitGroup, rescSrc, rescDst string, files chan string, success chan string, failure chan ReplError) {
 
-	fsrcPrefix := ""
-	fdstPrefix := ""
-
-	if src.Type == TypeIrods {
-		fsrcPrefix = "i:"
-	}
-
-	if dst.Type == TypeIrods {
-		fdstPrefix = "i:"
-	}
-
-	for fsrc := range files {
-		// determin destination file path.
-		fdst := path.Join(dst.Path, strings.TrimPrefix(fsrc, src.Path))
-
-		// run irsync
-		cmdExec := "irsync"
-		cmdArgs := []string{"-K", "-v", fmt.Sprintf("%s%s", fsrcPrefix, fsrc), fmt.Sprintf("%s%s", fdstPrefix, fdst)}
+	for f := range files {
+		// run irepl
+		cmdExec := "irepl"
+		cmdArgs := []string{"-v", "-S", rescSrc, "-R", rescDst, f}
 
 		log.Debugf("exec: %s %s", cmdExec, strings.Join(cmdArgs, " "))
 
 		if *optsDryrun {
-			success <- fsrc
+			success <- f
 			continue
 		}
 
 		if _, err := exec.Command(cmdExec, cmdArgs...).Output(); err != nil {
-			failure <- SyncError{
-				File:  fsrc,
+			failure <- ReplError{
+				File:  f,
 				Error: fmt.Errorf("%s %s fail: %s", cmdExec, strings.Join(cmdArgs, " "), err),
 			}
 		} else {
-			success <- fsrc
+			success <- f
 		}
 	}
 	wg.Done()

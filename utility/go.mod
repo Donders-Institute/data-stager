@@ -1,4 +1,4 @@
-module github.com/Donders-Institute/data-stager/isync
+module github.com/Donders-Institute/data-stager/utility
 
 go 1.13
 

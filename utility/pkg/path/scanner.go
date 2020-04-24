@@ -1,4 +1,4 @@
-package main
+package path
 
 import (
 	"bufio"
@@ -56,16 +56,17 @@ type Scanner interface {
 	// performs mkdir-like operations when the iteration visits a directory-like object.
 	//
 	// How the iteration is done depends on the implementation. How the mkdir-like operation is
-	// performed is also based on the implementation of the `dirmaker`.
+	// performed is also based on the implementation of the `dirmaker`.  Set the `dirmaker` to
+	// `nil` to skip the directory making operation.
 	//
 	// For example, it can be that the Scanner is implemented to loop over a local filesystem using
 	// the `filepath.Walk`, while the `dirmaker` is implemented to create a remote iRODS collection.
-	ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string
+	ScanMakeDir(path string, buffer int, dirmaker *DirMaker) chan string
 }
 
 // FileSystemScanner implements the `Scanner` interface for a POSIX-compliant filesystem.
 type FileSystemScanner struct {
-	dirmaker DirMaker
+	dirmaker *DirMaker
 	base     string
 }
 
@@ -74,7 +75,7 @@ type FileSystemScanner struct {
 //
 // The output is a string channel with the buffer size provided by the `buffer` argument.
 // Each element of the channel refers to a file path.  The channel is closed at the end of the scan.
-func (s FileSystemScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
+func (s FileSystemScanner) ScanMakeDir(path string, buffer int, dirmaker *DirMaker) chan string {
 
 	files := make(chan string, buffer)
 
@@ -143,7 +144,7 @@ func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan st
 				*files <- vpath
 			case syscall.DT_DIR:
 				// construct the directory to be created with dirmaker.
-				if err := s.dirmaker.Mkdir(strings.TrimPrefix(vpath, s.base)); err != nil {
+				if err := (*s.dirmaker).Mkdir(strings.TrimPrefix(vpath, s.base)); err != nil {
 					log.Errorf("Mkdir failure: %s", err.Error())
 				}
 				s.fastWalk(vpath, followLink, files)
@@ -188,7 +189,7 @@ func (s FileSystemScanner) fastWalk(root string, followLink bool, files *chan st
 // IrodsCollectionScanner implements the `Scanner` interface for iRODS.
 type IrodsCollectionScanner struct {
 	base     string
-	dirmaker DirMaker
+	dirmaker *DirMaker
 }
 
 // ScanMakeDir gets a list of data objects iteratively under a iRODS collection `path`, and performs
@@ -196,7 +197,7 @@ type IrodsCollectionScanner struct {
 //
 // The output is a string channel with the buffer size provided by the `buffer` argument.
 // Each element of the channel refers to an iRODS data object.  The channel is closed at the end of the scan.
-func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker DirMaker) chan string {
+func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker *DirMaker) chan string {
 
 	files := make(chan string, buffer)
 
@@ -262,10 +263,14 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", path)
 	go executor(cmdStr, &chanColl, true)
 	for coll := range chanColl {
-		// perform `MakeDir` with the `dirmaker`
-		if err := s.dirmaker.Mkdir(strings.TrimPrefix(coll, s.base)); err != nil {
-			log.Errorf("Mkdir failure: %s", err.Error())
+
+		if s.dirmaker != nil {
+			// perform `MakeDir` with the `dirmaker`
+			if err := (*s.dirmaker).Mkdir(strings.TrimPrefix(coll, s.base)); err != nil {
+				log.Errorf("Mkdir failure: %s", err.Error())
+			}
 		}
+
 		// walk on sub-collection
 		s.collWalk(coll, files)
 	}
