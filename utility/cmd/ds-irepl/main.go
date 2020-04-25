@@ -138,7 +138,7 @@ func main() {
 
 		// no progress
 		if !p {
-			break
+			continue
 		}
 
 		// show progress
