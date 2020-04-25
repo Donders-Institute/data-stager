@@ -103,6 +103,7 @@ func main() {
 
 	s := 0
 	f := 0
+	p := false
 	ec := 0
 	for {
 		select {
@@ -113,6 +114,7 @@ func main() {
 			}
 			// increase the success counter by 1
 			s++
+			p = true
 		case e, ok := <-failure:
 			if !ok {
 				failure = nil
@@ -120,14 +122,22 @@ func main() {
 			}
 			// increase the failure counter by 1
 			f++
+			p = true
 			ec = 2
 			// write error to the stderr
 			log.Errorf("failure: %s\n", e.Error)
 		default:
+			p = false
 		}
 
+		// all files are processed
 		if success == nil && failure == nil {
 			log.Debugln("finish")
+			break
+		}
+
+		// no progress
+		if !p {
 			break
 		}
 
