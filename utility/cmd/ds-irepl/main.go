@@ -23,13 +23,15 @@ var optsProgressBar *bool
 var optsRescSrc *string
 var optsRescDst *string
 var optsDryrun *bool
+var optsNthreads *int
 
 func init() {
 	optsVerbose = flag.Bool("v", false, "print debug messages")
 	optsProgressBar = flag.Bool("p", false, "show progress bar")
-	optsRescSrc = flag.String("S", "resc_dccn", "iRODS resource name as data source")
-	optsRescDst = flag.String("R", "resc_loc", "iRODS resource name as data destination")
-	optsDryrun = flag.Bool("d", false, "dry run. Only list actions to be performed.  It is useful for debug purpose.")
+	optsRescSrc = flag.String("S", "resc_dccn", "iRODS `resource` name as data source")
+	optsRescDst = flag.String("R", "resc_loc", "iRODS `resource` name as data destination")
+	optsNthreads = flag.Int("c", 4, "`number` of concurrent workers")
+	optsDryrun = flag.Bool("d", false, "dry run. Only list actions to be performed, useful for test.")
 
 	flag.Usage = usage
 	flag.Parse()
@@ -99,7 +101,7 @@ func main() {
 	// progress spinner
 	spinner := ustr.NewSpinner()
 
-	success, failure := ScanAndRepl(collPathInfo, *optsRescSrc, *optsRescDst, 4)
+	success, failure := ScanAndRepl(collPathInfo, *optsRescSrc, *optsRescDst, *optsNthreads)
 
 	s := 0
 	f := 0
