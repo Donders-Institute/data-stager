@@ -86,7 +86,9 @@ func main() {
 			os.Exit(0)
 		}
 
-		bar := pb.NewOptions(nf,
+		bar = pb.NewOptions(nf,
+			pb.OptionShowCount(),
+			pb.OptionShowIts(),
 			pb.OptionSetPredictTime(false),
 			pb.OptionSetTheme(pb.Theme{
 				Saucer:        "#",
@@ -144,7 +146,7 @@ func main() {
 		}
 
 		// show progress
-		if bar != nil {
+		if *optsProgressBar {
 			bar.Add(1)
 		} else {
 			fmt.Printf("\r %s - total: %d success: %d failure: %d", spinner.Next(), s+f, s, f)

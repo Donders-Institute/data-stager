@@ -86,6 +86,8 @@ func main() {
 
 	// progress bar
 	bar := pb.NewOptions(nf,
+		pb.OptionShowCount(),
+		pb.OptionShowIts(),
 		pb.OptionSetPredictTime(false),
 		pb.OptionSetTheme(pb.Theme{
 			Saucer:        "#",
