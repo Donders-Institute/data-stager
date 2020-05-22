@@ -211,7 +211,6 @@ func (s IrodsCollectionScanner) ScanMakeDir(path string, buffer int, dirmaker *D
 	return files
 }
 
-
 // escapeSpecialCharsGenQuery addes "\" in front of the known special characters
 // that cannot be passed to GenQuery directly.
 func (s IrodsCollectionScanner) escapeSpecialCharsGenQuery(p string) string {
@@ -257,7 +256,10 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 		outScanner.Split(bufio.ScanLines)
 
 		for outScanner.Scan() {
-			*out <- outScanner.Text()
+			// push to the channel `*out` only if the scanned text is not "CAT_NO_ROWS_FOUND".
+			if l := outScanner.Text(); !strings.Contains(l, "CAT_NO_ROWS_FOUND") {
+				*out <- l
+			}
 		}
 
 		if err = outScanner.Err(); err != nil {
@@ -265,16 +267,19 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 		}
 
 		// wait the cmd to finish and the IO pipes are closed.
-		cmd.Wait()
+		// write out error if the command execution is failed.
+		if err = cmd.Wait(); err != nil {
+			log.Errorf("%s fail: %s", cmdStr, err)
+		}
 	}
 
 	// list file objects and directly pass it to the `files` channel
-	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", s.escapeSpecialCharsGenQuery(path))
+	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
 	executor(cmdStr, files, false)
 
 	// iterate over sub-collections
 	chanColl := make(chan string)
-	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\" | grep -v 'CAT_NO_ROWS_FOUND'", s.escapeSpecialCharsGenQuery(path))
+	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
 	go executor(cmdStr, &chanColl, true)
 	for coll := range chanColl {
 
