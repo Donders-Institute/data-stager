@@ -274,12 +274,12 @@ func (s IrodsCollectionScanner) collWalk(path string, files *chan string) {
 	}
 
 	// list file objects and directly pass it to the `files` channel
-	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"SELECT COLL_NAME,DATA_NAME WHERE COLL_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
+	cmdStr := fmt.Sprintf("iquest --no-page '%%s/%%s' \"select COLL_NAME,DATA_NAME where COLL_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
 	executor(cmdStr, files, false)
 
 	// iterate over sub-collections
 	chanColl := make(chan string)
-	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
+	cmdStr = fmt.Sprintf("iquest --no-page '%%s' \"select COLL_NAME where COLL_PARENT_NAME = '%s'\"", s.escapeSpecialCharsGenQuery(path))
 	go executor(cmdStr, &chanColl, true)
 	for coll := range chanColl {
 
