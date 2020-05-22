@@ -264,7 +264,7 @@ func ScanAndRepl(coll putil.PathInfo, rescSrc, rescDst string, nworkers int) (su
 	// initiate a source scanner and performs the scan.
 	scanner := putil.NewScanner(coll)
 
-	files := scanner.ScanMakeDir(coll.Path, nworkers*8, nil)
+	files := scanner.ScanMakeDir(coll.Path, 4096, nil)
 
 	// create worker group
 	var wg sync.WaitGroup
