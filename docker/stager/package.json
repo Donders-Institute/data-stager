@@ -13,7 +13,7 @@
     "redis": "~2.6.3",
     "kue": "~0.11.4",
     "config": "~1.24.0",
-    "tree-kill": "~1.1.0",
+    "tree-kill": "~1.2.2",
     "basic-auth": "~1.0.4",
     "underscore": "~1.8.3",
     "async": "~2.1.2",
