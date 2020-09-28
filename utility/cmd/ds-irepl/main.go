@@ -290,8 +290,11 @@ func replWorker(id int, wg *sync.WaitGroup, rescSrc, rescDst string, files chan 
 
 	for f := range files {
 		// run irepl
-		cmdExec := "irepl"
-		cmdArgs := []string{"-v", "-S", rescSrc, "-R", rescDst, f}
+		//cmdExec := "irepl"
+		//cmdArgs := []string{"-v", "-S", rescSrc, "-R", rescDst, f}
+		// run irule
+		cmdExec := "irule"
+		cmdArgs := []string{"rdmReplicateData(*obj, list('" + rescDst + "'))", "*obj=" + f, "null"}
 
 		log.Debugf("exec: %s %s", cmdExec, strings.Join(cmdArgs, " "))
 
