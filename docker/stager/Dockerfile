@@ -57,13 +57,16 @@ RUN ( wget https://bootstrap.pypa.io/get-pip.py && \
       /opt/python/bin/python get-pip.py )
 
 # install devcron
-RUN ( yum -y install mercurial )
-RUN ( /opt/python/bin/pip install -e hg+https://bitbucket.org/dbenamy/devcron#egg=devcron )
+#RUN ( yum -y install mercurial )
+#RUN ( /opt/python/bin/pip install -e hg+https://bitbucket.org/dbenamy/devcron#egg=devcron )
+RUN ( /opt/python/bin/pip install -e git+https://github.com/dbenamy/devcron#egg=devcron )
 # copy default crontab into container
 RUN ( mkdir -p /cron )
 COPY cron /cron
 
 # install Cheetah template engine
+# force Markdown library to version 3.1, the last version supporting python 2.7
+RUN ( /opt/python/bin/pip install Markdown==3.1 )
 RUN ( wget https://pypi.python.org/packages/cd/b0/c2d700252fc251e91c08639ff41a8a5203b627f4e0a2ae18a6b662ab32ea/Cheetah-2.4.4.tar.gz#md5=853917116e731afbc8c8a43c37e6ddba && tar xvzf Cheetah-2.4.4.tar.gz && \
       cd Cheetah-2.4.4 && /opt/python/bin/python setup.py install )
 
