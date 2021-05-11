@@ -12,23 +12,30 @@ baseurl=https://repo.cyberduck.io/stable/\$basearch/\n\
 enabled=1\n\
 gpgcheck=0" > /etc/yum.repos.d/duck-stable.repo )
 
-RUN ( yum -y install duck )
+RUN ( yum -y install duck && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
 
 # create temporary directory
 RUN ( mkdir -p /tmp )
 WORKDIR /tmp
 
-# install python 2.7.12 and pycurl (as the system pycurl seems to have problem with data encoding)
+# install python 2.7.12
 ADD https://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz /tmp
 RUN ( if [ ! -d Python-2.7.12 ]; then tar xvf Python-2.7.12.tgz; fi \
       && cd Python-2.7.12 \
       && ./configure --prefix=/opt/python \
       && make && make install && rm -rf /tmp/Python-* )
 
-ADD https://dl.bintray.com/pycurl/pycurl/pycurl-7.43.0.tar.gz /tmp
-RUN ( if [ ! -d pycurl-7.43.0 ]; then tar xvf pycurl-7.43.0.tar.gz; fi \
-      && cd pycurl-7.43.0 \
-      && /opt/python/bin/python setup.py --with-nss install && rm -rf /tmp/pycurl-* )
+# install python pip
+RUN ( wget https://bootstrap.pypa.io/pip/2.7/get-pip.py && \
+      /opt/python/bin/python get-pip.py )
+
+# install pycurl
+RUN ( /opt/python/bin/pip install pycurl )
+
+#ADD https://github.com/pycurl/pycurl/archive/refs/tags/REL_7_43_0.tar.gz /tmp
+#RUN ( if [ ! -d pycurl-REL_7_43_0 ]; then tar xvf REL_7_43_0.tar.gz; fi \
+#      && cd pycurl-REL_7_43_0 \
+#      && /opt/python/bin/python setup.py --with-nss install && rm -rf /tmp/pycurl-* )
 
 # install nodejs
 ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
@@ -36,7 +43,7 @@ RUN ( if [ ! -d node-v6.11.2-linux-x64 ]; then tar xf node-v6.11.2-linux-x64.tar
       && mv node-v6.11.2-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
 
 # install expect so that we get unbuffer to get irsync progress, progressively
-RUN ( yum -y install expect parallel bc samba-client cifs-utils )
+RUN ( yum -y install expect parallel bc samba-client cifs-utils && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
 
 # install stager scripts and required nodejs modules
 RUN ( mkdir -p /opt/stager/bin )
@@ -52,13 +59,7 @@ COPY config_stager.py config_stager.py
 RUN ( chmod +x start_stager.sh )
 RUN ( chmod +x config_stager.py )
 
-# install python pip
-RUN ( wget https://bootstrap.pypa.io/get-pip.py && \
-      /opt/python/bin/python get-pip.py )
-
 # install devcron
-#RUN ( yum -y install mercurial )
-#RUN ( /opt/python/bin/pip install -e hg+https://bitbucket.org/dbenamy/devcron#egg=devcron )
 RUN ( /opt/python/bin/pip install -e git+https://github.com/dbenamy/devcron#egg=devcron )
 # copy default crontab into container
 RUN ( mkdir -p /cron )
