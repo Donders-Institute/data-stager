@@ -1,7 +1,7 @@
 {
   "name": "stager",
   "description": "generic staging service",
-  "version": "2.0.9",
+  "version": "2.1.1",
   "author": "Hurng-Chun Lee <h.lee@donders.ru.nl>",
   "main": "stager.js",
   "repository": {
@@ -15,7 +15,7 @@
     "config": "~1.24.0",
     "tree-kill": "~1.2.2",
     "basic-auth": "~1.0.4",
-    "underscore": "~1.8.3",
+    "underscore": ">=1.12.1",
     "async": "~2.1.2",
     "ldapjs": "~1.0.1",
     "bunyan": "~1.8.4",
@@ -24,7 +24,7 @@
     "node-rest-client": "~2.0.1",
     "body-parser": "~1.15.2",
     "posix": "~4.1.1",
-    "nodemailer": "~4.0.1",
+    "nodemailer": ">=6.4.16",
     "node-html-encoder": "~0.0.2",
     "node-emoji": "~1.5.1",
     "authenticate-pam": "~1.0.2"
