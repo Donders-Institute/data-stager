@@ -50,8 +50,8 @@ if [ $# -ne 4 ]; then
 fi
 
 mydir=$( get_script_dir $0 )
-src=$( echo $1 | sed 's/irods:/i:/g' )
-dst=$( echo $2 | sed 's/irods:/i:/g' )
+src=$( echo "$1" | sed 's/irods:/i:/g' )
+dst=$( echo "$2" | sed 's/irods:/i:/g' )
 
 # set iRODS environment variables
 export IRODS_USER_NAME=$3
