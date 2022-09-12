@@ -6,6 +6,10 @@
 #
 #    /api/RepositoryCollections?organizationalUnit={OU}
 #
+# Requirements:
+#   - jq
+#   - curl
+#
 ##################################################################
 
 if [ -z ${PROJECT_FORM_API_SERVER:+x} ]; then
