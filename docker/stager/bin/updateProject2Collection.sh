@@ -73,7 +73,7 @@ function project2collection() {
 
     endpoint="${PROJECT_FORM_API_SERVER}/api/RepositoryCollections"
     if [ $# -gt 1 ]; then
-        endpoint="${endpoint}?organizationUnit=${2}"
+        endpoint="${endpoint}?organizationalUnit=${2}"
     fi
 
     result="$(curl -sS \

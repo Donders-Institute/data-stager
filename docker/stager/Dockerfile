@@ -38,9 +38,10 @@ RUN ( /opt/python/bin/pip install pycurl )
 #      && /opt/python/bin/python setup.py --with-nss install && rm -rf /tmp/pycurl-* )
 
 # install nodejs
-ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
-RUN ( if [ ! -d node-v6.11.2-linux-x64 ]; then tar xf node-v6.11.2-linux-x64.tar.xz; fi \
-      && mv node-v6.11.2-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
+#ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
+ADD https://nodejs.org/dist/latest-v9.x/node-v9.11.2-linux-x64.tar.xz /tmp
+RUN ( if [ ! -d node-v9.11.2-linux-x64 ]; then tar xf node-v9.11.2-linux-x64.tar.xz; fi \
+      && mv node-v9.11.2-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
 
 # install expect so that we get unbuffer to get irsync progress, progressively
 RUN ( yum -y install expect parallel bc samba-client cifs-utils && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
@@ -77,6 +78,9 @@ RUN ( yum -y install supervisor )
 COPY supervisord.conf /opt/stager/supervisord.conf
 
 RUN ( yum -y clean all )
+
+# install jq
+RUN ( curl -L -o /usr/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64 && chmod +x /usr/bin/jq )
 
 # runtime environment variables
 ENV IRODS_ADMIN_USER=irods
