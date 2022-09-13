@@ -31,13 +31,13 @@ Build docker containers using the following command:
 
 ```bash
 $ cd docker
-$ docker-compose -f docker-compose build --force-rm
+$ docker-compose -f docker-compose.yml build --force-rm
 ```
 
 Start up docker containers using the following command:
 
 ```bash
-$ docker-compose -f docker-compose up -d
+$ docker-compose -f docker-compose.yml up -d
 ```
 
 If the services are started successfuly, the RESTful interface of the stager and stager-ui should be listening on port `3000` and `3080`, respectively.  You may check it by connecting the browser to `http://<dockerhost>:3000` or `http://<dockerhost>:3080`. 
