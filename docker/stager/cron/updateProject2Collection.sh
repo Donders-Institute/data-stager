@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 ###################################################################
 # This script updates the project2collection.json file (static part
 # of the project to collection resolution), using the data retrieved

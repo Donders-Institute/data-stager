@@ -1,1 +1,2 @@
-0 0 * * * /cron/renew_irods_token.sh
+0  0  * * * /cron/renew_irods_token.sh
+59 23 * * * /cron/updateProject2Collection.sh -c /opt/stager/config/project2collection.json -t -o DCC

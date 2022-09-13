@@ -62,9 +62,13 @@ RUN ( chmod +x config_stager.py )
 
 # install devcron
 RUN ( /opt/python/bin/pip install -e git+https://github.com/dbenamy/devcron#egg=devcron )
-# copy default crontab into container
+
+# copy default crontab and cron-job scripts into container
 RUN ( mkdir -p /cron )
-COPY cron /cron
+COPY cron/crontab /cron/crontab
+COPY cron/renew_irods_token.sh /cron/renew_irods_token.sh
+COPY cron/updateProject2Collection.sh /cron/updateProject2Collection.sh
+RUN ( chmod +x /cron/*.sh )
 
 # install Cheetah template engine
 # force Markdown library to version 3.1, the last version supporting python 2.7
@@ -91,6 +95,13 @@ ENV IRODS_ZONE_NAME=rdmtst
 ENV IRODS_REST_ENDPOINT=https://irods-rest
 ENV DAVRODS_ENDPOINT=https://irods-webdav
 ENV DAVRODS_EXPOSED_ROOT=/rdmtst/di
+ENV DAVRODS_EXPOSED_ROOT=/rdmtst/di
+
+# runtime environment required for updateProject2Collection.sh
+ENV PROJECT_FORM_API_SERVER=https://project-proposal
+ENV AUTH_SERVER=https://authserver
+ENV AUTH_CLIENT_ID=client_id
+ENV AUTH_CLIENT_SECRET=client_secret
 
 # run a stager and devcron from supervisor
 VOLUME [ "/project", "/cron", "/opt/stager/config", "/opt/stager/log" ]
