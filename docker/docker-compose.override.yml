@@ -10,4 +10,4 @@ services:
   stager-ui:
     environment:
       - DAVRODS_ENDPOINT=https://webdav.data.donders.ru.nl
-      - DAVRODS_EXPOSED_ROOT=/rdm/di
+      - DAVRODS_EXPOSED_ROOT=/nl.ru.donders/di
