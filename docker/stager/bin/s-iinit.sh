@@ -5,12 +5,12 @@ function print_usage() {
     cat <<EOF
 Usage:
 
-  $ s-iinit.sh <rdmUser> <rdmPass>
+  $ s-iinit.sh <rdmUser> <rdmPass> [<rdmTargetUser>]
 
 EOF
 }
 
-if [ $# -ne 2 ]; then
+if [ $# -lt 2 ]; then
     print_usage
     exit 1
 fi
@@ -23,7 +23,7 @@ tu=$u
 [ $# -eq 3 ] && tu=$3
 
 export IRODS_AUTHENTICATION_FILE=/tmp/.irodsA.${tu}
-export IRODS_USER_NAME=$tu
+export IRODS_USER_NAME=$u
 
 echo ${p} | iinit >> /tmp/.irodsA.${tu}.log 2>&1
 

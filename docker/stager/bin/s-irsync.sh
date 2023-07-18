@@ -45,7 +45,7 @@ function file_transfer() {
 export -f file_transfer
 
 # check if control file is given
-if [ $# -ne 4 ]; then
+if [ $# -lt 4 ]; then
     print_usage
     exit 1
 fi
