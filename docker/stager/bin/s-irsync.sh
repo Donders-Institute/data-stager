@@ -5,12 +5,13 @@ function print_usage() {
     cat <<EOF
 Usage:
 
-  $ s-irsync.sh <srcPath> <dstPath> <irodsUserName> <irodsA>
+  $ s-irsync.sh <srcPath> <dstPath> <irodsUserName> <irodsA> [<clientUserName>]
 
-  - srcPath:       the source location, use "irods:" prefix to indicate it's an iRODS path
-  - dstPath:       the target location, use "irods:" prefix to indicate it's an iRODS path
-  - irodsUserName: the iRODS username 
-  - irodsA:        the path of the .irodsA file in which a scrambled password is stored
+  - srcPath:        the source location, use "irods:" prefix to indicate it's an iRODS path
+  - dstPath:        the target location, use "irods:" prefix to indicate it's an iRODS path
+  - irodsUserName:  the iRODS username matching the scrambled password stored in <irodsA>
+  - irodsA:         the path of the .irodsA file in which a scrambled password is stored
+  - clientUserName: the iRODS target username.  When specified, the <irodsUserName> is used as a proxy user.
 
 EOF
 }
@@ -56,6 +57,15 @@ dst=$( echo "$2" | sed 's/irods:/i:/g' )
 # set iRODS environment variables
 export IRODS_USER_NAME=$3
 export IRODS_AUTHENTICATION_FILE=$4
+
+# iRODS target user
+export clientUserName=$IRODS_USER_NAME
+
+if [ $# -eq 5 ]; then
+    export clientUserName=$5
+else
+    export clientUserName=$IRODS_USER_NAME
+fi
 
 w_total=0
 

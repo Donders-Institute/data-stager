@@ -293,7 +293,7 @@ if (cluster.isMaster) {
 
                 case 'UAUTH':
                     // check the validity of the auth token for given rdmUser
-                    var u = msg['rdm_user'];
+                    var tu = msg['rdm_user'];
                     var su = msg['stager_user'];
 
                     var cmd_opts = {
@@ -307,23 +307,24 @@ if (cluster.isMaster) {
                         cmd_opts.gid = proc_user.gid;
                     }
 
-                    if ( typeof valid_auths[u] === 'undefined' ||
-                         typeof valid_auths[u].validity === 'undefined' ||
-                         valid_auths[u].validity < Date.now() - 600*1000 ) {
+                    if ( typeof valid_auths[tu] === 'undefined' ||
+                         typeof valid_auths[tu].validity === 'undefined' ||
+                         valid_auths[tu].validity < Date.now() - 600*1000 ) {
 
                         var nattempts = 0;
                         var isOk = false;
                         var irodsA = '';
+
+                        // initiate scrumble credential of the proxy user `u`, for the target user `tu`
+                        var u = config.get('RDM.userName');
+                        var p = config.get('RDM.userPass');
+
                         while ( ! isOk ) {
                             nattempts += 1;
                             if ( nattempts < 3 ) {
-                                var cmd = stager_bindir + path.sep + 's-otp.sh';
-                                var out = child_process.execFileSync( cmd, [u]);
-                                var rdmPass = out.toString().split('\n')[0];
-
                                 // call iinit to initialize token
                                 cmd = stager_bindir + path.sep + 's-iinit.sh';
-                                out = child_process.execFileSync( cmd, [ u, rdmPass ], cmd_opts);
+                                out = child_process.execFileSync( cmd, [ u, p, tu ], cmd_opts);
                                 irodsA = out.toString().split('\n')[0];
                                 try {
                                     isOk = fs.statSync(irodsA).isFile();
@@ -331,20 +332,20 @@ if (cluster.isMaster) {
                             }
                         }
 
-                        valid_auths[u] = { 'path':'', 'validity':0 };
+                        valid_auths[tu] = { 'path':'', 'validity':0 };
                         if ( isOk ) {
-                            console.log( '[' + new Date().toISOString() + '] initiate irods token: ' + u);
-                            valid_auths[u].path = irodsA;
-                            valid_auths[u].validity = Date.now() + 3600 * 1000;
+                            console.log( '[' + new Date().toISOString() + '] initiate irods token for ' + tu);
+                            valid_auths[tu].path = irodsA;
+                            valid_auths[tu].validity = Date.now() + 3600 * 1000;
                         } else {
-                            console.error( '[' + new Date().toISOString() + '] cannot create irods token: ' + u);
+                            console.error( '[' + new Date().toISOString() + '] cannot create irods token for ' + tu);
                         }
                     } else {
-                        console.log( '[' + new Date().toISOString() + '] reuse valid irods token: ' + u);
+                        console.log( '[' + new Date().toISOString() + '] reuse valid irods token for ' + tu);
                     }
 
                     // send-back the path in which the valid token is stored
-                    sendMsgToWorker(this, {'type': 'UAUTH', 'path': valid_auths[u].path });
+                    sendMsgToWorker(this, {'type': 'UAUTH', 'path': valid_auths[tu].path });
                     break;
 
                 default:
@@ -426,8 +427,9 @@ if ( cluster.worker ) {
 
                         var cmd_args = ["'"+_srcURL+"'",
                                         "'"+_dstURL+"'",
-                                        job.data.rdmUser,
-                                        irodsA];
+                                        config.get('RDM.userName'),
+                                        irodsA,
+                                        job.data.rdmUser];
 
                         var cmd_opts = {
                             shell: '/bin/bash'
