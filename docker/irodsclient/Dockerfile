@@ -2,9 +2,9 @@ FROM centos:7
 
 MAINTAINER Hurng-Chun Lee <h.lee@donders.ru.nl>
 
-RUN ( yum -y install epel-release )
+RUN ( ulimit -n 1024 && yum -y install epel-release )
 
-RUN ( yum -y install wget gcc gcc-c++ \
+RUN ( ulimit -n 1024 && yum -y install wget gcc gcc-c++ \
                      make autoconf git zlib zlib-devel \
                      openssl openssl-devel openssl-libs \
                      sssd-client \
@@ -13,11 +13,11 @@ RUN ( yum -y install wget gcc gcc-c++ \
                      bzip2-devel pam-devel perl-JSON \
                      curl curl-devel libxml2-devel )
 
-RUN ( rpm --import https://packages.irods.org/irods-signing-key.asc && \ 
-      wget -qO - https://packages.irods.org/renci-irods.yum.repo | \
-      tee /etc/yum.repos.d/renci-irods.yum.repo )
+RUN ( rpm --import https://packages.irods.org/irods-signing-key.asc )
 
-RUN ( yum -y install irods-devel irods-runtime irods-icommands && \
+RUN ( curl -L -o /etc/yum.repos.d/renci-irods.yum.repo https://packages.irods.org/renci-irods.yum.repo )
+
+RUN ( ulimit -n 1024 && yum -y --enablerepo=renci-irods install irods-devel-4.2.8-1 irods-runtime-4.2.8-1 irods-icommands-4.2.8-1 && \
       yum clean all && \
       rm -rf /var/cache/yum/* && \
       rm -rf /tmp/* )
