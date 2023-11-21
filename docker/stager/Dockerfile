@@ -5,14 +5,14 @@ LABEL donders.ru.nl.app_name "stager"
 LABEL donders.ru.nl.app_maintainer "h.lee@donders.ru.nl"
 LABEL donders.ru.nl.app_code_repository "https://github.com/Donders-Institute/data-stager"
 
-# install cyberduck command-line interface
-RUN ( echo -e "[duck-stable]\n\
-name=duck-stable\n\
-baseurl=https://repo.cyberduck.io/stable/\$basearch/\n\
-enabled=1\n\
-gpgcheck=0" > /etc/yum.repos.d/duck-stable.repo )
+# # install cyberduck command-line interface
+# RUN ( echo -e "[duck-stable]\n\
+# name=duck-stable\n\
+# baseurl=https://repo.cyberduck.io/stable/\$basearch/\n\
+# enabled=1\n\
+# gpgcheck=0" > /etc/yum.repos.d/duck-stable.repo )
 
-RUN ( yum -y install duck && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
+# RUN ( yum -y install duck && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
 
 # create temporary directory
 RUN ( mkdir -p /tmp )
@@ -39,12 +39,14 @@ RUN ( /opt/python/bin/pip install pycurl )
 
 # install nodejs
 #ADD https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.xz /tmp
-ADD https://nodejs.org/dist/latest-v9.x/node-v9.11.2-linux-x64.tar.xz /tmp
-RUN ( if [ ! -d node-v9.11.2-linux-x64 ]; then tar xf node-v9.11.2-linux-x64.tar.xz; fi \
-      && mv node-v9.11.2-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
+#ADD https://nodejs.org/dist/latest-v9.x/node-v9.11.2-linux-x64.tar.xz /tmp
+ADD https://nodejs.org/dist/latest-v10.x/node-v10.24.1-linux-x64.tar.xz /tmp
+
+RUN ( if [ ! -d node-v10.24.1-linux-x64 ]; then tar xf node-v10.24.1-linux-x64.tar.xz; fi \
+      && mv node-v10.24.1-linux-x64 /opt/nodejs && rm -rf /tmp/node-*)
 
 # install expect so that we get unbuffer to get irsync progress, progressively
-RUN ( yum -y install expect parallel bc samba-client cifs-utils && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
+RUN ( ulimit -n 1024 && yum -y install expect parallel bc samba-client cifs-utils && yum clean all && rm -rf /var/cache/yum/* && rm -rf /tmp/* )
 
 # install stager scripts and required nodejs modules
 RUN ( mkdir -p /opt/stager/bin )
@@ -77,8 +79,8 @@ RUN ( wget https://pypi.python.org/packages/cd/b0/c2d700252fc251e91c08639ff41a8a
       cd Cheetah-2.4.4 && /opt/python/bin/python setup.py install )
 
 # install supervisor
-RUN ( yum -y install epel-release )
-RUN ( yum -y install supervisor )
+RUN ( ulimit -n 1024 && yum -y install epel-release )
+RUN ( ulimit -n 1024 && yum -y install supervisor )
 COPY supervisord.conf /opt/stager/supervisord.conf
 
 RUN ( yum -y clean all )
