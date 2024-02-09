@@ -331,6 +331,7 @@ var _submitJobs = function(request, response) {
     jobs.forEach( function(j) {
         j.stagerUser = sess.user.stager;
         j.rdmUser = sess.user.rdm;
+        j.rdmPass = util.encryptStringWithRsaPublicKey(sess.pass.rdm, '/opt/stager-ui/ssl/public.pem');
         j.clientIF = 'irods';
         j.timeout = 86400;
         j.timeout_noprogress = 3600;

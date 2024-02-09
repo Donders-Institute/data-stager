@@ -49,6 +49,7 @@ services:
     volumes:
       - ./stager-ui/config:/opt/stager-ui/config
       - ./stager-ui/config/irods-webdav.pem:/opt/stager-ui/ssl/irods-webdav.pem:ro
+      - ./stager-ui/config/public.pem:/opt/stager-ui/ssl/public.pem:ro
     networks:
       - rdm-network
     ports:

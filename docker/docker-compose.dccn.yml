@@ -57,6 +57,7 @@ services:
         volumes:
             - /mnt/docker/data/stager/ui/config:/opt/stager-ui/config
             - /mnt/docker/data/stager/ui/config/irods-webdav.pem:/opt/stager-ui/ssl/irods-webdav.pem:ro
+            - /mnt/docker/data/stager/ui/config/public.pem:/opt/stager-ui/ssl/public.pem:ro
         networks:
             default:
                 aliases:
