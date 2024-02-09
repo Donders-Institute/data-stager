@@ -14,7 +14,7 @@ They are orchestrated by the docker-compose file `docker/docker-compose.yml`.
 - access to the project storage, i.e. the `/project` directory
 - accepting inbound connectivity via port: `3000`
 
-## generate RSA keypair for encryption
+## generate RSA keypair for data-access token encryption
 
 When user submits a job via the stager UI, the data-access token will be encrypted and transmitted to the stager as part of the job data.  The encryption uses RSA asymmetric key pair.
 
