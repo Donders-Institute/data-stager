@@ -16,6 +16,7 @@ var path = require('path');
 var mailer = require('./routes/mailer');
 var HtmlEncoder = require('node-html-encoder').Encoder;
 var emoji = require('node-emoji');
+var util = require('./routes/utility');
 
 var active_pids = {};
 
@@ -293,7 +294,7 @@ if (cluster.isMaster) {
 
                 case 'UAUTH':
                     // check the validity of the auth token for given rdmUser
-                    var tu = msg['rdm_user'];
+                    var u = msg['rdm_user'];
                     var su = msg['stager_user'];
 
                     var cmd_opts = {
@@ -307,45 +308,50 @@ if (cluster.isMaster) {
                         cmd_opts.gid = proc_user.gid;
                     }
 
-                    if ( typeof valid_auths[tu] === 'undefined' ||
-                         typeof valid_auths[tu].validity === 'undefined' ||
-                         valid_auths[tu].validity < Date.now() - 600*1000 ) {
+                    if ( typeof valid_auths[u] === 'undefined' ||
+                         typeof valid_auths[u].validity === 'undefined' ||
+                         valid_auths[u].validity < Date.now() - 600*1000 ) {
 
                         var nattempts = 0;
                         var isOk = false;
                         var irodsA = '';
 
-                        // initiate scrumble credential of the proxy user `u`, for the target user `tu`
-                        var u = config.get('RDM.userName');
-                        var p = config.get('RDM.userPass');
-
-                        while ( ! isOk ) {
-                            nattempts += 1;
-                            if ( nattempts < 3 ) {
-                                // call iinit to initialize token
-                                cmd = stager_bindir + path.sep + 's-iinit.sh';
-                                out = child_process.execFileSync( cmd, [ u, p, tu ], cmd_opts);
-                                irodsA = out.toString().split('\n')[0];
+                        var cmd = stager_bindir + path.sep + 's-iinit.sh';
+                        try {
+                            // for service account, the password from the configuration is used;
+                            // otherwise, it decrypts the data-access token from the job data.
+                            var p = (u === config.get('RDM.userName')) ? config.get('RDM.password'):util.decryptStringWithRsaPrivateKey(
+                                msg['rdm_pass'],
+                                '/opt/stager/ssl/private.pem'
+                            );
+                            while ( ! isOk && nattempts < 3 ) {
                                 try {
+                                    out = child_process.execFileSync( cmd, [ u, p ], cmd_opts);
+                                    irodsA = out.toString().split('\n')[0];
                                     isOk = fs.statSync(irodsA).isFile();
-                                } catch (err) {}
+                                } catch (err) {
+                                    console.error( '[' + new Date().toISOString() + '] ' + err );
+                                }
+                                nattempts += 1;
                             }
+                        } catch (err) {
+                            console.error('[' + new Date().toISOString() + '] fail to decrypt pass: ' + err);
                         }
 
-                        valid_auths[tu] = { 'path':'', 'validity':0 };
+                        valid_auths[u] = { 'path':'', 'validity':0 };
                         if ( isOk ) {
-                            console.log( '[' + new Date().toISOString() + '] initiate irods token for ' + tu);
-                            valid_auths[tu].path = irodsA;
-                            valid_auths[tu].validity = Date.now() + 3600 * 1000;
+                            console.log( '[' + new Date().toISOString() + '] initiate irods token for ' + u);
+                            valid_auths[u].path = irodsA;
+                            valid_auths[u].validity = Date.now() + 3600 * 1000;
                         } else {
-                            console.error( '[' + new Date().toISOString() + '] cannot create irods token for ' + tu);
+                            console.error( '[' + new Date().toISOString() + '] cannot create irods token for ' + u);
                         }
                     } else {
-                        console.log( '[' + new Date().toISOString() + '] reuse valid irods token for ' + tu);
+                        console.log( '[' + new Date().toISOString() + '] reuse valid irods token for ' + u);
                     }
 
                     // send-back the path in which the valid token is stored
-                    sendMsgToWorker(this, {'type': 'UAUTH', 'path': valid_auths[tu].path });
+                    sendMsgToWorker(this, {'type': 'UAUTH', 'path': valid_auths[u].path });
                     break;
 
                 default:
@@ -398,9 +404,12 @@ if ( cluster.worker ) {
                 // ask master process to retrieve irodsA path
                 irodsA = '';
                 authed = false;
-                process.send({'type':'UAUTH',
-                              'rdm_user': job.data.rdmUser,
-                              'stager_user': (typeof job.data.stagerUser === 'undefined')?'':job.data.stagerUser});
+                process.send({
+                    'type':'UAUTH',
+                    'rdm_user': job.data.rdmUser,
+                    'rdm_pass': job.data.rdmPass,
+                    'stager_user': (typeof job.data.stagerUser === 'undefined')?'':job.data.stagerUser,
+                });
 
                 // set timer to wait until the irodsA is retrieved from the master process
                 var authTimer = setInterval( function() {
@@ -410,13 +419,7 @@ if ( cluster.worker ) {
                             return done(new Error('user not successfully authenticated: ' + job.data.rdmUser));
                         }
 
-                        // TODO: make the logic implementation as a plug-in
-                        var cmd = '';
-                        if ( job.data.clientIF === undefined || job.data.clientIF == 'irods' ) {
-                            cmd = path.join(stager_bindir,'s-irsync.sh');
-                        } else {
-                            cmd = path.join(stager_bindir,'s-duck.sh');
-                        }
+                        var cmd = path.join(stager_bindir,'s-irsync.sh');
 
                         // expand the root path of the stager's local filesystem
                         var _srcURL = (job.data.srcURL.match(/^irods:/)) ?
@@ -425,11 +428,12 @@ if ( cluster.worker ) {
                         var _dstURL = (job.data.dstURL.match(/^irods:/)) ?
                                         job.data.dstURL : stager_fs.expandRoot(job.data.dstURL, job.data.stagerUser);
 
-                        var cmd_args = ["'"+_srcURL+"'",
-                                        "'"+_dstURL+"'",
-                                        config.get('RDM.userName'),
-                                        irodsA,
-                                        job.data.rdmUser];
+                        var cmd_args = [
+                            "'"+_srcURL+"'",
+                            "'"+_dstURL+"'",
+                            job.data.rdmUser,
+                            irodsA
+                        ];
 
                         var cmd_opts = {
                             shell: '/bin/bash'
