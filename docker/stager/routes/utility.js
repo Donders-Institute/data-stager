@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var crypto = require('crypto');
 
 // make new directories with necessary parents
 var _mkdir = function(dir, mode) {
@@ -41,7 +42,16 @@ var _printErr = function(header, err) {
     console.log(_composeLog(header, err));
 }
 
+var _decryptStringWithRsaPrivateKey = function(toDecrypt, relativeOrAbsolutePathToPrivateKey) {
+    var absolutePath = path.resolve(relativeOrAbsolutePathToPrivateKey);
+    var privateKey = fs.readFileSync(absolutePath, "utf-8");
+    var buffer = Buffer.from(toDecrypt, "base64");
+    var decrypted = crypto.privateDecrypt(privateKey, buffer);
+    return decrypted.toString();
+};
+
 module.exports.mkdir = _mkdir;
 module.exports.responseOnError = _responseOnError;
 module.exports.printLog = _printLog;
 module.exports.printErr = _printErr;
+module.exports.decryptStringWithRsaPrivateKey = _decryptStringWithRsaPrivateKey;
