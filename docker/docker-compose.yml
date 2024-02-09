@@ -33,6 +33,7 @@ services:
     volumes:
       - ./stager/config:/opt/stager/config
       - ./stager/config/icat.pem:/opt/irods/ssl/icat.pem:ro
+      - ./stager/config/keypair.pem:/opt/stager/ssl/private.pem:ro
       - ./data/log/stager:/opt/stager/log
     networks:
       - rdm-network

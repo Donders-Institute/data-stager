@@ -105,6 +105,9 @@ ENV AUTH_SERVER=https://authserver
 ENV AUTH_CLIENT_ID=client_id
 ENV AUTH_CLIENT_SECRET=client_secret
 
+# prepare folder for trusted certificate
+RUN ( mkdir -p /opt/stager/ssl )
+
 # run a stager and devcron from supervisor
 VOLUME [ "/project", "/cron", "/opt/stager/config", "/opt/stager/log" ]
 EXPOSE 3000

@@ -28,6 +28,7 @@ services:
             - /var/lib/sss/pipes:/var/lib/sss/pipes
             - /var/lib/sss/mc:/var/lib/sss/mc:ro
             - /mnt/docker/data/stager/config.v2/icat.pem:/opt/irods/ssl/icat.pem:ro
+            - /mnt/docker/data/stager/config.v2/keypair.pem:/opt/stager/ssl/private.pem:ro
         networks:
             default:
                 aliases:
