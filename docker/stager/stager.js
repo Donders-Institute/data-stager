@@ -93,6 +93,13 @@ var get_job_timout = function(job) {
     return [timeout, timeout_noprogress];
 }
 
+// function for removing data access token from job data object stored in Kue.
+var remove_job_rdmPass = function(job) {
+    var j = JSON.parse( JSON.stringify(job) );
+    j.data.rdmPass = 'xxx';
+    return j;
+}
+
 queue.on( 'error', function(err) {
     if ( cluster.isMaster) {
         console.error('Oops... ', err);
@@ -111,8 +118,8 @@ queue.on( 'error', function(err) {
                 return;
             }
 
-            // skip notification email when the user is irods
-            if (job.data.rdmUser == 'irods') {
+            // skip notification email when using the service account
+            if (job.data.rdmUser === config.get('RDM.userName')) {
                 return;
             }
 
@@ -149,7 +156,7 @@ queue.on( 'error', function(err) {
             msgHtml += '<tr><th>complete at</th><td>' + t_update.toDateString() + ' ' + t_update.toTimeString() + '</td></tr>';
             msgHtml += '<tr><th>source</th><td>' + encoder.htmlEncode(job.data.srcURL) + '</td></tr>';
             msgHtml += '<tr><th>destination</th><td>' + encoder.htmlEncode(job.data.dstURL) + '</td></tr>';
-            msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
+            msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(remove_job_rdmPass(job), null, 2) + '</pre></td></tr>';
             msgHtml += '</div></table>';
             msgHtml += '</html>';
 
@@ -210,11 +217,11 @@ queue.on( 'error', function(err) {
                 if ( ! error ) {
                     msgHtml += '<tr><th>job log</th><td>' + logdata.join("</br>") + '</td></tr>';
                 }
-                msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(job, null, 2) + '</pre></td></tr>';
+                msgHtml += '<tr><th>job detail</th><td><pre>' + JSON.stringify(remove_job_rdmPass(job), null, 2) + '</pre></td></tr>';
                 msgHtml += '</div></table>';
                 msgHtml += '</html>';
 
-                mailer.sendToAdmin(msgSubject, null, msgHtml, null);        
+                mailer.sendToAdmin(msgSubject, null, msgHtml, null);
             });
         });
         console.log('[' + new Date().toISOString() + '] job %d failed', id);
